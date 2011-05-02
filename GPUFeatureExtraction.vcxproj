@@ -183,7 +183,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\gpuprocessor\Filter.cpp" />
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
@@ -212,7 +211,6 @@
     <None Include="CL\RGB2YUV.cl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\gpuprocessor\Filter.h" />
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
   </ItemGroup>
