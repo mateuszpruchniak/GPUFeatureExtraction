@@ -19,7 +19,7 @@
 #include "cxmisc.h"
 #include "highgui.h"
 #include "GPUTransferManager.h"
-#include "Filter.h"
+#include "Moments.h"
 
 using namespace std;
 
@@ -62,7 +62,11 @@ class GPUImageProcessor
 		 * Total number of devices available to the platform.
 		 */
 		cl_uint uiDevCount;			
-   
+
+		/*!
+		 * List of pointer to processing objects.
+		 */
+        vector<Moments*> filters;        
     
     public:
  
@@ -93,7 +97,10 @@ class GPUImageProcessor
 		 */
         void Process();
 
-		
+		/*!
+		 * Add filters to image processing list.
+		 */
+        void AddProcessing(Moments* filter);
         
         /*!
 		 * Check error code.

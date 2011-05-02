@@ -60,15 +60,26 @@ void GPUImageProcessor::CheckError(int code)
 GPUImageProcessor::~GPUImageProcessor()
 {
 	delete Transfer;
-    
+    int i = (int)filters.size();
+    for( int j = 0 ; j < i ; j++)
+    {
+        delete filters[j];
+    }
 
     if(GPUCommandQueue)clReleaseCommandQueue(GPUCommandQueue);
     if(GPUContext)clReleaseContext(GPUContext);
 }
 
-
+void GPUImageProcessor::AddProcessing(Moments* filter)
+{
+    filters.push_back(filter);
+}
 
 void GPUImageProcessor::Process()
 {
-    
+    int i = (int)filters.size();
+    for( int j = 0 ; j < i ; j++)
+    {
+        filters[j]->process(GPUCommandQueue);
+    }
 }

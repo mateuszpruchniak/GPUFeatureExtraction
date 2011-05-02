@@ -186,6 +186,7 @@
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
+    <ClCompile Include="Moments.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="GPUCode.cl">
@@ -202,6 +203,7 @@
     <None Include="CL\ErodeFilter.cl" />
     <None Include="CL\GPUCode.cl" />
     <None Include="CL\HighpassFilter.cl" />
+    <None Include="CL\IntegralImage.cl" />
     <None Include="CL\LowpassFilter.cl" />
     <None Include="CL\LUTFilter.cl" />
     <None Include="CL\MaxFilter.cl" />
@@ -213,6 +215,7 @@
   <ItemGroup>
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
+    <ClInclude Include="Moments.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
