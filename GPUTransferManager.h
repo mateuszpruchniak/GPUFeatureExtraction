@@ -8,17 +8,17 @@
 
 #pragma once
 
+
 #include <oclUtils.h>
 #include <iostream>
 #include <vector>
 #include <string>
-#include "cv.h"
-#include "cxmisc.h"
-#include "highgui.h"
-#include <algorithm>
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
+#include "cv.h"
+#include "cxmisc.h"
+#include "highgui.h"
 
 using namespace std;
 
@@ -34,20 +34,17 @@ class GPUTransferManager
                 
 		         
 
-		/*!
-		 * Mapped Pointer to pinned Host input and output buffer for host processing.
+        /*!
+		 * Mapped Pointer to pinned Host output buffer for host processing.
 		 */
-        cl_uint* GPUInputOutput;                 
+		cl_uint* GPUOutput;
 
-		/*!
-		 * OpenCL host memory input output buffer object:  pinned.
-		 */
-        cl_mem cmPinnedBuf;               
 
-		/*!
-		 * The size in bytes of the buffer memory object to be allocated.
+        /*!
+		 * OpenCL host memory output buffer object:  pinned.
 		 */
-        size_t szBuffBytes;                
+		cl_mem cmPinnedBufOutput;
+
 
 		/*!
 		 * Error code, only 0 is allowed.
@@ -57,10 +54,14 @@ class GPUTransferManager
 		/*!
 		 * Image return from buffer.
 		 */
-        IplImage* image;                   
+        IplImage* image;
 		
 
     public:
+        /*!
+		 * The size in bytes of the buffer memory object to be allocated.
+		 */
+		size_t szBuffBytes;
 
 		/*!
 		 * OpenCL command-queue, is an object where OpenCL commands are enqueued to be executed by the device.
@@ -73,9 +74,14 @@ class GPUTransferManager
         cl_context GPUContext;    
 
 		/*!
-		 * OpenCL device memory input/output buffer object.
+		 * OpenCL device memory input buffer object.
 		 */
-        cl_mem cmDevBuf;                 
+        cl_mem cmDevBuf;
+
+        /*!
+		 * OpenCL device memory output buffer object.
+		 */
+		cl_mem cmSumTable;
 
 		/*!
 		 * Image width.
@@ -117,9 +123,13 @@ class GPUTransferManager
 		 */
         IplImage* ReceiveImage();
         
+        /*!
+		 * Checking size of image(if image size is larger than max size, this function increases buffers)
+		 */
+		bool CheckImage(IplImage*);
         
 		/*!
-		 * Release all buffors.
+		 * Release all buffers.
 		 */
         void Cleanup();
 
@@ -127,6 +137,11 @@ class GPUTransferManager
 		 * Check error code.
 		 */
         void CheckError(int );
+
+        /*!
+		 * Create buffers.
+		 */
+        void CreateBuffers();
 
 };
 

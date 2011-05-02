@@ -24,7 +24,7 @@ int main(int argc, const char** argv)
 
 
 
-	IplImage* img = cvLoadImage("./img/30x30.bmp");
+	IplImage* img = cvLoadImage("./img/1.bmp");
 	
 
 	GPUImageProcessor* GPU = new GPUImageProcessor(img->width,img->height,img->nChannels);
@@ -33,6 +33,7 @@ int main(int argc, const char** argv)
 	
 	GPU->AddProcessing( new Moments("./CL/IntegralImage.cl",GPU->GPUContext,GPU->Transfer,"ckIntegralImg") );
 
+	GPU->Transfer->CreateBuffers();
 	GPU->Transfer->SendImage(img);
 	GPU->Process();
 	img = GPU->Transfer->ReceiveImage();
