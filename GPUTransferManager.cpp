@@ -84,15 +84,18 @@ IplImage* GPUTransferManager::ReceiveImage()
     CheckError(GPUError);
 
 	cout << "Wynik" << endl;
+	int a = 0;
 	//wyswietlic tablice
 	for(int i = 0; i < ImageHeight ; i++ )
 	{
 		for(int j = 0; j < ImageWidth ; j++ )
 		{
-			cout << GPUOutput[i*j];
+			cout << GPUOutput[a] << "|";
+			++a;
 		}
 		cout << endl;
 	}
+
 
     image->imageData = (char*)GPUOutput;
     return image;
@@ -107,6 +110,9 @@ void GPUTransferManager::SendImage( IplImage* imageToLoad )
 	image = imageToLoad;
     GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageToLoad->imageData, 0, NULL, NULL);
     CheckError(GPUError);
+
+
+
 }
 
 bool GPUTransferManager::CheckImage(IplImage* img)

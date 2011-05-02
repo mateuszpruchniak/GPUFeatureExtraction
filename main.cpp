@@ -39,11 +39,6 @@ int main(int argc, const char** argv)
 	img = GPU->Transfer->ReceiveImage();
 
 
-
-	cvNamedWindow("sobel", CV_WINDOW_AUTOSIZE); 
-	cvShowImage("sobel", img );
-	cvWaitKey(2);
-
 	cout << "-------------------------\n\n" << endl;
 
    /* cvNamedWindow("sobel", CV_WINDOW_AUTOSIZE); 
