@@ -90,14 +90,14 @@ IplImage* GPUTransferManager::ReceiveImage()
 	{
 		for(int j = 0; j < ImageWidth ; j++ )
 		{
-			cout << GPUOutput[a] << "|";
+			cout << GPUOutput[a];
 			++a;
 		}
 		cout << endl;
 	}
 
 
-    image->imageData = (char*)GPUOutput;
+    
     return image;
 }
 
@@ -107,8 +107,11 @@ void GPUTransferManager::SendImage( IplImage* imageToLoad )
     ImageWidth = imageToLoad->width;
     cout << "img " << ImageWidth << "x" << ImageHeight << endl;
     int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
-	image = imageToLoad;
-    GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageToLoad->imageData, 0, NULL, NULL);
+
+	CvMat *mat = cvCreateMat(imageToLoad->height,imageToLoad->width,CV_8UC3 );
+	cvConvert( imageToLoad, mat );
+
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)mat->data.ptr , 0, NULL, NULL);
     CheckError(GPUError);
 
 
