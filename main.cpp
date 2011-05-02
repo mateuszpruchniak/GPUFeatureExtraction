@@ -30,9 +30,18 @@ int main(int argc, const char** argv)
 	GPUImageProcessor* GPU = new GPUImageProcessor(img->width,img->height,img->nChannels);
 
 
+	
 	GPU->AddProcessing( new Moments("./CL/IntegralImage.cl",GPU->GPUContext,GPU->Transfer,"ckIntegralImg") );
 
+	GPU->Transfer->SendImage(img);
+	GPU->Process();
+	img = GPU->Transfer->ReceiveImage();
 
+
+
+	cvNamedWindow("sobel", CV_WINDOW_AUTOSIZE); 
+	cvShowImage("sobel", img );
+	cvWaitKey(2);
 
 	cout << "-------------------------\n\n" << endl;
 

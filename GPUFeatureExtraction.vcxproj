@@ -198,19 +198,9 @@
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CL\Binarization.cl" />
-    <None Include="CL\DilateFilter.cl" />
-    <None Include="CL\ErodeFilter.cl" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="CL\GPUCode.cl" />
-    <None Include="CL\HighpassFilter.cl" />
     <None Include="CL\IntegralImage.cl" />
-    <None Include="CL\LowpassFilter.cl" />
-    <None Include="CL\LUTFilter.cl" />
-    <None Include="CL\MaxFilter.cl" />
-    <None Include="CL\MedianFilter.cl" />
-    <None Include="CL\MinFilter.cl" />
-    <None Include="CL\RGB2HSV.cl" />
-    <None Include="CL\RGB2YUV.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPUImageProcessor.h" />
