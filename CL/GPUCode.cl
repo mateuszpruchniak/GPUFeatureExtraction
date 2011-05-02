@@ -1,4 +1,3 @@
-
 void GetData(__global uchar* dataIn, __local uchar* dataOut, int iDevGMEMOffset, int iLocalPixOffset, int nChannels)
 {
 	dataOut[iLocalPixOffset*nChannels] = dataIn[iDevGMEMOffset*nChannels];
@@ -38,8 +37,6 @@ void setData(__global char* data, char x , char y, char z, int iDevGMEMOffset , 
 	data[iDevGMEMOffset*nChannels+2] = z;
 }
 
-
-
 uchar4 GetDataFromGlobalMemory( __global uchar* data,  int iDevGMEMOffset , int nChannels)
 {
 	uchar4 pix;
@@ -49,9 +46,9 @@ uchar4 GetDataFromGlobalMemory( __global uchar* data,  int iDevGMEMOffset , int 
 	return pix;
 }
 
-int Offset(int x, int y)
+int Offset(int x, int y, int ImageWidth)
 {
-	int offset = mul24( (int)y-1 , (int)get_global_size(1) ) + x;
+	int offset = mul24( (int)y, ImageWidth ) + x;
 	return offset;
 }
 
