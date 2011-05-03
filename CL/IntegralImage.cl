@@ -35,10 +35,10 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global uint* SumTable,int
 		}
 
 		barrier(CLK_GLOBAL_MEM_FENCE);
-		uint offset = 2;
+		int offset = 2;
 		for(offset = 2; offset < ImageWidth; offset <<= 1){
 
-            if( iImageX-offset > 1 )
+            if( iImageX-offset > 0 )
 			{
 
 				barrier(CLK_GLOBAL_MEM_FENCE);
