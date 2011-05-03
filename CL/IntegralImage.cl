@@ -58,6 +58,18 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global uint* SumTable,int
 				SumTable[iDevGMEMOffset] = result;	
 			}
         }
+
+
+
+
+
+
+
+
+
+
+
+
 	}
 }
 
