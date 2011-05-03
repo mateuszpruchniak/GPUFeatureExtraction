@@ -31,7 +31,9 @@ void sum(__global int* data,int iImageX,int iImageY,int iDevGMEMOffset,int Image
 }
 
 __kernel void ckIntegralImg(__global uchar* ucSource,__global int* SumTable00,__global int* SumTable01,__global int* SumTable10,
-							int ImageWidth, int ImageHeight, int channels)
+		__global int* SumTable11,__global int* SumTable20,__global int* SumTable02,
+		__global int* SumTable12,__global int* SumTable21,__global int* SumTable30,__global int* SumTable03,
+		int ImageWidth, int ImageHeight, int channels)
 {
 	
 	if( get_global_id(0) < ImageWidth && get_global_id(1) < ImageHeight )
@@ -59,12 +61,35 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global int* SumTable00,__
 
 		barrier(CLK_GLOBAL_MEM_FENCE);
 		SumTable00[iDevGMEMOffset] = result;
-		SumTable01[iDevGMEMOffset] = result*iImageX;
-		SumTable10[iDevGMEMOffset] = result*iImageY;
+		SumTable01[iDevGMEMOffset] = result*iImageY;
+		SumTable10[iDevGMEMOffset] = result*iImageX;
+		SumTable11[iDevGMEMOffset] = result*iImageY*iImageX;
+		SumTable12[iDevGMEMOffset] = result*iImageX*iImageY*iImageY;
+		SumTable21[iDevGMEMOffset] = result*iImageY*iImageX*iImageX;
+		SumTable20[iDevGMEMOffset] = result*iImageX*iImageX;
+		SumTable02[iDevGMEMOffset] = result*iImageY*iImageY;
+		SumTable30[iDevGMEMOffset] = result*iImageX*iImageX*iImageX;
+		SumTable03[iDevGMEMOffset] = result*iImageY*iImageY*iImageY;
+
+
+
 
 		sum(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		sum(SumTable01,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		sum(SumTable10,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable11,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable20,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable02,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable12,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable21,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable30,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable03,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		
+
+
+		// obliczenie momentow geometrycznych
+		
+
 
 
 	}

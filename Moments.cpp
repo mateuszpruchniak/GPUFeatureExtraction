@@ -79,15 +79,30 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
 	cl_mem cmSumTable00 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
 	cl_mem cmSumTable01 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
 	cl_mem cmSumTable10 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable11 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable20 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable02 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable12 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable21 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable30 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cl_mem cmSumTable03 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+
 
     int iLocalPixPitch = iBlockDimX + 2;
 	GPUError = clSetKernelArg(GPUFilter, 0, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf);
 	GPUError |= clSetKernelArg(GPUFilter, 1, sizeof(cl_mem), (void*)&cmSumTable00);
 	GPUError |= clSetKernelArg(GPUFilter, 2, sizeof(cl_mem), (void*)&cmSumTable01);
 	GPUError |= clSetKernelArg(GPUFilter, 3, sizeof(cl_mem), (void*)&cmSumTable10);
-    GPUError |= clSetKernelArg(GPUFilter, 4, sizeof(cl_uint), (void*)&GPUTransfer->ImageWidth);
-    GPUError |= clSetKernelArg(GPUFilter, 5, sizeof(cl_uint), (void*)&GPUTransfer->ImageHeight);
-	GPUError |= clSetKernelArg(GPUFilter, 6, sizeof(cl_int), (void*)&GPUTransfer->nChannels);
+	GPUError |= clSetKernelArg(GPUFilter, 4, sizeof(cl_mem), (void*)&cmSumTable11);
+	GPUError |= clSetKernelArg(GPUFilter, 5, sizeof(cl_mem), (void*)&cmSumTable20);
+	GPUError |= clSetKernelArg(GPUFilter, 6, sizeof(cl_mem), (void*)&cmSumTable02);
+	GPUError |= clSetKernelArg(GPUFilter, 7, sizeof(cl_mem), (void*)&cmSumTable12);
+	GPUError |= clSetKernelArg(GPUFilter, 8, sizeof(cl_mem), (void*)&cmSumTable21);
+	GPUError |= clSetKernelArg(GPUFilter, 9, sizeof(cl_mem), (void*)&cmSumTable30);
+	GPUError |= clSetKernelArg(GPUFilter, 10, sizeof(cl_mem), (void*)&cmSumTable03);
+    GPUError |= clSetKernelArg(GPUFilter, 11, sizeof(cl_uint), (void*)&GPUTransfer->ImageWidth);
+    GPUError |= clSetKernelArg(GPUFilter, 12, sizeof(cl_uint), (void*)&GPUTransfer->ImageHeight);
+	GPUError |= clSetKernelArg(GPUFilter, 13, sizeof(cl_int), (void*)&GPUTransfer->nChannels);
     if(GPUError) return false;
 
 	size_t GPULocalWorkSize[2]; 
