@@ -80,21 +80,21 @@ void GPUTransferManager::Cleanup()
 IplImage* GPUTransferManager::ReceiveImage()
 {
 	int szBuffBytesLocal = ImageWidth * ImageHeight * sizeof (int);
-    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmSumTable, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
-    CheckError(GPUError);
+ //   GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmSumTable, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
+ //   CheckError(GPUError);
 
-	cout << "Wynik" << endl;
-	int a = 0;
-	//wyswietlic tablice
-	for(int i = 0; i < ImageHeight ; i++ )
-	{
-		for(int j = 0; j < ImageWidth ; j++ )
-		{
-			cout << GPUOutput[a]<< "|";
-			++a;
-		}
-		cout << endl;
-	}
+	//cout << "Wynik" << endl;
+	//int a = 0;
+	////wyswietlic tablice
+	//for(int i = 0; i < ImageHeight ; i++ )
+	//{
+	//	for(int j = 0; j < ImageWidth ; j++ )
+	//	{
+	//		cout << GPUOutput[a]<< "|";
+	//		++a;
+	//	}
+	//	cout << endl;
+	//}
 
 
     

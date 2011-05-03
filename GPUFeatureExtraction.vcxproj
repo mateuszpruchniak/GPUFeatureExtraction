@@ -198,7 +198,6 @@
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
     <None Include="CL\GPUCode.cl" />
     <None Include="CL\IntegralImage.cl" />
   </ItemGroup>

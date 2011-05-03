@@ -1,8 +1,37 @@
 
+void sum(__global int* data,int iImageX,int iImageY,int iDevGMEMOffset,int ImageWidth,int ImageHeight)
+{
 
-// warto zastanowic sie nad wykorzystaniem tutaj pamieci lokalnej !!!
+	for(int offset = 2; offset < ImageWidth; offset <<= 1)
+	{
+        if( iImageX-offset >= 0 )
+		{
+			barrier(CLK_GLOBAL_MEM_FENCE);
+			int curr = data[iDevGMEMOffset];
+			int prev = data[iDevGMEMOffset-offset];
+			int result = prev + curr;
+			barrier(CLK_GLOBAL_MEM_FENCE);
+			data[iDevGMEMOffset] = result;	
+		}
+    }
 
-__kernel void ckIntegralImg(__global uchar* ucSource,__global uint* SumTable,int ImageWidth, int ImageHeight, int channels)
+	for(int offset = 1; offset < ImageHeight; offset <<= 1)
+	{
+        if( iImageY-offset >= 0 )
+		{
+			int offsPrev = Offset(iImageX,iImageY-offset,ImageWidth);
+			barrier(CLK_GLOBAL_MEM_FENCE);
+			int curr = data[iDevGMEMOffset];
+			int prev = data[offsPrev];
+			int result = prev + curr;
+			barrier(CLK_GLOBAL_MEM_FENCE);
+			data[iDevGMEMOffset] = result;	
+		}
+    }
+}
+
+__kernel void ckIntegralImg(__global uchar* ucSource,__global int* SumTable00,__global int* SumTable01,__global int* SumTable10,
+							int ImageWidth, int ImageHeight, int channels)
 {
 	
 	if( get_global_id(0) < ImageWidth && get_global_id(1) < ImageHeight )
@@ -13,7 +42,7 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global uint* SumTable,int
 		int iDevGMEMOffset = mul24(iImageY, ImageWidth) + iImageX;
 
 		uchar4 curr4 = GetDataFromGlobalMemory(ucSource,iDevGMEMOffset,nChannels);
-		uint result = 0;
+		int result = 0;
 
 		if( iImageX > 0 )
 		{
@@ -29,45 +58,13 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global uint* SumTable,int
 		}
 
 		barrier(CLK_GLOBAL_MEM_FENCE);
-		SumTable[iDevGMEMOffset] = result;
+		SumTable00[iDevGMEMOffset] = result;
+		SumTable01[iDevGMEMOffset] = result*iImageX;
+		SumTable10[iDevGMEMOffset] = result*iImageY;
 
-		
-		for(int offset = 2; offset < ImageWidth; offset <<= 1)
-		{
-            if( iImageX-offset >= 0 )
-			{
-				barrier(CLK_GLOBAL_MEM_FENCE);
-				uint curr = SumTable[iDevGMEMOffset];
-				uint prev = SumTable[iDevGMEMOffset-offset];
-				uint result = prev + curr;
-				barrier(CLK_GLOBAL_MEM_FENCE);
-				SumTable[iDevGMEMOffset] = result;	
-			}
-        }
-
-		for(int offset = 1; offset < ImageHeight; offset <<= 1)
-		{
-            if( iImageY-offset >= 0 )
-			{
-				int offsPrev = Offset(iImageX,iImageY-offset,ImageWidth);
-				barrier(CLK_GLOBAL_MEM_FENCE);
-				uint curr = SumTable[iDevGMEMOffset];
-				uint prev = SumTable[offsPrev];
-				uint result = prev + curr;
-				barrier(CLK_GLOBAL_MEM_FENCE);
-				SumTable[iDevGMEMOffset] = result;	
-			}
-        }
-
-
-
-
-
-
-
-
-
-
+		sum(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable01,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		sum(SumTable10,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 
 
 	}
