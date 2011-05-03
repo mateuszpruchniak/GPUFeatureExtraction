@@ -90,7 +90,7 @@ IplImage* GPUTransferManager::ReceiveImage()
 	{
 		for(int j = 0; j < ImageWidth ; j++ )
 		{
-			cout << GPUOutput[a];
+			cout << GPUOutput[a]<< "|";
 			++a;
 		}
 		cout << endl;
