@@ -157,21 +157,25 @@ __kernel void ckInvMoments(__global int* SumTable00,__global int* SumTable01,__g
 		int mi02 = m02 - m01 * m01 / m00;
 		int mi12 = m12 - 2*m01*m11/m00 - m01*m02/m00 + 2*m01*m01 / m00*m00;
 		int mi21 = m21 - 2*m10*m11/m00 - m01*m20/m00 + 2*m10*m10 / m00*m00;
+		int mi30 = m30 - 3*m10*m20/m00 + 2*m10*m10*m10/m00*m00;
+		int mi03 = m03 - 3*m01*m02/m00 + 2*m01*m01*m01/m00*m00;
 
 		int eta00 = m00;
 		int eta20 = mi20/m00;
 		int eta02 = mi02/m00;
 		int eta21 = mi21 / (float)pow((float)m00,(float)1.5);
 		int eta12 = mi12 / (float)pow((float)m00,(float)1.5);
-		int eta30 = m30 - 3*m10*m20/m00 + 2*m10*m10*m10/m00*m00;
-		int eta03 = m03 - 3*m01*m02/m00 + 2*m01*m01*m01/m00*m00;
+		int eta30 = mi30 / (float)pow((float)m00,(float)1.5);
+		int eta03 = mi03 / (float)pow((float)m00,(float)1.5);
 
 
 
 		int M1 = eta20 + eta02;
 		int M2 = (eta30 + eta12)^2 + (eta03 + eta21)^2;
+		int M3 = (eta30 + 3*eta12)*(eta30 + eta12)*((eta30 + eta12)^2 - 3*(eta03 + eta21)^2)+
+				 (3*eta21-eta03)*(eta03+eta21)*(3*(eta30+eta12)^2 - (eta03 + eta21)^2);
 
-		SumTable00[iDevGMEMOffset] = M2;
+		SumTable00[iDevGMEMOffset] = M3;
 	}
 }
 
