@@ -142,20 +142,22 @@ __kernel void ckInvMoments(__global int* SumTable00,__global int* SumTable01,__g
 		// eta00
 
 		int m00 = GetGeoMoments(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m01 = GetGeoMoments(SumTable01,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m10 = GetGeoMoments(SumTable10,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m20 = GetGeoMoments(SumTable20,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m02 = GetGeoMoments(SumTable02,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 
 
-		// eta 01
+		int mi20 = m20 - m10 * m10 / m00;
+		
 
-
-
-
-		//M1
-
+		int eta00 = m00;
+		int eta20 = mi20/m00;
 
 		//M1 = eta20 + eta02;
 
 
-		SumTable00[iDevGMEMOffset] = m00;
+		SumTable00[iDevGMEMOffset] = eta20;
 	}
 }
 
