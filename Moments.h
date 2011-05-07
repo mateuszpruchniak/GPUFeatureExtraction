@@ -73,6 +73,8 @@ class Moments
 		 */
         cl_kernel GPUFilter;               
 
+		cl_kernel GPUFilter2;   
+
 		/*!
 		 * Global size of NDRange.
 		 */

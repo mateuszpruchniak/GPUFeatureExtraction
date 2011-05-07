@@ -87,11 +87,76 @@ __kernel void ckIntegralImg(__global uchar* ucSource,__global int* SumTable00,__
 		
 
 
-		// obliczenie momentow geometrycznych
+	} // if( get_global_id(0) < ImageWidth && get_global_id(1) < ImageHeight )
+}
+
+int GetGeoMoments(__global int* data,int iImageX,int iImageY,int iDevGMEMOffset,int ImageWidth,int ImageHeight)
+{
+	int tlx = 0;
+	int tly = 0;
+	int brx = 49;
+	int bry = 49;
+
+	int offA = Offset(tlx,tly,ImageWidth);
+	int offB = Offset(brx,tly,ImageWidth);
+	int offC = Offset(tlx,bry,ImageWidth);
+	int offD = Offset(brx,bry,ImageWidth);
+
+	return data[offA] + data[offD] - data[offB] - data[offC];
+}
+
+
+//A----B
+//|    |
+//|    |
+//C----D
+
+
+//int Offset(int x, int y, int ImageWidth)
+//{
+//	int offset = mul24( (int)y, ImageWidth ) + x;
+//	return offset;
+//}
+
+__kernel void ckInvMoments(__global int* SumTable00,__global int* SumTable01,__global int* SumTable10,
+		__global int* SumTable11,__global int* SumTable20,__global int* SumTable02,
+		__global int* SumTable12,__global int* SumTable21,__global int* SumTable30,__global int* SumTable03,
+		int ImageWidth, int ImageHeight, int channels)
+{
+
+	int tlx = 0;
+	int tly = 0;
+	int brx = 0;
+	int bry = 0;
+
+	if( get_global_id(0) < ImageWidth && get_global_id(1) < ImageHeight )
+	{
+		int nChannels = channels;
+		int iImageX = get_global_id(0) >= ImageWidth  ? ImageWidth-1  : get_global_id(0);
+		int iImageY = get_global_id(1) >= ImageHeight ? ImageHeight-1 : get_global_id(1);
+		int iDevGMEMOffset = mul24(iImageY, ImageWidth) + iImageX;
+		
+		
 		
 
+		// eta00
+
+		int m00 = GetGeoMoments(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 
 
+		// eta 01
+
+
+
+
+		//M1
+
+
+		//M1 = eta20 + eta02;
+
+
+		SumTable00[iDevGMEMOffset] = m00;
 	}
 }
+
 

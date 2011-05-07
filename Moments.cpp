@@ -45,6 +45,7 @@ Moments::Moments(char* source, cl_context GPUContext ,GPUTransferManager* transf
     CheckError(GPUError);
 
     GPUFilter = clCreateKernel(GPUProgram, KernelName, &GPUError);
+	GPUFilter2 = clCreateKernel(GPUProgram, "ckInvMoments", &GPUError);
 }
 
 Moments::~Moments()
@@ -54,7 +55,7 @@ Moments::~Moments()
     if(GPUProgram)clReleaseProgram(GPUProgram);
 
     if(GPUFilter)clReleaseKernel(GPUFilter);
-	
+	if(GPUFilter2)clReleaseKernel(GPUFilter2);
 }
 
 
@@ -105,6 +106,22 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
 	GPUError |= clSetKernelArg(GPUFilter, 13, sizeof(cl_int), (void*)&GPUTransfer->nChannels);
     if(GPUError) return false;
 
+
+	GPUError |= clSetKernelArg(GPUFilter2, 0, sizeof(cl_mem), (void*)&cmSumTable00);
+	GPUError |= clSetKernelArg(GPUFilter2, 1, sizeof(cl_mem), (void*)&cmSumTable01);
+	GPUError |= clSetKernelArg(GPUFilter2, 2, sizeof(cl_mem), (void*)&cmSumTable10);
+	GPUError |= clSetKernelArg(GPUFilter2, 3, sizeof(cl_mem), (void*)&cmSumTable11);
+	GPUError |= clSetKernelArg(GPUFilter2, 4, sizeof(cl_mem), (void*)&cmSumTable20);
+	GPUError |= clSetKernelArg(GPUFilter2, 5, sizeof(cl_mem), (void*)&cmSumTable02);
+	GPUError |= clSetKernelArg(GPUFilter2, 6, sizeof(cl_mem), (void*)&cmSumTable12);
+	GPUError |= clSetKernelArg(GPUFilter2, 7, sizeof(cl_mem), (void*)&cmSumTable21);
+	GPUError |= clSetKernelArg(GPUFilter2, 8, sizeof(cl_mem), (void*)&cmSumTable30);
+	GPUError |= clSetKernelArg(GPUFilter2, 9, sizeof(cl_mem), (void*)&cmSumTable03);
+    GPUError |= clSetKernelArg(GPUFilter2, 10, sizeof(cl_uint), (void*)&GPUTransfer->ImageWidth);
+    GPUError |= clSetKernelArg(GPUFilter2, 11, sizeof(cl_uint), (void*)&GPUTransfer->ImageHeight);
+	GPUError |= clSetKernelArg(GPUFilter2, 12, sizeof(cl_int), (void*)&GPUTransfer->nChannels);
+    if(GPUError) return false;
+
 	size_t GPULocalWorkSize[2]; 
     GPULocalWorkSize[0] = iBlockDimX;
     GPULocalWorkSize[1] = iBlockDimY;
@@ -113,6 +130,11 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
     GPUGlobalWorkSize[1] = shrRoundUp((int)GPULocalWorkSize[1], (int)GPUTransfer->ImageHeight);
 
     if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
+
+
+
+	if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter2, 2, NULL, GPULocalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
+
 
 	// odczyt testowy
 
@@ -136,3 +158,4 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
 
     return true;
 }
+
