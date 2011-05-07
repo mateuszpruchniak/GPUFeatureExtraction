@@ -137,9 +137,6 @@ __kernel void ckInvMoments(__global int* SumTable00,__global int* SumTable01,__g
 		int iDevGMEMOffset = mul24(iImageY, ImageWidth) + iImageX;
 		
 		
-		
-
-		// eta00
 
 		int m00 = GetGeoMoments(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		int m01 = GetGeoMoments(SumTable01,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
