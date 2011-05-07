@@ -144,26 +144,34 @@ __kernel void ckInvMoments(__global int* SumTable00,__global int* SumTable01,__g
 		int m00 = GetGeoMoments(SumTable00,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		int m01 = GetGeoMoments(SumTable01,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		int m10 = GetGeoMoments(SumTable10,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m11 = GetGeoMoments(SumTable11,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		int m20 = GetGeoMoments(SumTable20,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 		int m02 = GetGeoMoments(SumTable02,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
-
+		int m12 = GetGeoMoments(SumTable12,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m21 = GetGeoMoments(SumTable21,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m03 = GetGeoMoments(SumTable03,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
+		int m30 = GetGeoMoments(SumTable30,iImageX,iImageY,iDevGMEMOffset,ImageWidth,ImageHeight);
 
 		int mi00 = m00;
 		int mi20 = m20 - m10 * m10 / m00;
 		int mi02 = m02 - m01 * m01 / m00;
+		int mi12 = m12 - 2*m01*m11/m00 - m01*m02/m00 + 2*m01*m01 / m00*m00;
+		int mi21 = m21 - 2*m10*m11/m00 - m01*m20/m00 + 2*m10*m10 / m00*m00;
 
-		
 		int eta00 = m00;
 		int eta20 = mi20/m00;
 		int eta02 = mi02/m00;
-
+		int eta21 = mi21 / (float)pow((float)m00,(float)1.5);
+		int eta12 = mi12 / (float)pow((float)m00,(float)1.5);
+		int eta30 = m30 - 3*m10*m20/m00 + 2*m10*m10*m10/m00*m00;
+		int eta03 = m03 - 3*m01*m02/m00 + 2*m01*m01*m01/m00*m00;
 
 
 
 		int M1 = eta20 + eta02;
+		int M2 = (eta30 + eta12)^2 + (eta03 + eta21)^2;
 
-
-		SumTable00[iDevGMEMOffset] = eta20;
+		SumTable00[iDevGMEMOffset] = M2;
 	}
 }
 
