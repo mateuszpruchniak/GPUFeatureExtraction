@@ -129,11 +129,21 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
 
     GPUGlobalWorkSize[1] = shrRoundUp((int)GPULocalWorkSize[1], (int)GPUTransfer->ImageHeight);
 
-    if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
 
-
-
-	if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter2, 2, NULL, GPULocalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
+	/*clock_t start, finish;
+	double duration = 0;
+	int i = 0;
+	start = clock();*/
+	//for(i = 0 ; i < 1000 ; i++ )
+	//{
+		if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
+		if( clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter2, 2, NULL, GPULocalWorkSize, GPULocalWorkSize, 0, NULL, NULL) ) return false;
+	//}
+	/*finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "Czas wykonania "<< i <<" iteracji: " << endl;
+	cout << duration << endl;
+	cout << "-------------------------\n\n" << endl;*/
 
 
 	// odczyt testowy
