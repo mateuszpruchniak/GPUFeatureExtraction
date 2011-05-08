@@ -135,7 +135,7 @@ bool GPUTransferManager::CheckImage(IplImage* img)
 
 void GPUTransferManager::CreateBuffers()
 {
-	int szBuffBytesSumTable = ImageHeight * ImageHeight * sizeof(int);
+	int szBuffBytesSumTable = ImageHeight * ImageHeight * sizeof(double);
 	cmPinnedBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytesSumTable, NULL, &GPUError);
 	CheckError(GPUError);
 

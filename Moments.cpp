@@ -76,7 +76,7 @@ void Moments::CheckError(int code)
 bool Moments::process(cl_command_queue GPUCommandQueue)
 {
 	
-	int szBuffBytesSumTable = GPUTransfer->ImageHeight * GPUTransfer->ImageHeight * sizeof(int);
+	int szBuffBytesSumTable = GPUTransfer->ImageHeight * GPUTransfer->ImageHeight * sizeof(double);
 	cl_mem cmSumTable00 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
 	cl_mem cmSumTable01 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
 	cl_mem cmSumTable10 = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
@@ -148,7 +148,8 @@ bool Moments::process(cl_command_queue GPUCommandQueue)
 	{
 		for(int j = 0; j < GPUTransfer->ImageWidth ; j++ )
 		{
-			cout << GPUTransfer->GPUOutput[a]<< "|";
+			double* tmp = (double*)GPUTransfer->GPUOutput;
+			cout << tmp[a]<< "|";
 			++a;
 		}
 		cout << endl;
