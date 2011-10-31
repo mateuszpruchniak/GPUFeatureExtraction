@@ -73,13 +73,13 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\bin\Win64\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\DisCODe\DisCODeEnv\libs\opencv\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\DisCODe\DisCODeEnv\libs\opencv\include\opencv;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\opencv\build\lib\Debug;C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\lib\Win32;C:\NVIDIA GPU Computing SDK 4.0\shared\lib\Win32;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\inc;C:\NVIDIA GPU Computing SDK 4.0\shared\inc;C:\opencv\build\install\include\opencv;C:\opencv\build\install\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../common/inc/;../../../shared/inc/;%(AdditionalIncludeDirectories);C:\OpenCV2.0\include\opencv</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../common/inc/;../../../shared/inc/;%(AdditionalIncludeDirectories);C:\opencv\build\install\bin</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -90,14 +90,15 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>oclUtils32D.lib;glut32.lib;OpenCL.lib;shrUtils32D.lib;C:\OpenCV2.2\lib\opencv_core220d.lib;C:\OpenCV2.2\lib\opencv_highgui220d.lib;C:\OpenCV2.2\lib\opencv_video220d.lib;C:\OpenCV2.2\lib\opencv_ml220d.lib;C:\OpenCV2.2\lib\opencv_legacy220d.lib;C:\OpenCV2.2\lib\opencv_imgproc220d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../../common/lib/;../../../shared/lib;../../common/lib/$(Platform)/;%(AdditionalLibraryDirectories);D:\DisCODe\DisCODeEnv\libs\opencv\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>oclUtils32D.lib;OpenCL.lib;shrUtils32D.lib;C:\opencv\build\install\lib\opencv_core231d.lib;C:\opencv\build\install\lib\opencv_highgui231d.lib;C:\opencv\build\install\lib\opencv_ml231d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../common/lib/;../../../shared/lib;../../common/lib/$(Platform)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

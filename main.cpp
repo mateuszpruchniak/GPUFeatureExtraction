@@ -31,19 +31,20 @@ int main(int argc, const char** argv)
 
 
 	
-	GPU->AddProcessing( new Moments("./CL/IntegralImage.cl",GPU->GPUContext,GPU->Transfer,"ckIntegralImg") );
+	//GPU->AddProcessing( new Moments("./CL/IntegralImage.cl",GPU->GPUContext,GPU->Transfer,"ckIntegralImg") );
 
-	GPU->Transfer->CreateBuffers();
+
+	/*GPU->Transfer->CreateBuffers();
 	GPU->Transfer->SendImage(img);
 	GPU->Process();
-	img = GPU->Transfer->ReceiveImage();
+	img = GPU->Transfer->ReceiveImage();*/
 
 
 	cout << "-------------------------\n\n" << endl;
 
-   /* cvNamedWindow("sobel", CV_WINDOW_AUTOSIZE); 
-    cvShowImage("sobel", img2 );
-    cvWaitKey(2);*/
+    cvNamedWindow("sobel", CV_WINDOW_AUTOSIZE); 
+    cvShowImage("sobel", img );
+    cvWaitKey(2);
 
 
 
