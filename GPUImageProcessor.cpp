@@ -70,7 +70,7 @@ GPUImageProcessor::~GPUImageProcessor()
     if(GPUContext)clReleaseContext(GPUContext);
 }
 
-void GPUImageProcessor::AddProcessing(Moments* filter)
+void GPUImageProcessor::AddProcessing(Feature* filter)
 {
     filters.push_back(filter);
 }

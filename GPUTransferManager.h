@@ -32,11 +32,19 @@ class GPUTransferManager
 {
 	private:
                 
-		         
+
+
+        /*!
+		 * Mapped Pointer to pinned Host output buffer for host processing.
+		 */
+		cl_uint* GPUOutput;
+
+
         /*!
 		 * OpenCL host memory output buffer object:  pinned.
 		 */
 		cl_mem cmPinnedBufOutput;
+
 
 
 		/*!
@@ -48,17 +56,9 @@ class GPUTransferManager
 		 * Image return from buffer.
 		 */
         IplImage* image;
-		
+
 
     public:
-
-		
-        /*!
-		 * Mapped Pointer to pinned Host output buffer for host processing.
-		 */
-		cl_uint* GPUOutput;
-
-
         /*!
 		 * The size in bytes of the buffer memory object to be allocated.
 		 */
@@ -82,7 +82,7 @@ class GPUTransferManager
         /*!
 		 * OpenCL device memory output buffer object.
 		 */
-		cl_mem cmSumTable;
+		cl_mem cmDevBufOutput;
 
 		/*!
 		 * Image width.
@@ -145,4 +145,5 @@ class GPUTransferManager
         void CreateBuffers();
 
 };
+
 

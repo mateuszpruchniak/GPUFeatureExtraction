@@ -74,48 +74,27 @@ void GPUTransferManager::Cleanup()
     cout << "\nStarting Cleanup...\n\n";
 
     if(cmDevBuf)clReleaseMemObject(cmDevBuf);
-    if(cmDevBuf)clReleaseMemObject(cmSumTable);
 }
 
 IplImage* GPUTransferManager::ReceiveImage()
 {
-	int szBuffBytesLocal = ImageWidth * ImageHeight * sizeof (int);
- //   GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmSumTable, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
- //   CheckError(GPUError);
-
-	//cout << "Wynik" << endl;
-	//int a = 0;
-	////wyswietlic tablice
-	//for(int i = 0; i < ImageHeight ; i++ )
-	//{
-	//	for(int j = 0; j < ImageWidth ; j++ )
-	//	{
-	//		cout << GPUOutput[a]<< "|";
-	//		++a;
-	//	}
-	//	cout << endl;
-	//}
-
-
-    
+	int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
+    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
+    CheckError(GPUError);
+    image->imageData = (char*)GPUOutput;
     return image;
 }
 
 void GPUTransferManager::SendImage( IplImage* imageToLoad )
 {
+	image = imageToLoad;
 	ImageHeight = imageToLoad->height;
     ImageWidth = imageToLoad->width;
     cout << "img " << ImageWidth << "x" << ImageHeight << endl;
     int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
-
-	CvMat *mat = cvCreateMat(imageToLoad->height,imageToLoad->width,CV_8UC3 );
-	cvConvert( imageToLoad, mat );
-
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)mat->data.ptr , 0, NULL, NULL);
+	image = imageToLoad;
+    GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageToLoad->imageData, 0, NULL, NULL);
     CheckError(GPUError);
-
-
-
 }
 
 bool GPUTransferManager::CheckImage(IplImage* img)
@@ -135,12 +114,11 @@ bool GPUTransferManager::CheckImage(IplImage* img)
 
 void GPUTransferManager::CreateBuffers()
 {
-	int szBuffBytesSumTable = ImageHeight * ImageHeight * sizeof(int);
-	cmPinnedBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytesSumTable, NULL, &GPUError);
+	cmPinnedBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
 
 	// Enqueues a command to map a region of the buffer object given by buffer into the host address space and returns a pointer to this mapped region.
-	GPUOutput = (cl_uint*)clEnqueueMapBuffer(GPUCommandQueue, cmPinnedBufOutput, CL_TRUE, CL_MAP_WRITE, 0, szBuffBytesSumTable, 0, NULL, NULL, &GPUError);
+	GPUOutput = (cl_uint*)clEnqueueMapBuffer(GPUCommandQueue, cmPinnedBufOutput, CL_TRUE, CL_MAP_WRITE, 0, szBuffBytes, 0, NULL, NULL, &GPUError);
 	CheckError(GPUError);
 
 	// Create the device buffers in GMEM on each device, for now we have one device :)
@@ -148,7 +126,7 @@ void GPUTransferManager::CreateBuffers()
 	CheckError(GPUError);
 
 	// Create the device buffers in GMEM on each device, for now we have one device :)
-	cmSumTable = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytesSumTable, NULL, &GPUError);
+	cmDevBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
 }
 

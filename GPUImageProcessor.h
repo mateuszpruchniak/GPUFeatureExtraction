@@ -19,7 +19,7 @@
 #include "cxmisc.h"
 #include "highgui.h"
 #include "GPUTransferManager.h"
-#include "Moments.h"
+#include "Feature.h"
 
 using namespace std;
 
@@ -66,7 +66,7 @@ class GPUImageProcessor
 		/*!
 		 * List of pointer to processing objects.
 		 */
-        vector<Moments*> filters;        
+        vector<Feature*> filters;        
     
     public:
  
@@ -100,7 +100,7 @@ class GPUImageProcessor
 		/*!
 		 * Add filters to image processing list.
 		 */
-        void AddProcessing(Moments* filter);
+        void AddProcessing(Feature* filter);
         
         /*!
 		 * Check error code.

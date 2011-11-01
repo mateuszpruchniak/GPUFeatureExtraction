@@ -23,22 +23,20 @@ int main(int argc, const char** argv)
 {
 
 
-
-	IplImage* img = cvLoadImage("./img/1.bmp");
+	IplImage* img = cvLoadImage("./img/car.jpg");
 	
 
 	GPUImageProcessor* GPU = new GPUImageProcessor(img->width,img->height,img->nChannels);
 
 
 	
-	//GPU->AddProcessing( new Moments("./CL/IntegralImage.cl",GPU->GPUContext,GPU->Transfer,"ckIntegralImg") );
+	GPU->AddProcessing( new Feature("./CL/SIFT.cl",GPU->GPUContext,GPU->Transfer,"ckBuildPyramid") );
 
 
-	/*GPU->Transfer->CreateBuffers();
+	GPU->Transfer->CreateBuffers();
 	GPU->Transfer->SendImage(img);
 	GPU->Process();
-	img = GPU->Transfer->ReceiveImage();*/
-
+	img = GPU->Transfer->ReceiveImage();
 
 	cout << "-------------------------\n\n" << endl;
 

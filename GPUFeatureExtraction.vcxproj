@@ -187,7 +187,7 @@
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
-    <ClCompile Include="Moments.cpp" />
+    <ClCompile Include="Feature.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="GPUCode.cl">
@@ -201,11 +201,12 @@
   <ItemGroup>
     <None Include="CL\GPUCode.cl" />
     <None Include="CL\IntegralImage.cl" />
+    <None Include="CL\SIFT.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
-    <ClInclude Include="Moments.h" />
+    <ClInclude Include="Feature.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
