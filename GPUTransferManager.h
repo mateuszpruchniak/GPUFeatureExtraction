@@ -19,6 +19,7 @@
 #include "cv.h"
 #include "cxmisc.h"
 #include "highgui.h"
+#include "OpenCLImage.h"
 
 using namespace std;
 
@@ -144,6 +145,10 @@ class GPUTransferManager
 		 */
         void CreateBuffers();
 
+		/*!
+		 * Create buffer and send image
+		 */
+        OpenCLImage* CreateBufferAndSendImage(IplImage*);
 };
 
 
