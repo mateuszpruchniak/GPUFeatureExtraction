@@ -79,7 +79,7 @@ void GPUTransferManager::Cleanup()
 IplImage* GPUTransferManager::ReceiveImage()
 {
 	int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
-    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
+    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
     CheckError(GPUError);
     image->imageData = (char*)GPUOutput;
     return image;

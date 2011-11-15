@@ -212,6 +212,18 @@
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
     <None Include="CL\SIFT.cl" />
+    <None Include="GPU\OpenCL\Binarization.cl" />
+    <None Include="GPU\OpenCL\DilateFilter.cl" />
+    <None Include="GPU\OpenCL\ErodeFilter.cl" />
+    <None Include="GPU\OpenCL\GPUCode.cl" />
+    <None Include="GPU\OpenCL\HighpassFilter.cl" />
+    <None Include="GPU\OpenCL\LowpassFilter.cl" />
+    <None Include="GPU\OpenCL\LUTFilter.cl" />
+    <None Include="GPU\OpenCL\MaxFilter.cl" />
+    <None Include="GPU\OpenCL\MedianFilter.cl" />
+    <None Include="GPU\OpenCL\MinFilter.cl" />
+    <None Include="GPU\OpenCL\RGB2HSV.cl" />
+    <None Include="GPU\OpenCL\RGB2YUV.cl" />
     <None Include="SIFT.cl" />
   </ItemGroup>
   <ItemGroup>
