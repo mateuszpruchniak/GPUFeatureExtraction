@@ -19,7 +19,7 @@
 #include "cxmisc.h"
 #include "highgui.h"
 #include "GPUTransferManager.h"
-#include "Feature.h"
+#include "GPU\Filter.h"
 
 using namespace std;
 
@@ -66,7 +66,7 @@ class GPUImageProcessor
 		/*!
 		 * List of pointer to processing objects.
 		 */
-        vector<Feature*> filters;        
+        vector<Filter*> filters;        
     
     public:
  
@@ -100,7 +100,7 @@ class GPUImageProcessor
 		/*!
 		 * Add filters to image processing list.
 		 */
-        void AddProcessing(Feature* filter);
+        void AddProcessing(Filter* filter);
         
         /*!
 		 * Check error code.
@@ -113,28 +113,3 @@ class GPUImageProcessor
         ~GPUImageProcessor();
 };
 
-
-
-typedef struct {
-	float xpos;
-	float ypos;   
-	float scale;
-	float sharpness;
-	float edgeness;
-	float orientation;
-	float score;
-	float ambiguity;
-	int match;
-	float match_xpos;
-	float match_ypos;
-	float match_error;
-	float empty[4];
-	float data[128];
-} SiftPoint;
-
-typedef struct {
-	int numPts;         // Number of available Sift points
-	int maxPts;         // Number of allocated Sift points
-	SiftPoint *h_data;  // Host (CPU) data
-	SiftPoint *d_data;  // Device (GPU) data
-} SiftData;

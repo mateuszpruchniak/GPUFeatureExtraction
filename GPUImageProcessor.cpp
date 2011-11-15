@@ -70,7 +70,7 @@ GPUImageProcessor::~GPUImageProcessor()
     if(GPUContext)clReleaseContext(GPUContext);
 }
 
-void GPUImageProcessor::AddProcessing(Feature* filter)
+void GPUImageProcessor::AddProcessing(Filter* filter)
 {
     filters.push_back(filter);
 }
@@ -80,6 +80,6 @@ void GPUImageProcessor::Process()
     int i = (int)filters.size();
     for( int j = 0 ; j < i ; j++)
     {
-        filters[j]->process(GPUCommandQueue);
+        filters[j]->filter(GPUCommandQueue);
     }
 }

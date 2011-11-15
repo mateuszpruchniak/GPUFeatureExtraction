@@ -184,11 +184,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Filter.cpp" />
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
     <ClCompile Include="Feature.cpp" />
-    <ClCompile Include="LowpassFilter.cpp" />
+    <ClCompile Include="GPU\ContextFilter.cpp" />
+    <ClCompile Include="GPU\ContextFreeFilter.cpp" />
+    <ClCompile Include="GPU\Filter.cpp" />
+    <ClCompile Include="GPU\HighpassFilter.cpp" />
+    <ClCompile Include="GPU\LinearFilter.cpp" />
+    <ClCompile Include="GPU\LowpassFilter.cpp" />
+    <ClCompile Include="GPU\MeanFilter.cpp" />
+    <ClCompile Include="GPU\NonLinearFilter.cpp" />
+    <ClCompile Include="GPU\Transformation.cpp" />
     <ClCompile Include="SIFT.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="main.cpp" />
@@ -204,20 +211,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
-    <None Include="CL\GPUCode.cl" />
-    <None Include="CL\IntegralImage.cl" />
     <None Include="CL\SIFT.cl" />
     <None Include="SIFT.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h" />
-    <ClInclude Include="Filter.h" />
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
     <ClInclude Include="Feature.h" />
+    <ClInclude Include="GPU\ContextFilter.h" />
+    <ClInclude Include="GPU\ContextFreeFilter.h" />
+    <ClInclude Include="GPU\Filter.h" />
+    <ClInclude Include="GPU\HighpassFilter.h" />
+    <ClInclude Include="GPU\LinearFilter.h" />
+    <ClInclude Include="GPU\LowpassFilter.h" />
+    <ClInclude Include="GPU\MeanFilter.h" />
+    <ClInclude Include="GPU\NonLinearFilter.h" />
+    <ClInclude Include="GPU\Transformation.h" />
     <ClInclude Include="KeyPoint.h" />
-    <ClInclude Include="LowpassFilter.h" />
-    <ClInclude Include="OpenCLImage.h" />
     <ClInclude Include="SIFT.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />

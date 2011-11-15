@@ -131,17 +131,3 @@ void GPUTransferManager::CreateBuffers()
 }
 
 
-
-OpenCLImage* GPUTransferManager::CreateBufferAndSendImage(IplImage *img)  // zwaolnic pamiec!!!
-{
-	OpenCLImage* CLImg = new OpenCLImage;
-
-	CLImg->cmDevBuf = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
-	CheckError(GPUError);
-    int szBuffBytesLocal = img->width * img->height * nChannels * sizeof (char);
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, CLImg->cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)img->imageData, 0, NULL, NULL);
-    CheckError(GPUError);
-
-
-	return CLImg;
-}
