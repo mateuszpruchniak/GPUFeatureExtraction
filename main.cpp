@@ -28,8 +28,8 @@ int main()
 	SIFT *sift = new SIFT("C:\\car.jpg", 4, 2);
 
 	sift->DoSift();				// Find keypoints
-	sift->ShowAbsSigma();		// Display the sigma table
-	sift->ShowKeypoints();		// Show the keypoints
+	//sift->ShowAbsSigma();		// Display the sigma table
+	//sift->ShowKeypoints();		// Show the keypoints
 	cvWaitKey(0);				// Wait for a keypress
 
 	// Cleanup and exit
