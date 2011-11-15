@@ -90,7 +90,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>oclUtils32D.lib;OpenCL.lib;shrUtils32D.lib;C:\opencv\build\install\lib\opencv_core231d.lib;C:\opencv\build\install\lib\opencv_highgui231d.lib;C:\opencv\build\install\lib\opencv_ml231d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>oclUtils32D.lib;OpenCL.lib;shrUtils32D.lib;C:\opencv\build\install\lib\opencv_core231d.lib;C:\opencv\build\install\lib\opencv_highgui231d.lib;C:\opencv\build\install\lib\opencv_ml231d.lib;C:\opencv\build\install\lib\opencv_imgproc231d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../common/lib/;../../../shared/lib;../../common/lib/$(Platform)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -185,9 +185,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GPUImageProcessor.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
     <ClCompile Include="Feature.cpp" />
+    <ClCompile Include="SIFT.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuildStep Include="GPUCode.cl">
@@ -199,15 +201,20 @@
     </CustomBuildStep>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram11.cd" />
     <None Include="CL\GPUCode.cl" />
     <None Include="CL\IntegralImage.cl" />
-    <None Include="CL\SIFT.cl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Descriptor.h" />
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
     <ClInclude Include="Feature.h" />
+    <ClInclude Include="KeyPoint.h" />
     <ClInclude Include="OpenCLImage.h" />
+    <ClInclude Include="SIFT.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
