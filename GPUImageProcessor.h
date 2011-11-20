@@ -95,7 +95,7 @@ class GPUImageProcessor
 		/*!
 		 * Start image processing. For each element of the image processing list called method filter().
 		 */
-        void Process();
+        void Process(float sigma);
 
 		/*!
 		 * Add filters to image processing list.

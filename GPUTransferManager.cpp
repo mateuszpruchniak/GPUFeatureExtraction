@@ -99,16 +99,16 @@ void GPUTransferManager::SendImage( IplImage* imageToLoad )
 
 bool GPUTransferManager::CheckImage(IplImage* img)
 {
-	int ImageHeight = img->height;
-    int ImageWidth = img->width;
-    int size = ImageHeight * ImageWidth * nChannels * sizeof(char);
-    if( size > szBuffBytes )
-    {
-    	// Allocate pinned input and output host image buffers:  mem copy operations to/from pinned memory is much faster than paged memory
-		//szBuffBytes = size;
-		//CreateBuffers();
-    	return false;
-    }
+	//int ImageHeight = img->height;
+ //   int ImageWidth = img->width;
+ //   int size = ImageHeight * ImageWidth * nChannels * sizeof(char);
+ //   if( size > szBuffBytes )
+ //   {
+ //   	// Allocate pinned input and output host image buffers:  mem copy operations to/from pinned memory is much faster than paged memory
+	//	//szBuffBytes = size;
+	//	//CreateBuffers();
+ //   	return false;
+ //   }
 	return true;
 }
 

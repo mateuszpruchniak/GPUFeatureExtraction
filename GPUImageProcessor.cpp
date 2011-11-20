@@ -75,11 +75,11 @@ void GPUImageProcessor::AddProcessing(Filter* filter)
     filters.push_back(filter);
 }
 
-void GPUImageProcessor::Process()
+void GPUImageProcessor::Process(float sigma)
 {
     int i = (int)filters.size();
     for( int j = 0 ; j < i ; j++)
     {
-        filters[j]->filter(GPUCommandQueue);
+        filters[j]->filter(GPUCommandQueue, sigma);
     }
 }
