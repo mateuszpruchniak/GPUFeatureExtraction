@@ -25,7 +25,7 @@ using namespace std;
 int main()
 {
 	// Create an instance of SIFT
-	SIFT *sift = new SIFT("C:\\car.jpg", 4, 2);
+	SIFT *sift = new SIFT("C:\\opel.jpg", 4, 2);
 
 	sift->DoSift();				// Find keypoints
 	//sift->ShowAbsSigma();		// Display the sigma table

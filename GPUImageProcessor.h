@@ -98,6 +98,13 @@ class GPUImageProcessor
         void Process(float sigma);
 
 		/*!
+		 * 
+		 */
+        void Process( IplImage* a, IplImage* b );
+
+
+
+		/*!
 		 * Add filters to image processing list.
 		 */
         void AddProcessing(Filter* filter);

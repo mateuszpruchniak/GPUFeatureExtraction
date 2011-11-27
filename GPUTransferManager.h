@@ -79,6 +79,8 @@ class GPUTransferManager
 		 */
         cl_mem cmDevBuf;
 
+		cl_mem cmDevBuf2;
+
         /*!
 		 * OpenCL device memory output buffer object.
 		 */
@@ -119,12 +121,18 @@ class GPUTransferManager
 		 */
         void SendImage( IplImage*  );
 
+		void SendImageData(char* imageData, int height, int width);
+
         /*!
 		 * Get image from GPU memory.
 		 */
         IplImage* ReceiveImage();
+
+
+		void ReceiveImageData(char* imageData);
         
-        /*!
+		
+		/*!
 		 * Checking size of image(if image size is larger than max size, this function increases buffers)
 		 */
 		bool CheckImage(IplImage*);

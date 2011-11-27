@@ -83,3 +83,14 @@ void GPUImageProcessor::Process(float sigma)
         filters[j]->filter(GPUCommandQueue, sigma);
     }
 }
+
+
+
+void GPUImageProcessor::Process( IplImage* a, IplImage* b )
+{
+    int i = (int)filters.size();
+    for( int j = 0 ; j < i ; j++)
+    {
+        filters[j]->filter(GPUCommandQueue, a , b);
+    }
+}

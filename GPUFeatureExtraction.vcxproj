@@ -226,6 +226,7 @@
     <None Include="GPU\OpenCL\MinFilter.cl" />
     <None Include="GPU\OpenCL\RGB2HSV.cl" />
     <None Include="GPU\OpenCL\RGB2YUV.cl" />
+    <None Include="GPU\OpenCL\Subtract.cl" />
     <None Include="SIFT.cl" />
   </ItemGroup>
   <ItemGroup>

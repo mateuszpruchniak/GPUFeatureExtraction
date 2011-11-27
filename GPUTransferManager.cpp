@@ -79,10 +79,25 @@ void GPUTransferManager::Cleanup()
 IplImage* GPUTransferManager::ReceiveImage()
 {
 	int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
-    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput, CL_TRUE, 0, szBuffBytesLocal, (void*)GPUOutput, 0, NULL, NULL);
+    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput, CL_TRUE, 0, szBuffBytesLocal, (void*)image->imageData, 0, NULL, NULL);
     CheckError(GPUError);
-    image->imageData = (char*)GPUOutput;
     return image;
+}
+
+void GPUTransferManager::ReceiveImageData(char* imageData)
+{
+	int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
+    GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput, CL_TRUE, 0, szBuffBytesLocal, (void*)imageData, 0, NULL, NULL);
+    CheckError(GPUError);
+}
+
+void GPUTransferManager::SendImageData(char* imageData, int height, int width)
+{
+	ImageHeight = height;
+    ImageWidth = width;
+    int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
+    GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageData, 0, NULL, NULL);
+    CheckError(GPUError);
 }
 
 void GPUTransferManager::SendImage( IplImage* imageToLoad )
@@ -92,7 +107,6 @@ void GPUTransferManager::SendImage( IplImage* imageToLoad )
     ImageWidth = imageToLoad->width;
     cout << "img " << ImageWidth << "x" << ImageHeight << endl;
     int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
-	image = imageToLoad;
     GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageToLoad->imageData, 0, NULL, NULL);
     CheckError(GPUError);
 }
@@ -114,15 +128,18 @@ bool GPUTransferManager::CheckImage(IplImage* img)
 
 void GPUTransferManager::CreateBuffers()
 {
-	cmPinnedBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &GPUError);
-	CheckError(GPUError);
+	//cmPinnedBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, szBuffBytes, NULL, &GPUError);
+	//CheckError(GPUError);
 
-	// Enqueues a command to map a region of the buffer object given by buffer into the host address space and returns a pointer to this mapped region.
-	GPUOutput = (cl_uint*)clEnqueueMapBuffer(GPUCommandQueue, cmPinnedBufOutput, CL_TRUE, CL_MAP_WRITE, 0, szBuffBytes, 0, NULL, NULL, &GPUError);
-	CheckError(GPUError);
+	//// Enqueues a command to map a region of the buffer object given by buffer into the host address space and returns a pointer to this mapped region.
+	//GPUOutput = (cl_uint*)clEnqueueMapBuffer(GPUCommandQueue, cmPinnedBufOutput, CL_TRUE, CL_MAP_WRITE, 0, szBuffBytes, 0, NULL, NULL, &GPUError);
+	//CheckError(GPUError);
 
 	// Create the device buffers in GMEM on each device, for now we have one device :)
 	cmDevBuf = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
+	CheckError(GPUError);
+
+	cmDevBuf2 = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
 
 	// Create the device buffers in GMEM on each device, for now we have one device :)
