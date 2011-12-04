@@ -478,7 +478,9 @@ void SIFT::DetectExtremaFunc()
 				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
 				GPUDetectExtrema->Process(down,middle,up);
 				GPUDetectExtrema->Transfer->ReceiveImageData(m_extrema[i][j-1]->imageData);
-
+				cvNamedWindow("Detect", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("Detect", m_extrema[i][j-1] );
+				cvWaitKey(2);
 			}
 			
 			printf("Found keypoints CPU : %d \n", num);
