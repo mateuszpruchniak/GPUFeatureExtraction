@@ -20,6 +20,8 @@ public:
 	*/
 	DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer);
 
+	int number;
+
 	/*!
 	* Start
 	*/

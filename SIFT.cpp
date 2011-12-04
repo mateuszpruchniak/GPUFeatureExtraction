@@ -485,7 +485,7 @@ void SIFT::DetectExtremaFunc()
 
 
 
-
+			printf("Found keypoints CPU : %d \n", num);
 
 
 
