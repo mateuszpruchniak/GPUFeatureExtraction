@@ -189,6 +189,7 @@
     <ClCompile Include="Feature.cpp" />
     <ClCompile Include="GPU\ContextFilter.cpp" />
     <ClCompile Include="GPU\ContextFreeFilter.cpp" />
+    <ClCompile Include="GPU\DetectExtrema.cpp" />
     <ClCompile Include="GPU\Filter.cpp" />
     <ClCompile Include="GPU\HighpassFilter.cpp" />
     <ClCompile Include="GPU\LinearFilter.cpp" />
@@ -215,6 +216,7 @@
     <None Include="CL\SIFT.cl" />
     <None Include="GPU\OpenCL\Binarization.cl" />
     <None Include="GPU\OpenCL\BlurGaussFilter.cl" />
+    <None Include="GPU\OpenCL\DetectExtrema.cl" />
     <None Include="GPU\OpenCL\DilateFilter.cl" />
     <None Include="GPU\OpenCL\ErodeFilter.cl" />
     <None Include="GPU\OpenCL\GPUCode.cl" />
@@ -236,6 +238,7 @@
     <ClInclude Include="Feature.h" />
     <ClInclude Include="GPU\ContextFilter.h" />
     <ClInclude Include="GPU\ContextFreeFilter.h" />
+    <ClInclude Include="GPU\DetectExtrema.h" />
     <ClInclude Include="GPU\Filter.h" />
     <ClInclude Include="GPU\HighpassFilter.h" />
     <ClInclude Include="GPU\LinearFilter.h" />

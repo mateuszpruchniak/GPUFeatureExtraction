@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="GPUImageProcessor.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="GPUTransferManager.cpp" />
+    <ClCompile Include="Feature.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="SIFT.cpp" />
+    <ClCompile Include="GPU\ContextFilter.cpp" />
+    <ClCompile Include="GPU\ContextFreeFilter.cpp" />
+    <ClCompile Include="GPU\Filter.cpp" />
+    <ClCompile Include="GPU\HighpassFilter.cpp" />
+    <ClCompile Include="GPU\LinearFilter.cpp" />
+    <ClCompile Include="GPU\LowpassFilter.cpp" />
+    <ClCompile Include="GPU\NonLinearFilter.cpp" />
+    <ClCompile Include="GPU\Transformation.cpp" />
+    <ClCompile Include="GPU\MeanFilter.cpp" />
+    <ClCompile Include="GPU\Subtract.cpp" />
+    <ClCompile Include="GPU\DetectExtrema.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Descriptor.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Feature.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUImageProcessor.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPUTransferManager.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyPoint.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SIFT.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\MeanFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\ContextFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\ContextFreeFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Filter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\HighpassFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\LinearFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\LowpassFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\NonLinearFilter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Transformation.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\Subtract.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GPU\DetectExtrema.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram11.cd" />
+    <None Include="CL\SIFT.cl" />
+    <None Include="SIFT.cl" />
+    <None Include="GPU\OpenCL\Binarization.cl" />
+    <None Include="GPU\OpenCL\DilateFilter.cl" />
+    <None Include="GPU\OpenCL\ErodeFilter.cl" />
+    <None Include="GPU\OpenCL\GPUCode.cl" />
+    <None Include="GPU\OpenCL\HighpassFilter.cl" />
+    <None Include="GPU\OpenCL\LowpassFilter.cl" />
+    <None Include="GPU\OpenCL\LUTFilter.cl" />
+    <None Include="GPU\OpenCL\MaxFilter.cl" />
+    <None Include="GPU\OpenCL\MedianFilter.cl" />
+    <None Include="GPU\OpenCL\MinFilter.cl" />
+    <None Include="GPU\OpenCL\RGB2HSV.cl" />
+    <None Include="GPU\OpenCL\RGB2YUV.cl" />
+    <None Include="GPU\OpenCL\BlurGaussFilter.cl" />
+    <None Include="GPU\OpenCL\Subtract.cl" />
+    <None Include="GPU\OpenCL\DetectExtrema.cl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header">
+      <UniqueIdentifier>{e89187a4-2439-4a05-89b7-d848fd0791db}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

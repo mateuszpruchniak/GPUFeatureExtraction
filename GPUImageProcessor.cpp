@@ -94,3 +94,12 @@ void GPUImageProcessor::Process( IplImage* a, IplImage* b )
         filters[j]->filter(GPUCommandQueue, a , b);
     }
 }
+
+void GPUImageProcessor::Process( IplImage* a, IplImage* b, IplImage* c )
+{
+    int i = (int)filters.size();
+    for( int j = 0 ; j < i ; j++)
+    {
+        filters[j]->filter(GPUCommandQueue, a , b, c);
+    }
+}

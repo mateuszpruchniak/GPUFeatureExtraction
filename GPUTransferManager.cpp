@@ -139,6 +139,9 @@ void GPUTransferManager::CreateBuffers()
 	cmDevBuf2 = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
 
+	cmDevBuf3 = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
+	CheckError(GPUError);
+
 	// Create the device buffers in GMEM on each device, for now we have one device :)
 	cmDevBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
