@@ -159,18 +159,6 @@ __kernel void ckDetect(__global float* down, __global float* middle, __global fl
 						GetPixel(middle, pozX-1, pozY+1, ImageWidth, ImageHeight) - 
 						GetPixel(middle, pozX+1, pozY-1, ImageWidth, ImageHeight)) / 4.0;
 
-				/*dxx = (cvGetReal2D(middle, yi-1, xi) +
-						cvGetReal2D(middle, yi+1, xi) -
-						2.0*cvGetReal2D(middle, yi, xi));
-
-				dyy = (cvGetReal2D(middle, yi, xi-1) +
-						cvGetReal2D(middle, yi, xi+1) -
-						2.0*cvGetReal2D(middle, yi, xi));
-
-				dxy = (cvGetReal2D(middle, yi-1, xi-1) +
-						cvGetReal2D(middle, yi+1, xi+1) -
-						cvGetReal2D(middle, yi+1, xi-1) - 
-						cvGetReal2D(middle, yi-1, xi+1)) / 4.0;*/
 
 				trH = dxx + dyy;
 				detH = dxx*dyy - dxy*dxy;
