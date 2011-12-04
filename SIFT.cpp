@@ -353,124 +353,83 @@ void SIFT::DetectExtremaFunc()
 
 			if(SIFTCPU)
 			{
-				
-			}
-			else 
-			{
-				GPUDetectExtrema->Process(down,middle,up);
-				//GPUDetectExtrema->Transfer->ReceiveImageData(middle->imageData);
-
-				
-			}
-			
-
-			for(xi=1;xi<m_dogList[i][j]->width-1;xi++)
-			{
-				for(yi=1;yi<m_dogList[i][j]->height-1;yi++)
+				for(xi=1;xi<m_dogList[i][j]->width-1;xi++)
 				{
-					// true if a keypoint is a maxima/minima
-					// but needs to be tested for contrast/edge thingy
-					bool justSet = false;
-
-					double currentPixel = cvGetReal2D(middle, yi, xi);
-
-					// Check for a maximum
-					if (currentPixel > cvGetReal2D(middle, yi-1, xi  )	&&
-                        currentPixel > cvGetReal2D(middle, yi+1, xi  )  &&
-                        currentPixel > cvGetReal2D(middle, yi  , xi-1)  &&
-                        currentPixel > cvGetReal2D(middle, yi  , xi+1)  &&
-                        currentPixel > cvGetReal2D(middle, yi-1, xi-1)	&&
-                        currentPixel > cvGetReal2D(middle, yi-1, xi+1)	&&
-                        currentPixel > cvGetReal2D(middle, yi+1, xi+1)	&&
-                        currentPixel > cvGetReal2D(middle, yi+1, xi-1)	&&
-                        currentPixel > cvGetReal2D(up, yi  , xi  )      &&
-                        currentPixel > cvGetReal2D(up, yi-1, xi  )      &&
-                        currentPixel > cvGetReal2D(up, yi+1, xi  )      &&
-                        currentPixel > cvGetReal2D(up, yi  , xi-1)      &&
-                        currentPixel > cvGetReal2D(up, yi  , xi+1)      &&
-                        currentPixel > cvGetReal2D(up, yi-1, xi-1)		&&
-                        currentPixel > cvGetReal2D(up, yi-1, xi+1)		&&
-                        currentPixel > cvGetReal2D(up, yi+1, xi+1)		&&
-                        currentPixel > cvGetReal2D(up, yi+1, xi-1)		&&
-                        currentPixel > cvGetReal2D(down, yi  , xi  )    &&
-                        currentPixel > cvGetReal2D(down, yi-1, xi  )    &&
-                        currentPixel > cvGetReal2D(down, yi+1, xi  )    &&
-                        currentPixel > cvGetReal2D(down, yi  , xi-1)    &&
-                        currentPixel > cvGetReal2D(down, yi  , xi+1)    &&
-                        currentPixel > cvGetReal2D(down, yi-1, xi-1)	&&
-                        currentPixel > cvGetReal2D(down, yi-1, xi+1)	&&
-                        currentPixel > cvGetReal2D(down, yi+1, xi+1)	&&
-                        currentPixel > cvGetReal2D(down, yi+1, xi-1)   )
+					for(yi=1;yi<m_dogList[i][j]->height-1;yi++)
 					{
-						cvSetReal2D(m_extrema[i][j-1], yi, xi, 255);
-						num++;
-						justSet = true;
-					}
-					// Check if it's a minimum
-					else if (currentPixel < cvGetReal2D(middle, yi-1, xi  )	&&
-                        currentPixel < cvGetReal2D(middle, yi+1, xi  )  &&
-                        currentPixel < cvGetReal2D(middle, yi  , xi-1)  &&
-                        currentPixel < cvGetReal2D(middle, yi  , xi+1)  &&
-                        currentPixel < cvGetReal2D(middle, yi-1, xi-1)	&&
-                        currentPixel < cvGetReal2D(middle, yi-1, xi+1)	&&
-                        currentPixel < cvGetReal2D(middle, yi+1, xi+1)	&&
-                        currentPixel < cvGetReal2D(middle, yi+1, xi-1)	&&
-                        currentPixel < cvGetReal2D(up, yi  , xi  )      &&
-                        currentPixel < cvGetReal2D(up, yi-1, xi  )      &&
-                        currentPixel < cvGetReal2D(up, yi+1, xi  )      &&
-                        currentPixel < cvGetReal2D(up, yi  , xi-1)      &&
-                        currentPixel < cvGetReal2D(up, yi  , xi+1)      &&
-                        currentPixel < cvGetReal2D(up, yi-1, xi-1)		&&
-                        currentPixel < cvGetReal2D(up, yi-1, xi+1)		&&
-                        currentPixel < cvGetReal2D(up, yi+1, xi+1)		&&
-                        currentPixel < cvGetReal2D(up, yi+1, xi-1)		&&
-                        currentPixel < cvGetReal2D(down, yi  , xi  )    &&
-                        currentPixel < cvGetReal2D(down, yi-1, xi  )    &&
-                        currentPixel < cvGetReal2D(down, yi+1, xi  )    &&
-                        currentPixel < cvGetReal2D(down, yi  , xi-1)    &&
-                        currentPixel < cvGetReal2D(down, yi  , xi+1)    &&
-                        currentPixel < cvGetReal2D(down, yi-1, xi-1)	&&
-                        currentPixel < cvGetReal2D(down, yi-1, xi+1)	&&
-                        currentPixel < cvGetReal2D(down, yi+1, xi+1)	&&
-                        currentPixel < cvGetReal2D(down, yi+1, xi-1)   )
-					{
-						cvSetReal2D(m_extrema[i][j-1], yi, xi, 255);
-						num++;
-						justSet = true;
-					}
+						// true if a keypoint is a maxima/minima
+						// but needs to be tested for contrast/edge thingy
+						bool justSet = false;
 
-					// The contrast check
-					if(justSet && fabs(cvGetReal2D(middle, yi, xi)) < CONTRAST_THRESHOLD)
-					{
-						cvSetReal2D(m_extrema[i][j-1], yi, xi, 0);
-						num--;
-						numRemoved++;
+						double currentPixel = cvGetReal2D(middle, yi, xi);
 
-						justSet=false;
-					}
+						// Check for a maximum
+						if (currentPixel > cvGetReal2D(middle, yi-1, xi  )	&&
+							currentPixel > cvGetReal2D(middle, yi+1, xi  )  &&
+							currentPixel > cvGetReal2D(middle, yi  , xi-1)  &&
+							currentPixel > cvGetReal2D(middle, yi  , xi+1)  &&
+							currentPixel > cvGetReal2D(middle, yi-1, xi-1)	&&
+							currentPixel > cvGetReal2D(middle, yi-1, xi+1)	&&
+							currentPixel > cvGetReal2D(middle, yi+1, xi+1)	&&
+							currentPixel > cvGetReal2D(middle, yi+1, xi-1)	&&
+							currentPixel > cvGetReal2D(up, yi  , xi  )      &&
+							currentPixel > cvGetReal2D(up, yi-1, xi  )      &&
+							currentPixel > cvGetReal2D(up, yi+1, xi  )      &&
+							currentPixel > cvGetReal2D(up, yi  , xi-1)      &&
+							currentPixel > cvGetReal2D(up, yi  , xi+1)      &&
+							currentPixel > cvGetReal2D(up, yi-1, xi-1)		&&
+							currentPixel > cvGetReal2D(up, yi-1, xi+1)		&&
+							currentPixel > cvGetReal2D(up, yi+1, xi+1)		&&
+							currentPixel > cvGetReal2D(up, yi+1, xi-1)		&&
+							currentPixel > cvGetReal2D(down, yi  , xi  )    &&
+							currentPixel > cvGetReal2D(down, yi-1, xi  )    &&
+							currentPixel > cvGetReal2D(down, yi+1, xi  )    &&
+							currentPixel > cvGetReal2D(down, yi  , xi-1)    &&
+							currentPixel > cvGetReal2D(down, yi  , xi+1)    &&
+							currentPixel > cvGetReal2D(down, yi-1, xi-1)	&&
+							currentPixel > cvGetReal2D(down, yi-1, xi+1)	&&
+							currentPixel > cvGetReal2D(down, yi+1, xi+1)	&&
+							currentPixel > cvGetReal2D(down, yi+1, xi-1)   )
+						{
+							cvSetReal2D(m_extrema[i][j-1], yi, xi, 255);
+							num++;
+							justSet = true;
+						}
+						// Check if it's a minimum
+						else if (currentPixel < cvGetReal2D(middle, yi-1, xi  )	&&
+							currentPixel < cvGetReal2D(middle, yi+1, xi  )  &&
+							currentPixel < cvGetReal2D(middle, yi  , xi-1)  &&
+							currentPixel < cvGetReal2D(middle, yi  , xi+1)  &&
+							currentPixel < cvGetReal2D(middle, yi-1, xi-1)	&&
+							currentPixel < cvGetReal2D(middle, yi-1, xi+1)	&&
+							currentPixel < cvGetReal2D(middle, yi+1, xi+1)	&&
+							currentPixel < cvGetReal2D(middle, yi+1, xi-1)	&&
+							currentPixel < cvGetReal2D(up, yi  , xi  )      &&
+							currentPixel < cvGetReal2D(up, yi-1, xi  )      &&
+							currentPixel < cvGetReal2D(up, yi+1, xi  )      &&
+							currentPixel < cvGetReal2D(up, yi  , xi-1)      &&
+							currentPixel < cvGetReal2D(up, yi  , xi+1)      &&
+							currentPixel < cvGetReal2D(up, yi-1, xi-1)		&&
+							currentPixel < cvGetReal2D(up, yi-1, xi+1)		&&
+							currentPixel < cvGetReal2D(up, yi+1, xi+1)		&&
+							currentPixel < cvGetReal2D(up, yi+1, xi-1)		&&
+							currentPixel < cvGetReal2D(down, yi  , xi  )    &&
+							currentPixel < cvGetReal2D(down, yi-1, xi  )    &&
+							currentPixel < cvGetReal2D(down, yi+1, xi  )    &&
+							currentPixel < cvGetReal2D(down, yi  , xi-1)    &&
+							currentPixel < cvGetReal2D(down, yi  , xi+1)    &&
+							currentPixel < cvGetReal2D(down, yi-1, xi-1)	&&
+							currentPixel < cvGetReal2D(down, yi-1, xi+1)	&&
+							currentPixel < cvGetReal2D(down, yi+1, xi+1)	&&
+							currentPixel < cvGetReal2D(down, yi+1, xi-1)   )
+						{
+							cvSetReal2D(m_extrema[i][j-1], yi, xi, 255);
+							num++;
+							justSet = true;
+						}
 
-					// The edge check
-					if(justSet)
-					{
-						dxx = (cvGetReal2D(middle, yi-1, xi) +
-							  cvGetReal2D(middle, yi+1, xi) -
-							  2.0*cvGetReal2D(middle, yi, xi));
-
-						dyy = (cvGetReal2D(middle, yi, xi-1) +
-							  cvGetReal2D(middle, yi, xi+1) -
-							  2.0*cvGetReal2D(middle, yi, xi));
-
-						dxy = (cvGetReal2D(middle, yi-1, xi-1) +
-							  cvGetReal2D(middle, yi+1, xi+1) -
-							  cvGetReal2D(middle, yi+1, xi-1) - 
-							  cvGetReal2D(middle, yi-1, xi+1)) / 4.0;
-
-						trH = dxx + dyy;
-						detH = dxx*dyy - dxy*dxy;
-
-						curvature_ratio = trH*trH/detH;
-						//printf("Threshold: %f - Ratio: %f\n", curvature_threshold, curvature_ratio);
-						if(detH<0 || curvature_ratio>curvature_threshold)
+						// The contrast check
+						if(justSet && fabs(cvGetReal2D(middle, yi, xi)) < CONTRAST_THRESHOLD)
 						{
 							cvSetReal2D(m_extrema[i][j-1], yi, xi, 0);
 							num--;
@@ -478,13 +437,47 @@ void SIFT::DetectExtremaFunc()
 
 							justSet=false;
 						}
+
+						// The edge check
+						if(justSet)
+						{
+							dxx = (cvGetReal2D(middle, yi-1, xi) +
+								cvGetReal2D(middle, yi+1, xi) -
+								2.0*cvGetReal2D(middle, yi, xi));
+
+							dyy = (cvGetReal2D(middle, yi, xi-1) +
+								cvGetReal2D(middle, yi, xi+1) -
+								2.0*cvGetReal2D(middle, yi, xi));
+
+							dxy = (cvGetReal2D(middle, yi-1, xi-1) +
+								cvGetReal2D(middle, yi+1, xi+1) -
+								cvGetReal2D(middle, yi+1, xi-1) - 
+								cvGetReal2D(middle, yi-1, xi+1)) / 4.0;
+
+							trH = dxx + dyy;
+							detH = dxx*dyy - dxy*dxy;
+
+							curvature_ratio = trH*trH/detH;
+							//printf("Threshold: %f - Ratio: %f\n", curvature_threshold, curvature_ratio);
+							if(detH<0 || curvature_ratio>curvature_threshold)
+							{
+								cvSetReal2D(m_extrema[i][j-1], yi, xi, 0);
+								num--;
+								numRemoved++;
+
+								justSet=false;
+							}
+						}
 					}
 				}
 			}
+			else 
+			{
+				GPUDetectExtrema->Process(down,middle,up);
+				GPUDetectExtrema->Transfer->ReceiveImageData(m_extrema[i][j-1]->imageData);
 
-
-
-
+			}
+			
 			printf("Found keypoints CPU : %d \n", num);
 			printf("Reject keypoints CPU : %d \n", numRemoved);
 			printf("\n");

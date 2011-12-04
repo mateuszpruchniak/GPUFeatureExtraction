@@ -27,6 +27,8 @@ __kernel void ckDetect(__global float* down, __global float* middle, __global fl
 
 		float contrastThreshold = 0.03;
 
+		ucDest[GMEMOffset] = 0.0;
+
 		// 00 01 02
 		// 10 11 12
 		// 20 21 22

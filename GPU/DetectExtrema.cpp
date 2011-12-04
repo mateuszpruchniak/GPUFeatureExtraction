@@ -20,7 +20,7 @@ DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer
 bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c )
 {
 
-	GPUTransfer->SendImage(a);
+	GPUTransfer->SendImageData(a->imageData,a->height,a->width);
 
 	
 	// wyslalenie drugiego obrazku !!!!!! poprawic!
