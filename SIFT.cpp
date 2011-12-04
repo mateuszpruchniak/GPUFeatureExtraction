@@ -486,13 +486,13 @@ void SIFT::DetectExtremaFunc()
 
 
 			printf("Found keypoints CPU : %d \n", num);
-
-
+			printf("Reject keypoints CPU : %d \n", numRemoved);
+			printf("\n");
 
 			// Save the image
-			char* filename = new char[200];
+			/*char* filename = new char[200];
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\extrema_oct_%d_scale_%d.jpg", i, j-1);
-			cvSaveImage(filename, m_extrema[i][j-1]);
+			cvSaveImage(filename, m_extrema[i][j-1]);*/
 		}
 	}
 
