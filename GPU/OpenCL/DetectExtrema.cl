@@ -10,11 +10,27 @@ __kernel void ckDetect(__global float* ucSource, __global float* ucSource2, __gl
 		int iDevGMEMOffset = mul24(iDevYPrime, ImageWidth) + iImagePosX;
 		
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		
 
 		// Write out to GMEM with restored offset
 		if((iDevYPrime <= ImageHeight) && (iImagePosX <= ImageWidth))
 		{
-			ucDest[iDevGMEMOffset] = 0.0;
+			ucDest[iDevGMEMOffset] = 0.99;
 		}
 }

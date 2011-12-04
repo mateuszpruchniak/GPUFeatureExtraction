@@ -45,8 +45,6 @@ SIFT::SIFT(IplImage* img, int octaves, int intervals)
 	//GPU = new GPUImageProcessor(640 * 2,480 * 2,4);
 	//GPU2 = new GPUImageProcessor(640 * 2,480 * 2,4);
 
-	//// nie uruchamia sie
-
 	//// Proceed to initialize the algorithm
 	//GenerateLists();
 }
@@ -62,13 +60,13 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	m_numOctaves = octaves;
 	m_numIntervals = intervals;
 
-	GPU = new GPUImageProcessor(640 * 2,480 * 2,4);
-	GPU2 = new GPUImageProcessor(640 * 2,480 * 2,4);
-	GPUDetectExtrema = new GPUImageProcessor(640 * 2,480 * 2,4);
+	GPU = new GPUImageProcessor(640 * 2,480 * 2, 4);
+	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
+	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 
 	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
-	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPU->GPUContext,GPU->Transfer));
+	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
 
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
@@ -166,8 +164,8 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	AssignOrientations();
-	ExtractKeypointDescriptors();
+	//AssignOrientations();
+	//ExtractKeypointDescriptors();
 }
 
 // BuildScaleSpace()
@@ -355,18 +353,18 @@ void SIFT::DetectExtremaFunc()
 
 			if(SIFTCPU)
 			{
-				 
+				
 			}
-			else
+			else 
 			{
-				GPUDetectExtrema->Process(m_dogList[i][j-1],m_dogList[i][j],m_dogList[i][j+1]);
-				GPUDetectExtrema->Transfer->ReceiveImageData(m_dogList[i][j]->imageData);
+				GPUDetectExtrema->Process(down,middle,up);
+				GPUDetectExtrema->Transfer->ReceiveImageData(middle->imageData);
 
 				cvNamedWindow("DetectExtrema", CV_WINDOW_AUTOSIZE); 
-			    cvShowImage("DetectExtrema", m_dogList[i][j] );
+			    cvShowImage("DetectExtrema", middle );
 			    cvWaitKey(2);
 			}
-
+			
 
 			for(xi=1;xi<m_dogList[i][j]->width-1;xi++)
 			{

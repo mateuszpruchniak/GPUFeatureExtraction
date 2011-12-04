@@ -15,6 +15,7 @@ Subtract::Subtract(cl_context GPUContext ,GPUTransferManager* transfer): Context
 //                      int ImageWidth, int ImageHeight, int channels)
 bool Subtract::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b )
 {
+
 	GPUTransfer->SendImage(a);
 
 	

@@ -17,17 +17,15 @@ DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer
 bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c )
 {
 
-	GPUTransfer->Se
+	GPUTransfer->SendImage(a);
 
-	// wyslalenie pierwszego obrazku !!!!!! poprawic!
-	int ImageHeight = a->height;
-    int ImageWidth = a->width;
-    int szBuffBytesLocal = ImageWidth * ImageHeight * 4 * sizeof (char);
-	
 	
 	// wyslalenie drugiego obrazku !!!!!! poprawic!
+	int ImageHeight = b->height;
+	int ImageWidth = b->width;
+	int szBuffBytesLocal = ImageWidth * ImageHeight * 4 * sizeof (char);
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, GPUTransfer->cmDevBuf2, CL_TRUE, 0, szBuffBytesLocal, (void*)b->imageData, 0, NULL, NULL);
-    CheckError(GPUError);
+	CheckError(GPUError);
 
 	// wyslalenie trzeciego obrazku !!!!!! poprawic!
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, GPUTransfer->cmDevBuf3, CL_TRUE, 0, szBuffBytesLocal, (void*)c->imageData, 0, NULL, NULL);
