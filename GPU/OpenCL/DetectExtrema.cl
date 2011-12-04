@@ -166,7 +166,7 @@ __kernel void ckDetect(__global float* down, __global float* middle, __global fl
 				detH = dxx*dyy - dxy*dxy;
 
 				curvature_ratio = trH*trH/detH;
-				//printf("Threshold: %f - Ratio: %f\n", curvature_threshold, curvature_ratio);
+
 				if(detH<0 || curvature_ratio>curvature_threshold)
 				{
 					ucDest[GMEMOffset] = 0.0;

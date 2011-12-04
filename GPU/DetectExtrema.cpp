@@ -56,8 +56,8 @@ bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplIma
 	GPUError |= clSetKernelArg(GPUFilter, 1, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf2);
 	GPUError |= clSetKernelArg(GPUFilter, 2, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf3);
 	GPUError |= clSetKernelArg(GPUFilter, 3, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBufOutput);
-	GPUError |= clSetKernelArg(GPUFilter, 4, sizeof(cl_uint), (void*)&GPUTransfer->ImageWidth);
-	GPUError |= clSetKernelArg(GPUFilter, 5, sizeof(cl_uint), (void*)&GPUTransfer->ImageHeight);
+	GPUError |= clSetKernelArg(GPUFilter, 4, sizeof(cl_uint), (void*)&a->width);
+	GPUError |= clSetKernelArg(GPUFilter, 5, sizeof(cl_uint), (void*)&a->height);
 	GPUError |= clSetKernelArg(GPUFilter, 6, sizeof(cl_mem), (void*)&cmDevBufNumber);
 	GPUError |= clSetKernelArg(GPUFilter, 7, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;

@@ -342,9 +342,7 @@ void SIFT::DetectExtremaFunc()
 		
 		for(j=1;j<m_numIntervals+1;j++)
 		{
-			// Allocate memory and set all points to zero ("not key point")
-			m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 8, 1);
-			cvZero(m_extrema[i][j-1]);
+			
 
 			// Images just above and below, in the current octave
 			middle = m_dogList[i][j];
@@ -353,6 +351,10 @@ void SIFT::DetectExtremaFunc()
 
 			if(SIFTCPU)
 			{
+				// Allocate memory and set all points to zero ("not key point")
+				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 8, 1);
+				cvZero(m_extrema[i][j-1]);
+
 				for(xi=1;xi<m_dogList[i][j]->width-1;xi++)
 				{
 					for(yi=1;yi<m_dogList[i][j]->height-1;yi++)
@@ -473,6 +475,7 @@ void SIFT::DetectExtremaFunc()
 			}
 			else 
 			{
+				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
 				GPUDetectExtrema->Process(down,middle,up);
 				GPUDetectExtrema->Transfer->ReceiveImageData(m_extrema[i][j-1]->imageData);
 
@@ -483,9 +486,9 @@ void SIFT::DetectExtremaFunc()
 			printf("\n");
 
 			// Save the image
-			/*char* filename = new char[200];
+			char* filename = new char[200];
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\extrema_oct_%d_scale_%d.jpg", i, j-1);
-			cvSaveImage(filename, m_extrema[i][j-1]);*/
+			cvSaveImage(filename, m_extrema[i][j-1]);
 		}
 	}
 
