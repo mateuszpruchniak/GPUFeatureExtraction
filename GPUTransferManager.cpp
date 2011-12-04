@@ -22,13 +22,11 @@ GPUTransferManager::GPUTransferManager()
 GPUTransferManager::GPUTransferManager( cl_context GPUContextArg, cl_command_queue GPUCommandQueueArg, unsigned int width, unsigned int height, int channels )
 {
     //cout << "data transfer konstr" << endl;
-	cout << "GPUTransferManager::GPUTransferManager" << endl;
 	nChannels = channels;
     GPUContext = GPUContextArg;
     ImageHeight = height;
     ImageWidth = width;
     GPUCommandQueue = GPUCommandQueueArg;
-    cout << "create buf " << ImageWidth << "x" << ImageHeight << endl;
     // Allocate pinned input and output host image buffers:  mem copy operations to/from pinned memory is much faster than paged memory
     szBuffBytes = ImageWidth * ImageHeight * nChannels * sizeof (char);
     CreateBuffers();
@@ -105,7 +103,6 @@ void GPUTransferManager::SendImage( IplImage* imageToLoad )
 	image = imageToLoad;
 	ImageHeight = imageToLoad->height;
     ImageWidth = imageToLoad->width;
-    cout << "img " << ImageWidth << "x" << ImageHeight << endl;
     int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
     GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBuf, CL_TRUE, 0, szBuffBytesLocal, (void*)imageToLoad->imageData, 0, NULL, NULL);
     CheckError(GPUError);
