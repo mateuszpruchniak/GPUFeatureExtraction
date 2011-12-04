@@ -358,11 +358,9 @@ void SIFT::DetectExtremaFunc()
 			else 
 			{
 				GPUDetectExtrema->Process(down,middle,up);
-				GPUDetectExtrema->Transfer->ReceiveImageData(middle->imageData);
+				//GPUDetectExtrema->Transfer->ReceiveImageData(middle->imageData);
 
-				cvNamedWindow("DetectExtrema", CV_WINDOW_AUTOSIZE); 
-			    cvShowImage("DetectExtrema", middle );
-			    cvWaitKey(2);
+				
 			}
 			
 
@@ -492,9 +490,9 @@ void SIFT::DetectExtremaFunc()
 
 
 			// Save the image
-			/*char* filename = new char[200];
-			sprintf(filename, "C:\\SIFT Test\\Extrema\\extrema_oct_%d_scale_%d.jpg", i, j-1);
-			cvSaveImage(filename, m_extrema[i][j-1]);*/
+			char* filename = new char[200];
+			sprintf(filename, "C:\\Users\\Mati\\Pictures\\extrema_oct_%d_scale_%d.jpg", i, j-1);
+			cvSaveImage(filename, m_extrema[i][j-1]);
 		}
 	}
 
