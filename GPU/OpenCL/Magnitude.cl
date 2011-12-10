@@ -14,7 +14,7 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 
 
 
-__kernel void ckMagn(__global float* ucSource, __global float* ucDest,
+__kernel void ckMagn(__global float* ucSource, __global float* ucDestMagn, __global float* ucDestOrient,
                       int ImageWidth, int ImageHeight)
 {
 		
@@ -31,10 +31,9 @@ __kernel void ckMagn(__global float* ucSource, __global float* ucDest,
 			float dx = GetPixel(ucSource, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(ucSource, pozX-1, pozY, ImageWidth, ImageHeight);
 			float dy = GetPixel(ucSource, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(ucSource, pozX, pozY-1, ImageWidth, ImageHeight);
 			
-			ucDest[GMEMOffset] = (float)sqrt(dx*dx + dy*dy);
+			ucDestMagn[GMEMOffset] = (float)sqrt(dx*dx + dy*dy);
 
-
-
+			ucDestOrient[GMEMOffset] = (float)atan(dy/dx);
 
 		}
 }

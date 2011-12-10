@@ -89,6 +89,18 @@ void GPUTransferManager::ReceiveImageData(char* imageData)
     CheckError(GPUError);
 }
 
+void GPUTransferManager::ReceiveImageData(char* imageData, char* imageData2)
+{
+	int szBuffBytesLocal = ImageWidth * ImageHeight * nChannels * sizeof (char);
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput, CL_TRUE, 0, szBuffBytesLocal, (void*)imageData, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufOutput2, CL_TRUE, 0, szBuffBytesLocal, (void*)imageData2, 0, NULL, NULL);
+	CheckError(GPUError);
+
+}
+
+
 void GPUTransferManager::SendImageData(char* imageData, int height, int width)
 {
 	ImageHeight = height;
@@ -144,6 +156,9 @@ void GPUTransferManager::CreateBuffers()
 
 	// Create the device buffers in GMEM on each device, for now we have one device :)
 	cmDevBufOutput = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
+	CheckError(GPUError);
+
+	cmDevBufOutput2 = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, szBuffBytes, NULL, &GPUError);
 	CheckError(GPUError);
 }
 

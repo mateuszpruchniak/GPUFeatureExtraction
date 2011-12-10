@@ -63,15 +63,14 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	GPU = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	GPUMagnitude = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	GPUOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 
 	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
 	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
-	GPUMagnitude->AddProcessing(new Magnitude(GPUMagnitude->GPUContext,GPUMagnitude->Transfer));
-	//GPUOrientation->AddProcessing(new Orientation(GPUOrientation->GPUContext,GPUOrientation->Transfer));
-
+	GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
+	
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
 	//	for(int i = -2 ; i <= 2; i++ ) //x
@@ -583,22 +582,15 @@ void SIFT::AssignOrientations()
 			} else 
 			{
 
-				GPUMagnitude->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
-				GPUMagnitude->Process(0);
-				GPUMagnitude->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData);
+				GPUMagnitudeOrientation->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
+				GPUMagnitudeOrientation->Process(0);
+				GPUMagnitudeOrientation->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData, orientation[i][j-1]->imageData);
 
-				/*GPUOrientation->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
-				GPUOrientation->Process(0);
-				GPUOrientation->Transfer->ReceiveImageData(orientation[i][j-1]->imageData);
-
-*/
-
-
-
+				
 
 
 				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
-				cvShowImage("AssignOrientations", magnitude[i][j-1] );
+				cvShowImage("AssignOrientations", orientation[i][j-1] );
 				cvWaitKey(2);
 
 			}

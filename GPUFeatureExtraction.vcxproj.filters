@@ -18,8 +18,7 @@
     <ClCompile Include="GPU\MeanFilter.cpp" />
     <ClCompile Include="GPU\Subtract.cpp" />
     <ClCompile Include="GPU\DetectExtrema.cpp" />
-    <ClCompile Include="GPU\Magnitude.cpp" />
-    <ClCompile Include="GPU\Orientation.cpp" />
+    <ClCompile Include="GPU\MagnitudeOrientation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h">
@@ -77,8 +76,7 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="GPU\DetectExtrema.h" />
-    <ClInclude Include="GPU\Magnitude.h" />
-    <ClInclude Include="GPU\Orientation.h" />
+    <ClInclude Include="GPU\MagnitudeOrientation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
@@ -99,7 +97,6 @@
     <None Include="GPU\OpenCL\BlurGaussFilter.cl" />
     <None Include="GPU\OpenCL\Subtract.cl" />
     <None Include="GPU\OpenCL\DetectExtrema.cl" />
-    <None Include="GPU\OpenCL\Orientation.cl" />
     <None Include="GPU\OpenCL\Magnitude.cl" />
     <None Include="ClassDiagram12.cd" />
   </ItemGroup>

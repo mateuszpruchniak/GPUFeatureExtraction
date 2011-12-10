@@ -88,6 +88,8 @@ class GPUTransferManager
 		 */
 		cl_mem cmDevBufOutput;
 
+		cl_mem cmDevBufOutput2;
+
 		/*!
 		 * Image width.
 		 */
@@ -132,7 +134,8 @@ class GPUTransferManager
 
 
 		void ReceiveImageData(char* imageData);
-        
+		void ReceiveImageData(char* imageData, char* imageData2);
+
 		
 		/*!
 		 * Checking size of image(if image size is larger than max size, this function increases buffers)
