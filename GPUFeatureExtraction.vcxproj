@@ -194,8 +194,10 @@
     <ClCompile Include="GPU\HighpassFilter.cpp" />
     <ClCompile Include="GPU\LinearFilter.cpp" />
     <ClCompile Include="GPU\LowpassFilter.cpp" />
+    <ClCompile Include="GPU\Magnitude.cpp" />
     <ClCompile Include="GPU\MeanFilter.cpp" />
     <ClCompile Include="GPU\NonLinearFilter.cpp" />
+    <ClCompile Include="GPU\Orientation.cpp" />
     <ClCompile Include="GPU\Subtract.cpp" />
     <ClCompile Include="GPU\Transformation.cpp" />
     <ClCompile Include="SIFT.cpp" />
@@ -213,6 +215,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
+    <None Include="ClassDiagram12.cd" />
     <None Include="CL\SIFT.cl" />
     <None Include="GPU\OpenCL\Binarization.cl" />
     <None Include="GPU\OpenCL\BlurGaussFilter.cl" />
@@ -223,9 +226,11 @@
     <None Include="GPU\OpenCL\HighpassFilter.cl" />
     <None Include="GPU\OpenCL\LowpassFilter.cl" />
     <None Include="GPU\OpenCL\LUTFilter.cl" />
+    <None Include="GPU\OpenCL\Magnitude.cl" />
     <None Include="GPU\OpenCL\MaxFilter.cl" />
     <None Include="GPU\OpenCL\MedianFilter.cl" />
     <None Include="GPU\OpenCL\MinFilter.cl" />
+    <None Include="GPU\OpenCL\Orientation.cl" />
     <None Include="GPU\OpenCL\RGB2HSV.cl" />
     <None Include="GPU\OpenCL\RGB2YUV.cl" />
     <None Include="GPU\OpenCL\Subtract.cl" />
@@ -243,8 +248,10 @@
     <ClInclude Include="GPU\HighpassFilter.h" />
     <ClInclude Include="GPU\LinearFilter.h" />
     <ClInclude Include="GPU\LowpassFilter.h" />
+    <ClInclude Include="GPU\Magnitude.h" />
     <ClInclude Include="GPU\MeanFilter.h" />
     <ClInclude Include="GPU\NonLinearFilter.h" />
+    <ClInclude Include="GPU\Orientation.h" />
     <ClInclude Include="GPU\Transformation.h" />
     <ClInclude Include="KeyPoint.h" />
     <ClInclude Include="SIFT.h" />

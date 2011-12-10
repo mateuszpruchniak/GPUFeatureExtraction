@@ -110,7 +110,7 @@ class Filter
 		/*!
 		 * Virtual methods, processing image. Launching the Kernel.
 		 */
-		virtual bool filter(cl_command_queue GPUCommandQueue, float sigma) = 0;
+		virtual bool filter(cl_command_queue GPUCommandQueue, float sigma = 0) = 0;
 
 		/*!
 		 * Virtual methods, processing image. Launching the Kernel.

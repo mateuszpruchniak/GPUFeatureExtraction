@@ -7,6 +7,8 @@
 #include "GPU\MeanFilter.h"
 #include "GPU\Subtract.h"
 #include "GPU\DetectExtrema.h"
+#include "GPU\Magnitude.h"
+#include "GPU\Orientation.h"
 #include "GPUImageProcessor.h"
 
 
@@ -17,6 +19,8 @@ public:
 	GPUImageProcessor* GPU;
 	GPUImageProcessor* GPU2;
 	GPUImageProcessor* GPUDetectExtrema;
+	GPUImageProcessor* GPUMagnitude;
+	GPUImageProcessor* GPUOrientation;
 
 
 	SIFT(IplImage* img, int octaves, int intervals);
@@ -50,4 +54,5 @@ public:
 
 	vector<Keypoint> m_keyPoints;	// Holds each keypoint's basic info
 	vector<Descriptor> m_keyDescs;	// Holds each keypoint's descriptor
+	
 };

@@ -63,10 +63,14 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	GPU = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	GPUMagnitude = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	GPUOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 
 	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
 	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
+	GPUMagnitude->AddProcessing(new Magnitude(GPUMagnitude->GPUContext,GPUMagnitude->Transfer));
+	//GPUOrientation->AddProcessing(new Orientation(GPUOrientation->GPUContext,GPUOrientation->Transfer));
 
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
@@ -164,7 +168,16 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	//AssignOrientations();
+	start = clock();
+	AssignOrientations();
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "AssignOrientations: " << endl;
+	cout << duration << endl;
+	
+	
+	
+	
 	//ExtractKeypointDescriptors();
 }
 
@@ -472,15 +485,18 @@ void SIFT::DetectExtremaFunc()
 						}
 					}
 				}
+				/*cvNamedWindow("Detect", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("Detect", m_extrema[i][j-1] );
+				cvWaitKey(2);*/
 			}
 			else 
 			{
 				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
 				GPUDetectExtrema->Process(down,middle,up);
 				GPUDetectExtrema->Transfer->ReceiveImageData(m_extrema[i][j-1]->imageData);
-				cvNamedWindow("Detect", CV_WINDOW_AUTOSIZE); 
+				/*cvNamedWindow("Detect", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("Detect", m_extrema[i][j-1] );
-				cvWaitKey(2);
+				cvWaitKey(2);*/
 			}
 			
 			printf("Found keypoints CPU : %d \n", num);
@@ -532,34 +548,68 @@ void SIFT::AssignOrientations()
 			magnitude[i][j-1] = cvCreateImage(cvGetSize(m_gList[i][j]), 32, 1);
 			orientation[i][j-1] = cvCreateImage(cvGetSize(m_gList[i][j]), 32, 1);
 
-			cvZero(magnitude[i][j-1]);
-			cvZero(orientation[i][j-1]);
+			
 
-			// Iterate over the gaussian image with the current octave and interval
-			for(xi=1;xi<m_gList[i][j]->width-1;xi++)
+
+			if(SIFTCPU)
 			{
-				for(yi=1;yi<m_gList[i][j]->height-1;yi++)
+				cvZero(magnitude[i][j-1]);
+				cvZero(orientation[i][j-1]);
+
+				// Iterate over the gaussian image with the current octave and interval
+				for(xi=1;xi<m_gList[i][j]->width-1;xi++)
 				{
-					// Calculate gradient
-					double dx = cvGetReal2D(m_gList[i][j], yi, xi+1) - cvGetReal2D(m_gList[i][j], yi, xi-1);
-					double dy = cvGetReal2D(m_gList[i][j], yi+1, xi) - cvGetReal2D(m_gList[i][j], yi-1, xi);
+					for(yi=1;yi<m_gList[i][j]->height-1;yi++)
+					{
+						// Calculate gradient
+						double dx = cvGetReal2D(m_gList[i][j], yi, xi+1) - cvGetReal2D(m_gList[i][j], yi, xi-1);
+						double dy = cvGetReal2D(m_gList[i][j], yi+1, xi) - cvGetReal2D(m_gList[i][j], yi-1, xi);
 
-					// Store magnitude
-					cvSetReal2D(magnitude[i][j-1], yi, xi, sqrt(dx*dx + dy*dy));
+						// Store magnitude
+						cvSetReal2D(magnitude[i][j-1], yi, xi, sqrt(dx*dx + dy*dy));
 
-					// Store orientation as radians
-					double ori=atan(dy/dx);					
-					cvSet2D(orientation[i][j-1], yi, xi, cvScalar(ori));
+						// Store orientation as radians
+						double ori=atan(dy/dx);					
+						cvSet2D(orientation[i][j-1], yi, xi, cvScalar(ori));
+					}
 				}
+
+
+
+				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("AssignOrientations", magnitude[i][j-1] );
+				cvWaitKey(2);
+
+			} else 
+			{
+
+				GPUMagnitude->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
+				GPUMagnitude->Process(0);
+				GPUMagnitude->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData);
+
+				/*GPUOrientation->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
+				GPUOrientation->Process(0);
+				GPUOrientation->Transfer->ReceiveImageData(orientation[i][j-1]->imageData);
+
+*/
+
+
+
+
+
+				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("AssignOrientations", magnitude[i][j-1] );
+				cvWaitKey(2);
+
 			}
 
 			// Save these images for fun
-			/*char* filename = new char[200];
-			sprintf(filename, "C:\\SIFT Test\\Mag\\mag_oct_%d_scl_%d.jpg", i, j-1);
+			char* filename = new char[200];
+			sprintf(filename, "C:\\Users\\Mati\\Pictures\\mag_oct_%d_scl_%d.jpg", i, j-1);
 			cvSaveImage(filename, magnitude[i][j-1]);
 
-			sprintf(filename, "C:\\SIFT Test\\Ori\\ori_oct_%d_scl_%d.jpg", i, j-1);
-			cvSaveImage(filename, orientation[i][j-1]);*/
+			sprintf(filename, "C:\\Users\\Mati\\Pictures\\ori_oct_%d_scl_%d.jpg", i, j-1);
+			cvSaveImage(filename, orientation[i][j-1]);
 		}
 	}
 
@@ -591,164 +641,173 @@ void SIFT::AssignOrientations()
 			IplImage* imgMask = cvCreateImage(cvSize(width, height), 8, 1);
 			cvZero(imgMask);
 
-			// Iterate through all points at this octave and interval
-			for(xi=0;xi<width;xi++)
+
+			if(SIFTCPU)
 			{
-				for(yi=0;yi<height;yi++)
+
+				// Iterate through all points at this octave and interval
+				for(xi=0;xi<width;xi++)
 				{
-					// We're at a keypoint
-					if(cvGetReal2D(m_extrema[i][j-1], yi, xi)!=0)
+					for(yi=0;yi<height;yi++)
 					{
-						// Reset the histogram thingy
-						for(k=0;k<NUM_BINS;k++)
-							hist_orient[k]=0.0;
-
-						// Go through all pixels in the window around the extrema
-						for(kk=-hfsz;kk<=hfsz;kk++)
+						// We're at a keypoint
+						if(cvGetReal2D(m_extrema[i][j-1], yi, xi)!=0)
 						{
-							for(tt=-hfsz;tt<=hfsz;tt++)
+							// Reset the histogram thingy
+							for(k=0;k<NUM_BINS;k++)
+								hist_orient[k]=0.0;
+
+							// Go through all pixels in the window around the extrema
+							for(kk=-hfsz;kk<=hfsz;kk++)
 							{
-								// Ensure we're within the image
-								if(xi+kk<0 || xi+kk>=width || yi+tt<0 || yi+tt>=height)
-									continue;
+								for(tt=-hfsz;tt<=hfsz;tt++)
+								{
+									// Ensure we're within the image
+									if(xi+kk<0 || xi+kk>=width || yi+tt<0 || yi+tt>=height)
+										continue;
 
- 								double sampleOrient = cvGetReal2D(orientation[i][j-1], yi+tt, xi+kk);
+ 									double sampleOrient = cvGetReal2D(orientation[i][j-1], yi+tt, xi+kk);
 
-								if(sampleOrient <=-M_PI || sampleOrient>M_PI)
-									printf("Bad Orientation: %f\n", sampleOrient);
+									if(sampleOrient <=-M_PI || sampleOrient>M_PI)
+										printf("Bad Orientation: %f\n", sampleOrient);
 								
-								sampleOrient+=M_PI;
+									sampleOrient+=M_PI;
 
-								// Convert to degrees
-								unsigned int sampleOrientDegrees = sampleOrient * 180 / M_PI;
-								hist_orient[(int)sampleOrientDegrees / (360/NUM_BINS)] += cvGetReal2D(imgWeight, yi+tt, xi+kk);
-								cvSetReal2D(imgMask, yi+tt, xi+kk, 255);
+									// Convert to degrees
+									unsigned int sampleOrientDegrees = sampleOrient * 180 / M_PI;
+									hist_orient[(int)sampleOrientDegrees / (360/NUM_BINS)] += cvGetReal2D(imgWeight, yi+tt, xi+kk);
+									cvSetReal2D(imgMask, yi+tt, xi+kk, 255);
+								}
 							}
-						}
 
-						// We've computed the histogram. Now check for the maximum
-						double max_peak = hist_orient[0];
-						unsigned int max_peak_index = 0;
-						for(k=1;k<NUM_BINS;k++)
-						{
-							if(hist_orient[k]>max_peak)
+							// We've computed the histogram. Now check for the maximum
+							double max_peak = hist_orient[0];
+							unsigned int max_peak_index = 0;
+							for(k=1;k<NUM_BINS;k++)
 							{
-								max_peak=hist_orient[k];
-								max_peak_index = k;
+								if(hist_orient[k]>max_peak)
+								{
+									max_peak=hist_orient[k];
+									max_peak_index = k;
+								}
 							}
-						}
 
-						// List of magnitudes and orientations at the current extrema
-						vector<double> orien;
-						vector<double> mag;
-						for(k=0;k<NUM_BINS;k++)
-						{
-							// Do we have a good peak?
-							if(hist_orient[k]> 0.8*max_peak)
+							// List of magnitudes and orientations at the current extrema
+							vector<double> orien;
+							vector<double> mag;
+							for(k=0;k<NUM_BINS;k++)
 							{
-								// Three points. (x2,y2) is the peak and (x1,y1)
-								// and (x3,y3) are the neigbours to the left and right.
-								// If the peak occurs at the extreme left, the "left
-								// neighbour" is equal to the right most. Similarly for
-								// the other case (peak is rightmost)
-								double x1 = k-1;
-								double y1;
-								double x2 = k;
-								double y2 = hist_orient[k];
-								double x3 = k+1;
-								double y3;
-
-								if(k==0)
+								// Do we have a good peak?
+								if(hist_orient[k]> 0.8*max_peak)
 								{
-									y1 = hist_orient[NUM_BINS-1];
-									y3 = hist_orient[1];
+									// Three points. (x2,y2) is the peak and (x1,y1)
+									// and (x3,y3) are the neigbours to the left and right.
+									// If the peak occurs at the extreme left, the "left
+									// neighbour" is equal to the right most. Similarly for
+									// the other case (peak is rightmost)
+									double x1 = k-1;
+									double y1;
+									double x2 = k;
+									double y2 = hist_orient[k];
+									double x3 = k+1;
+									double y3;
+
+									if(k==0)
+									{
+										y1 = hist_orient[NUM_BINS-1];
+										y3 = hist_orient[1];
+									}
+									else if(k==NUM_BINS-1)
+									{
+										y1 = hist_orient[NUM_BINS-1];
+										y3 = hist_orient[0];
+									}
+									else
+									{
+										y1 = hist_orient[k-1];
+										y3 = hist_orient[k+1];
+									}
+
+									// Next we fit a downward parabola aound
+									// these three points for better accuracy
+
+									// A downward parabola has the general form
+									//
+									// y = a * x^2 + bx + c
+									// Now the three equations stem from the three points
+									// (x1,y1) (x2,y2) (x3.y3) are
+									//
+									// y1 = a * x1^2 + b * x1 + c
+									// y2 = a * x2^2 + b * x2 + c
+									// y3 = a * x3^2 + b * x3 + c
+									//
+									// in Matrix notation, this is y = Xb, where
+									// y = (y1 y2 y3)' b = (a b c)' and
+									// 
+									//     x1^2 x1 1
+									// X = x2^2 x2 1
+									//     x3^2 x3 1
+									//
+									// OK, we need to solve this equation for b
+									// this is done by inverse the matrix X
+									//
+									// b = inv(X) Y
+
+									double *b = new double[3];
+									CvMat *X = cvCreateMat(3, 3, CV_32FC1);
+									CvMat *matInv = cvCreateMat(3, 3, CV_32FC1);
+
+									cvSetReal2D(X, 0, 0, x1*x1);
+									cvSetReal2D(X, 1, 0, x1);
+									cvSetReal2D(X, 2, 0, 1);
+
+									cvSetReal2D(X, 0, 1, x2*x2);
+									cvSetReal2D(X, 1, 1, x2);
+									cvSetReal2D(X, 2, 1, 1);
+
+									cvSetReal2D(X, 0, 2, x3*x3);
+									cvSetReal2D(X, 1, 2, x3);
+									cvSetReal2D(X, 2, 2, 1);
+
+									// Invert the matrix
+									cvInv(X, matInv);
+
+									b[0] = cvGetReal2D(matInv, 0, 0)*y1 + cvGetReal2D(matInv, 1, 0)*y2 + cvGetReal2D(matInv, 2, 0)*y3;
+									b[1] = cvGetReal2D(matInv, 0, 1)*y1 + cvGetReal2D(matInv, 1, 1)*y2 + cvGetReal2D(matInv, 2, 1)*y3;
+									b[2] = cvGetReal2D(matInv, 0, 2)*y1 + cvGetReal2D(matInv, 1, 2)*y2 + cvGetReal2D(matInv, 2, 2)*y3;
+
+									double x0 = -b[1]/(2*b[0]);
+
+									// Anomalous situation
+									if(fabs(x0)>2*NUM_BINS)
+										x0=x2;
+
+									while(x0<0)
+										x0 += NUM_BINS;
+									while(x0>= NUM_BINS)
+										x0-= NUM_BINS;
+
+									// Normalize it
+									double x0_n = x0*(2*M_PI/NUM_BINS);
+
+									assert(x0_n>=0 && x0_n<2*M_PI);
+									x0_n -= M_PI;
+									assert(x0_n>=-M_PI && x0_n<M_PI);
+
+									orien.push_back(x0_n);
+									mag.push_back(hist_orient[k]);
 								}
-								else if(k==NUM_BINS-1)
-								{
-									y1 = hist_orient[NUM_BINS-1];
-									y3 = hist_orient[0];
-								}
-								else
-								{
-									y1 = hist_orient[k-1];
-									y3 = hist_orient[k+1];
-								}
-
-								// Next we fit a downward parabola aound
-								// these three points for better accuracy
-
-								// A downward parabola has the general form
-								//
-                                // y = a * x^2 + bx + c
-                                // Now the three equations stem from the three points
-                                // (x1,y1) (x2,y2) (x3.y3) are
-								//
-                                // y1 = a * x1^2 + b * x1 + c
-                                // y2 = a * x2^2 + b * x2 + c
-                                // y3 = a * x3^2 + b * x3 + c
-								//
-                                // in Matrix notation, this is y = Xb, where
-                                // y = (y1 y2 y3)' b = (a b c)' and
-                                // 
-                                //     x1^2 x1 1
-                                // X = x2^2 x2 1
-                                //     x3^2 x3 1
-                                //
-                                // OK, we need to solve this equation for b
-                                // this is done by inverse the matrix X
-                                //
-                                // b = inv(X) Y
-
-								double *b = new double[3];
-								CvMat *X = cvCreateMat(3, 3, CV_32FC1);
-								CvMat *matInv = cvCreateMat(3, 3, CV_32FC1);
-
-								cvSetReal2D(X, 0, 0, x1*x1);
-								cvSetReal2D(X, 1, 0, x1);
-								cvSetReal2D(X, 2, 0, 1);
-
-								cvSetReal2D(X, 0, 1, x2*x2);
-								cvSetReal2D(X, 1, 1, x2);
-								cvSetReal2D(X, 2, 1, 1);
-
-								cvSetReal2D(X, 0, 2, x3*x3);
-								cvSetReal2D(X, 1, 2, x3);
-								cvSetReal2D(X, 2, 2, 1);
-
-								// Invert the matrix
-								cvInv(X, matInv);
-
-								b[0] = cvGetReal2D(matInv, 0, 0)*y1 + cvGetReal2D(matInv, 1, 0)*y2 + cvGetReal2D(matInv, 2, 0)*y3;
-								b[1] = cvGetReal2D(matInv, 0, 1)*y1 + cvGetReal2D(matInv, 1, 1)*y2 + cvGetReal2D(matInv, 2, 1)*y3;
-								b[2] = cvGetReal2D(matInv, 0, 2)*y1 + cvGetReal2D(matInv, 1, 2)*y2 + cvGetReal2D(matInv, 2, 2)*y3;
-
-								double x0 = -b[1]/(2*b[0]);
-
-								// Anomalous situation
-								if(fabs(x0)>2*NUM_BINS)
-									x0=x2;
-
-								while(x0<0)
-									x0 += NUM_BINS;
-								while(x0>= NUM_BINS)
-									x0-= NUM_BINS;
-
-								// Normalize it
-								double x0_n = x0*(2*M_PI/NUM_BINS);
-
-								assert(x0_n>=0 && x0_n<2*M_PI);
-								x0_n -= M_PI;
-								assert(x0_n>=-M_PI && x0_n<M_PI);
-
-								orien.push_back(x0_n);
-								mag.push_back(hist_orient[k]);
 							}
-						}
 
-						// Save this keypoint into the list
-						m_keyPoints.push_back(Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1));
+							// Save this keypoint into the list
+							m_keyPoints.push_back(Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1));
+						}
 					}
 				}
+
+			} else 
+			{
+
 			}
 
 			// Save the regions!
