@@ -98,7 +98,7 @@
     <None Include="GPU\OpenCL\Subtract.cl" />
     <None Include="GPU\OpenCL\DetectExtrema.cl" />
     <None Include="ClassDiagram12.cd" />
-    <None Include="GPU\OpenCL\MagnitudeOrientation.cl" />
+    <None Include="GPU\OpenCL\AssignOrientations.cl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">

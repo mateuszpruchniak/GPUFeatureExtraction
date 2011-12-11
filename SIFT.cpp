@@ -620,7 +620,16 @@ void SIFT::AssignOrientations()
 
 			// This is used for magnitudes
 			IplImage* imgWeight = cvCreateImage(cvSize(width, height), 32, 1);
-			cvSmooth(magnitude[i][j-1], imgWeight, CV_GAUSSIAN, 0, 0, 1.5*abs_sigma);
+
+			if(SIFTCPU)
+				cvSmooth(magnitude[i][j-1], imgWeight, CV_GAUSSIAN, 0, 0, 1.5*abs_sigma);
+			else 
+			{
+				GPU2->Transfer->SendImageData(magnitude[i][j-1]->imageData,magnitude[i][j-1]->height,magnitude[i][j-1]->width);
+				GPU2->Process(1.5*abs_sigma);
+				GPU2->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData);
+			}
+
 
 			// Get the kernel size for the Guassian blur
 			int hfsz = GetKernelSize(1.5*abs_sigma)/2;
@@ -639,6 +648,8 @@ void SIFT::AssignOrientations()
 				{
 					for(yi=0;yi<height;yi++)
 					{
+
+
 						// We're at a keypoint
 						if(cvGetReal2D(m_extrema[i][j-1], yi, xi)!=0)
 						{

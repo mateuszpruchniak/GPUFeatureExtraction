@@ -225,7 +225,7 @@
     <None Include="GPU\OpenCL\HighpassFilter.cl" />
     <None Include="GPU\OpenCL\LowpassFilter.cl" />
     <None Include="GPU\OpenCL\LUTFilter.cl" />
-    <None Include="GPU\OpenCL\MagnitudeOrientation.cl" />
+    <None Include="GPU\OpenCL\AssignOrientations.cl" />
     <None Include="GPU\OpenCL\MaxFilter.cl" />
     <None Include="GPU\OpenCL\MedianFilter.cl" />
     <None Include="GPU\OpenCL\MinFilter.cl" />
