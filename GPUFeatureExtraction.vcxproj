@@ -187,6 +187,7 @@
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
     <ClCompile Include="Feature.cpp" />
+    <ClCompile Include="GPU\AssignOrientations.cpp" />
     <ClCompile Include="GPU\ContextFilter.cpp" />
     <ClCompile Include="GPU\ContextFreeFilter.cpp" />
     <ClCompile Include="GPU\DetectExtrema.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
     <ClInclude Include="Feature.h" />
+    <ClInclude Include="GPU\AssignOrientations.h" />
     <ClInclude Include="GPU\ContextFilter.h" />
     <ClInclude Include="GPU\ContextFreeFilter.h" />
     <ClInclude Include="GPU\DetectExtrema.h" />

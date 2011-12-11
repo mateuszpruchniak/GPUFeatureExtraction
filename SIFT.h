@@ -8,6 +8,7 @@
 #include "GPU\Subtract.h"
 #include "GPU\DetectExtrema.h"
 #include "GPU\MagnitudeOrientation.h"
+#include "GPU\AssignOrientations.h"
 #include "GPUImageProcessor.h"
 
 
@@ -34,7 +35,7 @@ public:
 	void GenerateLists();
 	void BuildScaleSpace();
 	void DetectExtremaFunc();
-	void AssignOrientations();
+	void AssignOrientationsFunc();
 	void ExtractKeypointDescriptors();
 
 	unsigned int GetKernelSize(double sigma, double cut_off=0.001);
@@ -53,5 +54,6 @@ public:
 
 	vector<Keypoint> m_keyPoints;	// Holds each keypoint's basic info
 	vector<Descriptor> m_keyDescs;	// Holds each keypoint's descriptor
-	
+	GPUImageProcessor* GPUAssignOrientations;
+
 };

@@ -51,12 +51,16 @@ bool LowpassFilter::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplIma
 }
 
 
-bool LowpassFilter::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c)
+bool LowpassFilter::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, float sigma )
 {
 	
 	return false;
 }
 
+bool LowpassFilter::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma )
+{
+	return false;
+}
 
 void LowpassFilter::LoadMask(int* mask,int count,GPUTransferManager* transfer)
 {

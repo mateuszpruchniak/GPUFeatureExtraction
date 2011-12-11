@@ -18,6 +18,8 @@
 
 using namespace std;
 
+#define MAX_KERNEL_SIZE			20
+
 /*!
  * \class Filter
  * \brief Abstract class for all filters.
@@ -120,7 +122,9 @@ class Filter
 		/*!
 		 * Virtual methods, processing image. Launching the Kernel.
 		 */
-		virtual bool filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b,IplImage* c  ) = 0;
+		virtual bool filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b,IplImage* c, float sigma = 0  ) = 0;
+
+		virtual bool filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b,IplImage* c,IplImage* d, float sigma = 0  ) = 0;
         
 		/*!
 		 * Check error code.
@@ -131,6 +135,6 @@ class Filter
 		 * Initialize filter.
 		 */
         virtual bool onInit(cl_context ,GPUTransferManager* );
-
+		int GetKernelSize(double sigma, double cut_off=0.001);
 };
 

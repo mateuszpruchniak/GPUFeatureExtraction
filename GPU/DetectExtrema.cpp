@@ -14,10 +14,12 @@ DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer
 
 }
 
+bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma )
+{
+	return false;
+}
 
-
-
-bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c )
+bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, float sigma )
 {
 
 	GPUTransfer->SendImageData(a->imageData,a->height,a->width);
@@ -85,3 +87,4 @@ bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplIma
 {
 	return false;
 }
+

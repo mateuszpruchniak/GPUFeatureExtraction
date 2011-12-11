@@ -64,11 +64,13 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	GPUAssignOrientations = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	
 	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
 	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
 	GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
+	GPUAssignOrientations->AddProcessing(new AssignOrientations(GPUAssignOrientations->GPUContext,GPUAssignOrientations->Transfer));
 	
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
@@ -167,7 +169,7 @@ void SIFT::DoSift()
 
 
 	start = clock();
-	AssignOrientations();
+	AssignOrientationsFunc();
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
 	cout << "AssignOrientations: " << endl;
@@ -515,7 +517,7 @@ void SIFT::DetectExtremaFunc()
 
 // AssignOrientations()
 // For all the key points, generate an orientation.
-void SIFT::AssignOrientations()
+void SIFT::AssignOrientationsFunc()
 {
 	printf("Assigning orientations...\n");
 	unsigned int i, j, k, xi, yi;
@@ -546,8 +548,6 @@ void SIFT::AssignOrientations()
 			magnitude[i][j-1] = cvCreateImage(cvGetSize(m_gList[i][j]), 32, 1);
 			orientation[i][j-1] = cvCreateImage(cvGetSize(m_gList[i][j]), 32, 1);
 
-			
-
 
 			if(SIFTCPU)
 			{
@@ -572,8 +572,6 @@ void SIFT::AssignOrientations()
 					}
 				}
 
-
-
 				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", orientation[i][j-1] );
 				cvWaitKey(2);*/
@@ -585,7 +583,6 @@ void SIFT::AssignOrientations()
 				GPUMagnitudeOrientation->Process(0);
 				GPUMagnitudeOrientation->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData, orientation[i][j-1]->imageData);
 
-				
 				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", orientation[i][j-1] );
 				cvWaitKey(2);*/
@@ -627,22 +624,21 @@ void SIFT::AssignOrientations()
 			{
 				GPU2->Transfer->SendImageData(magnitude[i][j-1]->imageData,magnitude[i][j-1]->height,magnitude[i][j-1]->width);
 				GPU2->Process(1.5*abs_sigma);
-				GPU2->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData);
+				GPU2->Transfer->ReceiveImageData(imgWeight->imageData);
 			}
 
 
 			// Get the kernel size for the Guassian blur
 			int hfsz = GetKernelSize(1.5*abs_sigma)/2;
-
-			// Temporarily used to generate a mask of region used to calculate 
-			// the orientations
-			IplImage* imgMask = cvCreateImage(cvSize(width, height), 8, 1);
-			cvZero(imgMask);
-
+			IplImage* imgMask;
+			
 
 			if(SIFTCPU)
 			{
-
+				// Temporarily used to generate a mask of region used to calculate 
+				// the orientations
+				imgMask = cvCreateImage(cvSize(width, height), 8, 1);
+				cvZero(imgMask);
 				// Iterate through all points at this octave and interval
 				for(xi=0;xi<width;xi++)
 				{
@@ -807,6 +803,25 @@ void SIFT::AssignOrientations()
 
 			} else 
 			{
+				// Temporarily used to generate a mask of region used to calculate 
+				// the orientations
+				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
+				cvZero(imgMask);
+
+
+				GPUAssignOrientations->Process(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1], 1.5*abs_sigma);
+				GPUAssignOrientations->Transfer->ReceiveImageData(imgMask->imageData);
+				
+
+
+
+
+
+
+				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("AssignOrientations", imgMask );
+				cvWaitKey(2);
+
 
 			}
 

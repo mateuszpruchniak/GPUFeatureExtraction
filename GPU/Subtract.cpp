@@ -54,7 +54,12 @@ bool Subtract::filter(cl_command_queue GPUCommandQueue, float sigma)
 }
 
 
-bool Subtract::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c )
+bool Subtract::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, float sigma )
+{
+	return false;
+}
+
+bool Subtract::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma )
 {
 	return false;
 }

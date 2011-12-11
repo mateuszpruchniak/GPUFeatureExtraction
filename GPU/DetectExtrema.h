@@ -27,7 +27,9 @@ public:
 	/*!
 	* Start
 	*/
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c );
+	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c , float sigma = 0);
+
+	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma = 0);
 
 	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b);
 

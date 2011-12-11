@@ -83,6 +83,8 @@ class GPUTransferManager
 
 		cl_mem cmDevBuf3;
 
+		cl_mem cmDevBuf4;
+
         /*!
 		 * OpenCL device memory output buffer object.
 		 */
