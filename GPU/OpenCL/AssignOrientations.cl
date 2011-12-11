@@ -159,11 +159,10 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 				//
 				// b = inv(X) Y
 
-				float b =[3];
-				float 
+				float b[3];
+				float X[9]
+				float matinv[9];
 
-				CvMat *X = cvCreateMat(3, 3, CV_32FC1);
-				CvMat *matInv = cvCreateMat(3, 3, CV_32FC1);
 
 				cvSetReal2D(X, 0, 0, x1*x1);
 				cvSetReal2D(X, 1, 0, x1);
