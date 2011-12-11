@@ -64,8 +64,7 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	GPUOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-
+	
 	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
 	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
@@ -575,9 +574,9 @@ void SIFT::AssignOrientations()
 
 
 
-				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
-				cvShowImage("AssignOrientations", magnitude[i][j-1] );
-				cvWaitKey(2);
+				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("AssignOrientations", orientation[i][j-1] );
+				cvWaitKey(2);*/
 
 			} else 
 			{
@@ -587,11 +586,9 @@ void SIFT::AssignOrientations()
 				GPUMagnitudeOrientation->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData, orientation[i][j-1]->imageData);
 
 				
-
-
-				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", orientation[i][j-1] );
-				cvWaitKey(2);
+				cvWaitKey(2);*/
 
 			}
 

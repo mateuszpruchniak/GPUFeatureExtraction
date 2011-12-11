@@ -97,8 +97,8 @@
     <None Include="GPU\OpenCL\BlurGaussFilter.cl" />
     <None Include="GPU\OpenCL\Subtract.cl" />
     <None Include="GPU\OpenCL\DetectExtrema.cl" />
-    <None Include="GPU\OpenCL\Magnitude.cl" />
     <None Include="ClassDiagram12.cd" />
+    <None Include="GPU\OpenCL\MagnitudeOrientation.cl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">
