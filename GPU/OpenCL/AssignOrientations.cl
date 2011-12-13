@@ -134,82 +134,21 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 					y3 = hist[k+1];
 				}
 
-				// Next we fit a downward parabola aound
-				// these three points for better accuracy
 
-				// A downward parabola has the general form
-				//
-				// y = a * x^2 + bx + c
-				// Now the three equations stem from the three points
-				// (x1,y1) (x2,y2) (x3.y3) are
-				//
-				// y1 = a * x1^2 + b * x1 + c
-				// y2 = a * x2^2 + b * x2 + c
-				// y3 = a * x3^2 + b * x3 + c
-				//
-				// in Matrix notation, this is y = Xb, where
-				// y = (y1 y2 y3)' b = (a b c)' and
-				// 
-				//     x1^2 x1 1
-				// X = x2^2 x2 1
-				//     x3^2 x3 1
-				//
-				// OK, we need to solve this equation for b
-				// this is done by inverse the matrix X
-				//
-				// b = inv(X) Y
+				float denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
+				float A     = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
+				float B     = (x3*x3 * (y1 - y2) + x2*x2 * (y3 - y1) + x1*x1 * (y2 - y3)) / denom;
+				float C     = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
 
-				float b[3];
-				float X[9]
-				float matinv[9];
+				
 
 
-				cvSetReal2D(X, 0, 0, x1*x1);
-				cvSetReal2D(X, 1, 0, x1);
-				cvSetReal2D(X, 2, 0, 1);
 
-				cvSetReal2D(X, 0, 1, x2*x2);
-				cvSetReal2D(X, 1, 1, x2);
-				cvSetReal2D(X, 2, 1, 1);
 
-				cvSetReal2D(X, 0, 2, x3*x3);
-				cvSetReal2D(X, 1, 2, x3);
-				cvSetReal2D(X, 2, 2, 1);
 
-				// Invert the matrix
-				cvInv(X, matInv);
-
-				b[0] = cvGetReal2D(matInv, 0, 0)*y1 + cvGetReal2D(matInv, 1, 0)*y2 + cvGetReal2D(matInv, 2, 0)*y3;
-				b[1] = cvGetReal2D(matInv, 0, 1)*y1 + cvGetReal2D(matInv, 1, 1)*y2 + cvGetReal2D(matInv, 2, 1)*y3;
-				b[2] = cvGetReal2D(matInv, 0, 2)*y1 + cvGetReal2D(matInv, 1, 2)*y2 + cvGetReal2D(matInv, 2, 2)*y3;
-
-				float x0 = -b[1]/(2*b[0]);
-
-				// Anomalous situation
-				if(fabs(x0)>2*36)
-					x0=x2;
-
-				while(x0<0)
-					x0 += 36;
-				while(x0>= 36)
-					x0-= 36;
-
-				// Normalize it
-				float x0_n = x0*(2*M_PI/36);
-
-				assert(x0_n>=0 && x0_n<2*M_PI);
-				x0_n -= M_PI;
-				assert(x0_n>=-M_PI && x0_n<M_PI);
-
-				orien.push_back(x0_n);
-				mag.push_back(hist[k]);
+				
 			}
 		}
-
-		// Save this keypoint into the list
-		m_keyPoints.push_back(Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1));
-
-
 
 
 		ucDest[GMEMOffset] = 1.0;
