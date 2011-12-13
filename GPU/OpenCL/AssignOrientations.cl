@@ -140,7 +140,27 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 				float B     = (x3*x3 * (y1 - y2) + x2*x2 * (y3 - y1) + x1*x1 * (y2 - y3)) / denom;
 				float C     = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
 
+				double x0 = -b[1]/(2*b[0]);
+
+				// Anomalous situation
+				if( abs(x0) > 36.0 * 2.0 )
+					x0=x2;
+
+				while( x0 < 0 )
+					x0 += NUM_BINS;
 				
+				while(x0>= NUM_BINS)
+					x0-= NUM_BINS;
+
+				// Normalize it
+				double x0_n = x0*(2*M_PI/NUM_BINS);
+
+				assert(x0_n>=0 && x0_n<2*M_PI);
+				x0_n -= M_PI;
+				assert(x0_n>=-M_PI && x0_n<M_PI);
+
+				orien.push_back(x0_n);
+				mag.push_back(hist_orient[k]);
 
 
 
