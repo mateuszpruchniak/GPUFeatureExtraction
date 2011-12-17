@@ -15,7 +15,7 @@
 #define DESC_NUM_BINS			8
 #define FVSIZE					128
 #define	FV_THRESHOLD			0.2
-#define	SIFTCPU					0
+#define	SIFTCPU					1
 
 
 // SaveFloatingPointImage()
@@ -178,7 +178,7 @@ void SIFT::DoSift()
 	
 	
 	
-	//ExtractKeypointDescriptors();
+	ExtractKeypointDescriptors();
 }
 
 // BuildScaleSpace()
@@ -931,13 +931,18 @@ void SIFT::ExtractKeypointDescriptors()
 				cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, width, 0);
 			}
 
+
+			cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
+			cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
+			cvWaitKey(2);
+
 			// Now we have the imgInterpolated* ready. Store and get started
-			/*char* filename = new char[200];
-			sprintf(filename, "C:\\SIFT Test\\Interpolated Mag\\intmag_oct_%d_scl_%d.jpg", i, j-1);
+			char* filename = new char[200];
+			sprintf(filename, "C:\\Users\\Mati\\Pictures\\intmag_oct_%d_scl_%d.jpg", i, j-1);
 			cvSaveImage(filename, imgInterpolatedMagnitude[i][j-1]);
 
-			sprintf(filename, "C:\\SIFT Test\\Interpolated Ori\\intori_oct_%d_scl_%d.jpg", i, j-1);
-			cvSaveImage(filename, imgInterpolatedOrientation[i][j-1]);*/
+			sprintf(filename, "C:\\Users\\Mati\\Pictures\\intori_oct_%d_scl_%d.jpg", i, j-1);
+			cvSaveImage(filename, imgInterpolatedOrientation[i][j-1]);
 
 			cvReleaseImage(&imgTemp);
 
