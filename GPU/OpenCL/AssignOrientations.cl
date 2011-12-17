@@ -135,6 +135,8 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 				float x0_n = x0*(2*pi/36);
 				x0_n -= pi;
 
+				//orien.push_back(x0_n);
+				//mag.push_back(hist_orient[k]);
 
 			}
 		}
@@ -143,39 +145,3 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 	}
 
 }
-
-
-//		//List of magnitudes and orientations at the current extrema
-//		/*vector<float> orien;
-//		vector<float> mag;*/
-//
-//
-//		
-//
-//
-
-//
-//				
-//
-//				//// Normalize it
-//				//float x0_n = x0*(2*M_PI/36);
-//
-//				/*assert(x0_n>=0 && x0_n<2*M_PI);
-//				x0_n -= M_PI;
-//				assert(x0_n>=-M_PI && x0_n<M_PI);
-//
-//				orien.push_back(x0_n);
-//				mag.push_back(hist_orient[k]);
-//				*/
-//
-//			//}
-//		//}
-//
-//		//ucDest[GMEMOffset] = 1.0;
-//
-////	//}
-////
-////
-////}
-////
-////
