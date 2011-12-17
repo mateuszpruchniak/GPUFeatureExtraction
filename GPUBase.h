@@ -1,6 +1,7 @@
 
 
 #pragma once
+
 #include <oclUtils.h>
 #include <iostream>
 #include <vector>
@@ -12,20 +13,12 @@
 #include "cxmisc.h"
 #include "highgui.h"
 
+using namespace std;
 
 class GPUBase
 {
     public:
         
-        /*!
-		 * Image width.
-		 */
-        unsigned int ImageWidth;   
-
-		/*!
-		 * Image height.
-		 */
-        unsigned int ImageHeight;  
 
 		/*!
 		 * Error code, only 0 is allowed.
@@ -58,8 +51,37 @@ class GPUBase
 		 */
         cl_context GPUContext;    
 
-		GPUBase();
+		/*!
+		 * Check error code.
+		 */
+        void CheckError(int code);
 
+		/*!
+		 * Program is formed by a set of kernels, functions and declarations, and it's represented by an cl_program object.
+		 */
+        cl_program GPUProgram;    
+
+		/*!
+		 * Kernels are essentially functions that we can call from the host and that will run on the device
+		 */
+        cl_kernel GPUKernel;
+
+		char* kernelFuncName;
 		
+		cl_mem* buffersList;
+
+		int numberOfBuffers;
+
+		GPUBase(char* source, char* KernelName);
+
+
+		bool CreateBuffers(int maxBufferSize, int numberOfBuffers);
+
+
+		bool SendImageToBuffers(IplImage* img, ... );
+
+		size_t shrRoundUp(int group_size, int global_size);
+
+		char* oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* szFinalLength);
 };
 

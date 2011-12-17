@@ -20,6 +20,7 @@
     <ClCompile Include="GPU\DetectExtrema.cpp" />
     <ClCompile Include="GPU\MagnitudeOrientation.cpp" />
     <ClCompile Include="GPU\AssignOrientations.cpp" />
+    <ClCompile Include="GPUBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h">

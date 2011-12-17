@@ -15,7 +15,7 @@
 #define DESC_NUM_BINS			8
 #define FVSIZE					128
 #define	FV_THRESHOLD			0.2
-#define	SIFTCPU					1
+#define	SIFTCPU					0
 
 
 // SaveFloatingPointImage()
@@ -70,8 +70,6 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
 	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
 	GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
-	GPUAssignOrientations->AddProcessing(new AssignOrientations(GPUAssignOrientations->GPUContext,GPUAssignOrientations->Transfer));
-	
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
 	//	for(int i = -2 ; i <= 2; i++ ) //x
@@ -810,6 +808,8 @@ void SIFT::AssignOrientationsFunc()
 				// the orientations
 				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
 				cvZero(imgMask);
+
+
 
 				GPUAssignOrientations->Process(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1], 1.5*abs_sigma);
 				GPUAssignOrientations->Transfer->ReceiveImageData(imgMask->imageData);

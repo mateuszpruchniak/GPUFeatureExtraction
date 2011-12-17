@@ -3,9 +3,14 @@
 #include "GPUBase.h"
 
 
-GPUBase::GPUBase()
+GPUBase::GPUBase(char* source, char* KernelName)
 {
-	//cout << "gpu computing konstr" << endl;
+	kernelFuncName = KernelName;
+	size_t szKernelLength;
+	size_t szKernelLengthFilter;
+	size_t szKernelLengthSum;
+	char* SourceOpenCLShared;
+	char* SourceOpenCL;
 
 	GPUError = oclGetPlatformID(&cpPlatform);
 	CheckError(GPUError);
@@ -30,9 +35,133 @@ GPUBase::GPUBase()
 	GPUCommandQueue = clCreateCommandQueue(GPUContext, cdDevices[0], 0, &GPUError);
 	CheckError(GPUError);
 
-	oclPrintDevName(LOGBOTH, cdDevices[0]);  
+	oclPrintDevName(LOGBOTH, cdDevices[0]);
+
+	// Load OpenCL kernel
+	SourceOpenCLShared = oclLoadProgSource("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\GPUCode.cl", "// My comment\n", &szKernelLength);
+
+	SourceOpenCL = oclLoadProgSource(source, "// My comment\n", &szKernelLengthFilter);
+	szKernelLengthSum = szKernelLength + szKernelLengthFilter;
+	char* sourceCL = new char[szKernelLengthSum];
+	strcpy(sourceCL,SourceOpenCLShared);
+	strcat (sourceCL, SourceOpenCL);
+	
+	GPUProgram = clCreateProgramWithSource( GPUContext , 1, (const char **)&sourceCL, &szKernelLengthSum, &GPUError);
+	CheckError(GPUError);
+
+	// Build the program with 'mad' Optimization option
+	char *flags = "";
+
+	GPUError = clBuildProgram(GPUProgram, 0, NULL, flags, NULL, NULL);
+	cout << GPUError << endl;
+	CheckError(GPUError);
+	cout << kernelFuncName << endl;
+
+	GPUKernel = clCreateKernel(GPUProgram, kernelFuncName, &GPUError);
+
+
+
 }
 
+bool GPUBase::CreateBuffers(int maxBufferSize, int numbOfBuffers)
+{
+	numberOfBuffers = numbOfBuffers;
+	buffersList = new cl_mem[numberOfBuffers];
+	for (int i = 0; i < numberOfBuffers ; i++)
+	{
+		buffersList[i] = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, maxBufferSize, NULL, &GPUError);
+		CheckError(GPUError);
+	}
+	return true;
+}
+
+
+
+void GPUBase::CheckError( int code )
+{
+	switch(code)
+	{
+	case CL_SUCCESS:
+		return;
+		break;
+	default:
+		cout << "OTHERS ERROR" << endl;
+	}
+}
+
+
+bool GPUBase::SendImageToBuffers(IplImage* img, ... )
+{
+	if(buffersList == NULL)
+		return false;
+
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersList[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	va_list arg_ptr;
+	va_start(arg_ptr, img);
+	
+	for(int i = 1 ; i<numberOfBuffers ; i++)
+	{
+
+		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
+		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersList[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
+		CheckError(GPUError);
+	}
+	va_end(arg_ptr);
+}
+
+size_t GPUBase::shrRoundUp(int group_size, int global_size)
+{
+	int r = global_size % group_size;
+	if(r == 0)
+	{
+		return global_size;
+	} else
+	{
+		return global_size + group_size - r;
+	}
+}
+
+char* GPUBase::oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* szFinalLength)
+{
+	// locals
+	FILE* pFileStream = NULL;
+	size_t szSourceLength;
+
+
+	pFileStream = fopen(cFilename, "rb");
+	if(pFileStream == 0)
+	{
+		return NULL;
+	}
+	size_t szPreambleLength = strlen(cPreamble);
+
+	// get the length of the source code
+	fseek(pFileStream, 0, SEEK_END);
+	szSourceLength = ftell(pFileStream);
+	fseek(pFileStream, 0, SEEK_SET);
+
+	// allocate a buffer for the source code string and read it in
+	char* cSourceString = (char *)malloc(szSourceLength + szPreambleLength + 1);
+	memcpy(cSourceString, cPreamble, szPreambleLength);
+	if (fread((cSourceString) + szPreambleLength, szSourceLength, 1, pFileStream) != 1)
+	{
+		fclose(pFileStream);
+		free(cSourceString);
+		return 0;
+	}
+
+	// close the file and return the total length of the combined (preamble + source) string
+	fclose(pFileStream);
+	if(szFinalLength != 0)
+	{
+		*szFinalLength = szSourceLength + szPreambleLength;
+	}
+	cSourceString[szSourceLength + szPreambleLength] = '\0';
+
+	return cSourceString;
+}
 
 
 

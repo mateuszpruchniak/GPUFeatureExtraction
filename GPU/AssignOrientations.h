@@ -1,12 +1,12 @@
 ﻿
 
 #pragma once
-#include "GPUBase.h"
+#include "ContextFilter.h"
 
 
 
 class AssignOrientations :
-	public GPUBase
+	public ContextFilter
 {
 public:
 

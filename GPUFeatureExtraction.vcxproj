@@ -184,6 +184,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GPUBase.cpp" />
     <ClCompile Include="GPUImageProcessor.cpp" />
     <ClCompile Include="GPUTransferManager.cpp" />
     <ClCompile Include="Feature.cpp" />
