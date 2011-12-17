@@ -237,6 +237,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h" />
+    <ClInclude Include="GPUBase.h" />
     <ClInclude Include="GPUImageProcessor.h" />
     <ClInclude Include="GPUTransferManager.h" />
     <ClInclude Include="Feature.h" />
