@@ -58,7 +58,7 @@ class GPUBase
 		 */
         cl_context GPUContext;    
 
-		
+		GPUBase();
 
 		
 };
