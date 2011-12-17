@@ -68,17 +68,27 @@ class GPUBase
 
 		char* kernelFuncName;
 		
-		cl_mem* buffersList;
+		cl_mem* buffersListIn;
 
-		int numberOfBuffers;
+		int* sizeBuffersIn;
+
+		int numberOfBuffersIn;
+
+		cl_mem* buffersListOut;
+
+		int* sizeBuffersOut;
+
+		int numberOfBuffersOut;
 
 		GPUBase(char* source, char* KernelName);
 
+		bool CreateBuffersIn(int maxBufferSize, int numberOfBuffers);
 
-		bool CreateBuffers(int maxBufferSize, int numberOfBuffers);
-
+		bool CreateBuffersOut(int maxBufferSize, int numberOfBuffers);
 
 		bool SendImageToBuffers(IplImage* img, ... );
+
+		bool ReceiveImageData(IplImage* img, ... );
 
 		size_t shrRoundUp(int group_size, int global_size);
 

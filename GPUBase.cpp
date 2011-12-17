@@ -63,18 +63,34 @@ GPUBase::GPUBase(char* source, char* KernelName)
 
 }
 
-bool GPUBase::CreateBuffers(int maxBufferSize, int numbOfBuffers)
+bool GPUBase::CreateBuffersIn(int maxBufferSize, int numbOfBuffers)
 {
-	numberOfBuffers = numbOfBuffers;
-	buffersList = new cl_mem[numberOfBuffers];
-	for (int i = 0; i < numberOfBuffers ; i++)
+	numberOfBuffersIn = numbOfBuffers;
+	buffersListIn = new cl_mem[numberOfBuffersIn];
+	sizeBuffersIn = new int[numberOfBuffersIn];
+
+	for (int i = 0; i < numberOfBuffersIn ; i++)
 	{
-		buffersList[i] = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, maxBufferSize, NULL, &GPUError);
+		buffersListIn[i] = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, maxBufferSize, NULL, &GPUError);
 		CheckError(GPUError);
 	}
 	return true;
 }
 
+
+bool GPUBase::CreateBuffersOut( int maxBufferSize, int numbOfBuffers)
+{
+	numberOfBuffersOut = numbOfBuffers;
+	buffersListOut = new cl_mem[numberOfBuffersOut];
+	sizeBuffersOut = new int[numberOfBuffersOut];
+
+	for (int i = 0; i < numberOfBuffersOut ; i++)
+	{
+		buffersListOut[i] = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, maxBufferSize, NULL, &GPUError);
+		CheckError(GPUError);
+	}
+	return true;
+}
 
 
 void GPUBase::CheckError( int code )
@@ -92,24 +108,49 @@ void GPUBase::CheckError( int code )
 
 bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 {
-	if(buffersList == NULL)
+	if(buffersListIn == NULL)
 		return false;
 
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersList[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
+	sizeBuffersIn[0] = img->nSize;
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
 	CheckError(GPUError);
 
 	va_list arg_ptr;
 	va_start(arg_ptr, img);
 	
-	for(int i = 1 ; i<numberOfBuffers ; i++)
+	for(int i = 1 ; i<numberOfBuffersIn ; i++)
 	{
-
 		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersList[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
+		sizeBuffersIn[i] = tmpImg->nSize;
+		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
 	}
 	va_end(arg_ptr);
 }
+
+
+bool GPUBase::ReceiveImageData( IplImage* img, ... )
+{
+	if(buffersListOut == NULL)
+		return false;
+
+	sizeBuffersOut[0] = img->nSize;
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	va_list arg_ptr;
+	va_start(arg_ptr, img);
+
+	for(int i = 1 ; i<numberOfBuffersOut ; i++)
+	{
+		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
+		sizeBuffersOut[i] = tmpImg->nSize;
+		GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
+		CheckError(GPUError);
+	}
+	va_end(arg_ptr);
+}
+
 
 size_t GPUBase::shrRoundUp(int group_size, int global_size)
 {
@@ -162,6 +203,8 @@ char* GPUBase::oclLoadProgSource(const char* cFilename, const char* cPreamble, s
 
 	return cSourceString;
 }
+
+
 
 
 
