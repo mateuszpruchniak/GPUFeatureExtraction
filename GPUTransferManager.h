@@ -85,6 +85,7 @@ class GPUTransferManager
 
 		cl_mem cmDevBuf4;
 
+
         /*!
 		 * OpenCL device memory output buffer object.
 		 */
@@ -162,3 +163,11 @@ class GPUTransferManager
 };
 
 
+typedef struct
+{
+	float	x;
+	float	y;	
+	float	mag;	
+	float	orien;	
+	float	scale;	
+} Keys;

@@ -639,6 +639,9 @@ void SIFT::AssignOrientationsFunc()
 				// the orientations
 				imgMask = cvCreateImage(cvSize(width, height), 8, 1);
 				cvZero(imgMask);
+
+				
+
 				// Iterate through all points at this octave and interval
 				for(xi=0;xi<width;xi++)
 				{
@@ -807,7 +810,6 @@ void SIFT::AssignOrientationsFunc()
 				// the orientations
 				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
 				cvZero(imgMask);
-
 
 				GPUAssignOrientations->Process(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1], 1.5*abs_sigma);
 				GPUAssignOrientations->Transfer->ReceiveImageData(imgMask->imageData);

@@ -36,17 +36,30 @@ __kernel void ckMagnOrien(__global float* ucSource, __global float* ucDestMagn, 
 
 
 
-
 __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgWeight, __global float* imgMask, __global float* ucSourceOrientation, 
-							__global float* ucDest, int ImageWidth, int ImageHeight, float maskSize)
+						   __global int* count, __global float* keys,
+						   __global float* ucDest, int ImageWidth, int ImageHeight, float maskSize)
 {
 	int pozX = get_global_id(0) > ImageWidth  ? ImageWidth  : get_global_id(0);
 	int pozY = get_global_id(1) > ImageHeight ? ImageHeight : get_global_id(1);
 	float pi = 3.141592653;
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
 	
+
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+
+
+
 	if( ucSourceExtrema[GMEMOffset] != 0.0 )
 	{
+
+
+		int numberExtrema = atomic_add(count, (int)1);
+		int numberPointInHist = 1;
+		//keys[numberExtrema * 36 * 5] = (float)numberExtrema;
+		
 		float histOrient[36];
 		for(int i=0;i<36;i++)
 			histOrient[i]=0.0;
@@ -134,6 +147,16 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 				float x0_n = x0*(2*pi/36);
 				x0_n -= pi;
+
+				
+				
+				keys[numberExtrema*numberPointInHist*5] = (float)pozX;
+				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY;
+				keys[numberExtrema*numberPointInHist*5 + 2] = (float)histOrient[k];
+				keys[numberExtrema*numberPointInHist*5 + 3] = (float)x0_n;
+				keys[numberExtrema*numberPointInHist*5 + 4] = (float)numberExtrema;
+				
+				++numberPointInHist;
 
 				//orien.push_back(x0_n);
 				//mag.push_back(hist_orient[k]);
