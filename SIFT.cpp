@@ -1046,7 +1046,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 	// Loop over all keypoints
 
-	for(unsigned int ikp = 0; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp = 140 ; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
