@@ -891,46 +891,58 @@ void SIFT::ExtractKeypointDescriptors()
 			cvZero(imgInterpolatedMagnitude[i][j-1]);
 			cvZero(imgInterpolatedOrientation[i][j-1]);
 
-			// Do the calculations
-			for(float ii=1.5;ii<width-1.5;ii++)
+
+			if(SIFTCPU)
 			{
-				for(float jj=1.5;jj<height-1.5;jj++)
+
+				// Do the calculations
+				for(float ii=1.5;ii<width-1.5;ii++)
 				{
-					// "inbetween" change
-					double dx = (cvGetReal2D(m_gList[i][j], jj, ii+1.5) + cvGetReal2D(m_gList[i][j], jj, ii+0.5))/2 - (cvGetReal2D(m_gList[i][j], jj, ii-1.5) + cvGetReal2D(m_gList[i][j], jj, ii-0.5))/2;
-					double dy = (cvGetReal2D(m_gList[i][j], jj+1.5, ii) + cvGetReal2D(m_gList[i][j], jj+0.5, ii))/2 - (cvGetReal2D(m_gList[i][j], jj-1.5, ii) + cvGetReal2D(m_gList[i][j], jj-0.5, ii))/2;
+					for(float jj=1.5;jj<height-1.5;jj++)
+					{
+						// "inbetween" change
+						double dx = (cvGetReal2D(m_gList[i][j], jj, ii+1.5) + cvGetReal2D(m_gList[i][j], jj, ii+0.5))/2 - (cvGetReal2D(m_gList[i][j], jj, ii-1.5) + cvGetReal2D(m_gList[i][j], jj, ii-0.5))/2;
+						double dy = (cvGetReal2D(m_gList[i][j], jj+1.5, ii) + cvGetReal2D(m_gList[i][j], jj+0.5, ii))/2 - (cvGetReal2D(m_gList[i][j], jj-1.5, ii) + cvGetReal2D(m_gList[i][j], jj-0.5, ii))/2;
 
-					unsigned int iii = ii+1;
-					unsigned int jjj = jj+1;
-					assert(iii<=width && jjj<=height);
+						unsigned int iii = ii+1;
+						unsigned int jjj = jj+1;
+						assert(iii<=width && jjj<=height);
 
-					// Set the magnitude and orientation
-					cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, iii, sqrt(dx*dx + dy*dy));
-					cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, iii, (atan2(dy,dx)==M_PI)? -M_PI:atan2(dy,dx) );
+						// Set the magnitude and orientation
+						cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, iii, sqrt(dx*dx + dy*dy));
+						cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, iii, (atan2(dy,dx)==M_PI)? -M_PI:atan2(dy,dx) );
+					}
 				}
-			}
 
-			// Pad the edges with zeros
-			for(unsigned int iii=0;iii<width+1;iii++)
-			{
-				cvSetReal2D(imgInterpolatedMagnitude[i][j-1], 0, iii, 0);
-				cvSetReal2D(imgInterpolatedMagnitude[i][j-1], height, iii, 0);
-				cvSetReal2D(imgInterpolatedOrientation[i][j-1], 0, iii, 0);
-				cvSetReal2D(imgInterpolatedOrientation[i][j-1], height, iii, 0);
-			}
+				// Pad the edges with zeros
+				for(unsigned int iii=0;iii<width+1;iii++)
+				{
+					cvSetReal2D(imgInterpolatedMagnitude[i][j-1], 0, iii, 0);
+					cvSetReal2D(imgInterpolatedMagnitude[i][j-1], height, iii, 0);
+					cvSetReal2D(imgInterpolatedOrientation[i][j-1], 0, iii, 0);
+					cvSetReal2D(imgInterpolatedOrientation[i][j-1], height, iii, 0);
+				}
 
-			for(unsigned int jjj=0;jjj<height+1;jjj++)
+				for(unsigned int jjj=0;jjj<height+1;jjj++)
+				{
+					cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, 0, 0);
+					cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, width, 0);
+					cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, 0, 0);
+					cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, width, 0);
+				}
+
+			} else 
 			{
-				cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, 0, 0);
-				cvSetReal2D(imgInterpolatedMagnitude[i][j-1], jjj, width, 0);
-				cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, 0, 0);
-				cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, width, 0);
+
+
 			}
 
 
 			cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
 			cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
 			cvWaitKey(2);
+
+
 
 			// Now we have the imgInterpolated* ready. Store and get started
 			char* filename = new char[200];
