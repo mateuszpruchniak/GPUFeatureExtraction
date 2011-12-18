@@ -21,6 +21,7 @@
     <ClCompile Include="GPU\MagnitudeOrientation.cpp" />
     <ClCompile Include="GPU\AssignOrientations.cpp" />
     <ClCompile Include="GPUBase.cpp" />
+    <ClCompile Include="GPU\ExtractKeypointDescriptors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h">
@@ -81,6 +82,7 @@
     <ClInclude Include="GPU\MagnitudeOrientation.h" />
     <ClInclude Include="GPU\AssignOrientations.h" />
     <ClInclude Include="GPUBase.h" />
+    <ClInclude Include="GPU\ExtractKeypointDescriptors.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
@@ -103,6 +105,7 @@
     <None Include="GPU\OpenCL\DetectExtrema.cl" />
     <None Include="ClassDiagram12.cd" />
     <None Include="GPU\OpenCL\AssignOrientations.cl" />
+    <None Include="GPU\OpenCL\ExtractKeypointDescriptors.cl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header">

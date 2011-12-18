@@ -109,6 +109,8 @@ class GPUBase
 
 		GPUBase();
 
+		~GPUBase();
+
 		GPUBase(char* source, char* KernelName);
 
 		bool CreateBuffersIn(int maxBufferSize, int numberOfBuffers);

@@ -3,6 +3,7 @@
 
 #include "SIFT.h"
 #include "GPUImageProcessor.h"
+#include "GPU/ExtractKeypointDescriptors.h"
 
 #define SIGMA_ANTIALIAS			0.5
 #define SIGMA_PREBLUR			1.0
@@ -176,7 +177,7 @@ void SIFT::DoSift()
 	
 	
 	
-	ExtractKeypointDescriptors();
+	ExtractKeypointDescriptorsFunc();
 }
 
 // BuildScaleSpace()
@@ -817,9 +818,9 @@ void SIFT::AssignOrientationsFunc()
 				assign->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
 				assign->ReceiveImageData(imgMask);
 
-				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
+				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", imgMask );
-				cvWaitKey(2);
+				cvWaitKey(2);*/
 
 			}
 
@@ -852,7 +853,7 @@ void SIFT::AssignOrientationsFunc()
 
 // ExtractKeypointDescriptors()
 // Generates a unique descriptor for each keypoint descriptor
-void SIFT::ExtractKeypointDescriptors()
+void SIFT::ExtractKeypointDescriptorsFunc()
 {
 	printf("Extract keypoint descriptors...\n");
 
@@ -868,6 +869,19 @@ void SIFT::ExtractKeypointDescriptors()
 		imgInterpolatedMagnitude[i] = new IplImage*[m_numIntervals];
 		imgInterpolatedOrientation[i] = new IplImage*[m_numIntervals];
 	}
+
+
+	ExtractKeypointDescriptors* extract;
+
+	if(SIFTCPU)
+	{
+
+	}
+	else
+	{
+		extract = new ExtractKeypointDescriptors();
+	}
+
 
 	// These two loops calculate the interpolated thingy for all octaves
 	// and subimages
@@ -885,15 +899,16 @@ void SIFT::ExtractKeypointDescriptors()
 			// Scale it up. This will give us "access" to in betweens
 			cvPyrUp(m_gList[i][j], imgTemp);
 
-			// Allocate memory and zero them
-			imgInterpolatedMagnitude[i][j-1] = cvCreateImage(cvSize(width+1, height+1), 32, 1);
-			imgInterpolatedOrientation[i][j-1] = cvCreateImage(cvSize(width+1, height+1), 32, 1);
-			cvZero(imgInterpolatedMagnitude[i][j-1]);
-			cvZero(imgInterpolatedOrientation[i][j-1]);
+			
 
 
 			if(SIFTCPU)
 			{
+				// Allocate memory and zero them
+				imgInterpolatedMagnitude[i][j-1] = cvCreateImage(cvSize(width+1, height+1), 32, 1);
+				imgInterpolatedOrientation[i][j-1] = cvCreateImage(cvSize(width+1, height+1), 32, 1);
+				cvZero(imgInterpolatedMagnitude[i][j-1]);
+				cvZero(imgInterpolatedOrientation[i][j-1]);
 
 				// Do the calculations
 				for(float ii=1.5;ii<width-1.5;ii++)
@@ -901,6 +916,8 @@ void SIFT::ExtractKeypointDescriptors()
 					for(float jj=1.5;jj<height-1.5;jj++)
 					{
 						// "inbetween" change
+						int tmp = jj;
+						cout << tmp << endl;
 						double dx = (cvGetReal2D(m_gList[i][j], jj, ii+1.5) + cvGetReal2D(m_gList[i][j], jj, ii+0.5))/2 - (cvGetReal2D(m_gList[i][j], jj, ii-1.5) + cvGetReal2D(m_gList[i][j], jj, ii-0.5))/2;
 						double dy = (cvGetReal2D(m_gList[i][j], jj+1.5, ii) + cvGetReal2D(m_gList[i][j], jj+0.5, ii))/2 - (cvGetReal2D(m_gList[i][j], jj-1.5, ii) + cvGetReal2D(m_gList[i][j], jj-0.5, ii))/2;
 
@@ -933,14 +950,25 @@ void SIFT::ExtractKeypointDescriptors()
 
 			} else 
 			{
-
-
+				// Allocate memory and zero them
+				imgInterpolatedMagnitude[i][j-1] = cvCreateImage(cvSize(width, height), 32, 1);
+				imgInterpolatedOrientation[i][j-1] = cvCreateImage(cvSize(width, height), 32, 1);
+				cvZero(imgInterpolatedMagnitude[i][j-1]);
+				cvZero(imgInterpolatedOrientation[i][j-1]);
+				
+				extract->CreateBuffersIn((width)*(height)*sizeof(float),1);
+				extract->CreateBuffersOut((width)*(height)*sizeof(float),2);
+				extract->SendImageToBuffers(m_gList[i][j]);
+				extract->Process();
+				extract->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
+				
+				cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
+				cvWaitKey(2);
 			}
 
 
-			cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
-			cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
-			cvWaitKey(2);
+			
 
 
 
@@ -955,6 +983,15 @@ void SIFT::ExtractKeypointDescriptors()
 			cvReleaseImage(&imgTemp);
 
 		}
+	}
+
+
+	if(SIFTCPU)
+	{
+
+	} else
+	{
+		delete extract;
 	}
 
 	// Build an Interpolated Gaussian Table of size FEATURE_WINDOW_SIZE

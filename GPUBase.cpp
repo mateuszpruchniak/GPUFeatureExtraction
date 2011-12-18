@@ -132,7 +132,7 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 	imageHeight = img->height;
 	imageWidth = img->width;
 
-	sizeBuffersIn[0] = img->width*img->height*img->nChannels*sizeof(char);
+	sizeBuffersIn[0] = img->width*img->height*sizeof(float);
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->width*img->height*sizeof(float) , (void*)img->imageData, 0, NULL, NULL);
 	CheckError(GPUError);
 
@@ -142,7 +142,7 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 	for(int i = 1 ; i<numberOfBuffersIn ; i++)
 	{
 		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		sizeBuffersIn[i] = tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char);
+		sizeBuffersIn[i] = tmpImg->width*tmpImg->height*sizeof(float);
 		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*sizeof(float) , (void*)tmpImg->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
 	}
@@ -155,7 +155,7 @@ bool GPUBase::ReceiveImageData( IplImage* img, ... )
 	if(buffersListOut == NULL)
 		return false;
 
-	sizeBuffersOut[0] = img->width*img->height*img->nChannels*sizeof(char);
+	sizeBuffersOut[0] = img->width*img->height*sizeof(float);
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[0], CL_TRUE, 0, img->width*img->height*sizeof(float) , (void*)img->imageData, 0, NULL, NULL);
 	CheckError(GPUError);
 
@@ -165,7 +165,7 @@ bool GPUBase::ReceiveImageData( IplImage* img, ... )
 	for(int i = 1 ; i<numberOfBuffersOut ; i++)
 	{
 		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		sizeBuffersOut[i] = tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char);
+		sizeBuffersOut[i] = tmpImg->width*tmpImg->height*sizeof(float);
 		GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*sizeof(float) , (void*)tmpImg->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
 	}
@@ -223,6 +223,22 @@ char* GPUBase::oclLoadProgSource(const char* cFilename, const char* cPreamble, s
 	cSourceString[szSourceLength + szPreambleLength] = '\0';
 
 	return cSourceString;
+}
+
+GPUBase::~GPUBase()
+{
+	if(GPUCommandQueue)clReleaseCommandQueue(GPUCommandQueue);
+	if(GPUContext)clReleaseContext(GPUContext);
+
+	for(int i = 1 ; i<numberOfBuffersOut ; i++)
+	{
+		if(buffersListOut[i])clReleaseMemObject(buffersListOut[i]);
+	}
+
+	for(int i = 1 ; i<numberOfBuffersIn ; i++)
+	{
+		if(buffersListIn[i])clReleaseMemObject(buffersListIn[i]);
+	}
 }
 
 

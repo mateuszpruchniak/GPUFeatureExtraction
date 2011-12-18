@@ -69,7 +69,7 @@ bool AssignOrientations::Process( float sigma, int scale, int scale2 )
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, 700*36*sizeof(Keys), (void*)&keys, 0, NULL, NULL);
 	CheckError(GPUError);
 	
-	cout << "count: " << count << endl;
+	/*cout << "count: " << count << endl;
 	for (int i =0 ; i < 36*350 ; i++)
 	{
 		if( keys[i].x != 0 ) 
@@ -81,6 +81,6 @@ bool AssignOrientations::Process( float sigma, int scale, int scale2 )
 			cout << " orie: " << keys[i].orien;
 			cout << " scale: " << keys[i].scale << endl;
 		}
-	}
+	}*/
 	return true;
 }

@@ -192,6 +192,7 @@
     <ClCompile Include="GPU\ContextFilter.cpp" />
     <ClCompile Include="GPU\ContextFreeFilter.cpp" />
     <ClCompile Include="GPU\DetectExtrema.cpp" />
+    <ClCompile Include="GPU\ExtractKeypointDescriptors.cpp" />
     <ClCompile Include="GPU\Filter.cpp" />
     <ClCompile Include="GPU\HighpassFilter.cpp" />
     <ClCompile Include="GPU\LinearFilter.cpp" />
@@ -223,6 +224,7 @@
     <None Include="GPU\OpenCL\DetectExtrema.cl" />
     <None Include="GPU\OpenCL\DilateFilter.cl" />
     <None Include="GPU\OpenCL\ErodeFilter.cl" />
+    <None Include="GPU\OpenCL\ExtractKeypointDescriptors.cl" />
     <None Include="GPU\OpenCL\GPUCode.cl" />
     <None Include="GPU\OpenCL\HighpassFilter.cl" />
     <None Include="GPU\OpenCL\LowpassFilter.cl" />
@@ -246,6 +248,7 @@
     <ClInclude Include="GPU\ContextFilter.h" />
     <ClInclude Include="GPU\ContextFreeFilter.h" />
     <ClInclude Include="GPU\DetectExtrema.h" />
+    <ClInclude Include="GPU\ExtractKeypointDescriptors.h" />
     <ClInclude Include="GPU\Filter.h" />
     <ClInclude Include="GPU\HighpassFilter.h" />
     <ClInclude Include="GPU\LinearFilter.h" />

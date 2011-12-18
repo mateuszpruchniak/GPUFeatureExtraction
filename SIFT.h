@@ -36,7 +36,7 @@ public:
 	void BuildScaleSpace();
 	void DetectExtremaFunc();
 	void AssignOrientationsFunc();
-	void ExtractKeypointDescriptors();
+	void ExtractKeypointDescriptorsFunc();
 
 	unsigned int GetKernelSize(double sigma, double cut_off=0.001);
 	CvMat* BuildInterpolatedGaussianTable(unsigned int size, double sigma);
