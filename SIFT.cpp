@@ -175,9 +175,16 @@ void SIFT::DoSift()
 	cout << duration << endl;
 	
 	
-	
-	
+	start = clock();
 	ExtractKeypointDescriptorsFunc();
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "ExtractKeypointDescriptors: " << endl;
+	cout << duration << endl;
+
+
+
+
 }
 
 // BuildScaleSpace()
@@ -916,8 +923,6 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 					for(float jj=1.5;jj<height-1.5;jj++)
 					{
 						// "inbetween" change
-						int tmp = jj;
-						cout << tmp << endl;
 						double dx = (cvGetReal2D(m_gList[i][j], jj, ii+1.5) + cvGetReal2D(m_gList[i][j], jj, ii+0.5))/2 - (cvGetReal2D(m_gList[i][j], jj, ii-1.5) + cvGetReal2D(m_gList[i][j], jj, ii-0.5))/2;
 						double dy = (cvGetReal2D(m_gList[i][j], jj+1.5, ii) + cvGetReal2D(m_gList[i][j], jj+0.5, ii))/2 - (cvGetReal2D(m_gList[i][j], jj-1.5, ii) + cvGetReal2D(m_gList[i][j], jj-0.5, ii))/2;
 
@@ -930,6 +935,10 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 						cvSetReal2D(imgInterpolatedOrientation[i][j-1], jjj, iii, (atan2(dy,dx)==M_PI)? -M_PI:atan2(dy,dx) );
 					}
 				}
+
+				cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
+				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
+				cvWaitKey(2);
 
 				// Pad the edges with zeros
 				for(unsigned int iii=0;iii<width+1;iii++)
@@ -963,7 +972,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 				extract->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
 				
 				cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
-				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
+				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
 				cvWaitKey(2);
 			}
 
