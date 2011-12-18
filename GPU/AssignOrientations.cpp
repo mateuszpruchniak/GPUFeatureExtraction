@@ -15,7 +15,7 @@ AssignOrientations::AssignOrientations(): GPUBase("C:\\Users\\Mati\\Desktop\\Dro
 
 }
 
-bool AssignOrientations::Process( float sigma )
+bool AssignOrientations::Process( float sigma, int scale, int scale2 )
 {
 	int maskSize = GetKernelSize(sigma);
 	Keys keys[36*700];
@@ -57,7 +57,9 @@ bool AssignOrientations::Process( float sigma )
 	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_mem), (void*)&buffersListOut[0]);
 	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_uint), (void*)&imageWidth);
 	GPUError |= clSetKernelArg(GPUKernel, 8, sizeof(cl_uint), (void*)&imageHeight);
-	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_float), (void*)&maskSize);
+	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_uint), (void*)&scale);
+	GPUError |= clSetKernelArg(GPUKernel, 10, sizeof(cl_uint), (void*)&scale2);
+	GPUError |= clSetKernelArg(GPUKernel, 11, sizeof(cl_float), (void*)&maskSize);
 	if(GPUError) return false;
 	
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;

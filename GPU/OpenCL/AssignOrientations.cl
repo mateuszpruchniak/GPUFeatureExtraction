@@ -38,7 +38,7 @@ __kernel void ckMagnOrien(__global float* ucSource, __global float* ucDestMagn, 
 
 __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgWeight, __global float* imgMask, __global float* ucSourceOrientation, 
 						   __global int* count, __global float* keys,
-						   __global float* ucDest, int ImageWidth, int ImageHeight, float maskSize)
+						   __global float* ucDest, int ImageWidth, int ImageHeight, int scale, int scale2, float maskSize)
 {
 	int pozX = get_global_id(0) > ImageWidth  ? ImageWidth  : get_global_id(0);
 	int pozY = get_global_id(1) > ImageHeight ? ImageHeight : get_global_id(1);
@@ -147,19 +147,15 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 				float x0_n = x0*(2*pi/36);
 				x0_n -= pi;
 
-				
-				
-				keys[numberExtrema*numberPointInHist*5] = (float)pozX;
-				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY;
+				//Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1)
+
+				keys[numberExtrema*numberPointInHist*5] = (float)pozX * scale / 2.0;
+				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY * scale / 2.0;
 				keys[numberExtrema*numberPointInHist*5 + 2] = (float)histOrient[k];
 				keys[numberExtrema*numberPointInHist*5 + 3] = (float)x0_n;
-				keys[numberExtrema*numberPointInHist*5 + 4] = (float)numberExtrema;
+				keys[numberExtrema*numberPointInHist*5 + 4] = (float)scale2;
 				
 				++numberPointInHist;
-
-				//orien.push_back(x0_n);
-				//mag.push_back(hist_orient[k]);
-
 			}
 		}
 

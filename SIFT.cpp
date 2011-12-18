@@ -793,6 +793,7 @@ void SIFT::AssignOrientationsFunc()
 
 									orien.push_back(x0_n);
 									mag.push_back(hist_orient[k]);
+
 								}
 							}
 
@@ -813,18 +814,12 @@ void SIFT::AssignOrientationsFunc()
 				assign->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
 				assign->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
 				assign->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
-				assign->Process(1.5*abs_sigma);
+				assign->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
 				assign->ReceiveImageData(imgMask);
-
-
-
-
-
 
 				cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", imgMask );
 				cvWaitKey(2);
-
 
 			}
 

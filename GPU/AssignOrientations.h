@@ -20,7 +20,7 @@ public:
 	*/
 	AssignOrientations();
 
-	bool Process(float sigma);
+	bool Process(float sigma, int scale, int scale2);
 
 };
 
