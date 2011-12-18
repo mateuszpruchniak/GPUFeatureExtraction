@@ -810,8 +810,8 @@ void SIFT::AssignOrientationsFunc()
 				cvZero(imgMask);
 
 				AssignOrientations* assign = new AssignOrientations();
-				assign->CreateBuffersIn(imgMask->width*imgMask->height*imgMask->nChannels*sizeof(char),4);
-				assign->CreateBuffersOut(imgMask->width*imgMask->height*imgMask->nChannels*sizeof(char),1);
+				assign->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
+				assign->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
 				assign->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
 				assign->Process(1.5*abs_sigma);
 				assign->ReceiveImageData(imgMask);
