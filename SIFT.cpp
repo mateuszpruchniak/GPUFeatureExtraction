@@ -608,6 +608,8 @@ void SIFT::AssignOrientationsFunc()
 	// The histogram with 8 bins
 	double* hist_orient = new double[NUM_BINS];
 
+	m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
+
 	// Go through all octaves
 	for(i=0;i<m_numOctaves;i++)
 	{
@@ -615,6 +617,8 @@ void SIFT::AssignOrientationsFunc()
 		unsigned int scale = (unsigned int)pow(2.0, (double)i);
 		unsigned int width = m_gList[i][0]->width;
 		unsigned int height= m_gList[i][0]->height;
+		
+		
 
 		// Go through all intervals in the current scale
 		for(j=1;j<m_numIntervals+1;j++)
@@ -818,13 +822,42 @@ void SIFT::AssignOrientationsFunc()
 				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
 				cvZero(imgMask);
 
+				
+
 				AssignOrientations* assign = new AssignOrientations();
 				assign->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
 				assign->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
 				assign->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
-				assign->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
+				Keys* keys = assign->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
 				assign->ReceiveImageData(imgMask);
 
+				
+
+				for (int i =0 ; i < 36*350 ; i++)
+				{
+					if( keys[i].x != 0 ) 
+					{
+						vector<double> orien;
+						vector<double> mag;
+						orien.push_back(keys[i].orien);
+						mag.push_back(keys[i].mag);
+						m_keyPoints.push_back(Keypoint(keys[i].x, keys[i].y, mag, orien, keys[i].scale));
+
+						++m_numKeypoints;
+
+						/*cout << "i: " << i << endl;
+						cout << " x: " << keys[i].x;
+						cout << " y: " << keys[i].y;
+						cout << " mag: " << keys[i].mag;
+						cout << " orie: " << keys[i].orien;
+						cout << " scale: " << keys[i].scale << endl;*/
+					}
+				}
+				
+				
+
+				//m_keyPoints.push_back(Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1));
+				
 				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", imgMask );
 				cvWaitKey(2);*/
@@ -936,9 +969,9 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 					}
 				}
 
-				cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
+				/*cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
-				cvWaitKey(2);
+				cvWaitKey(2);*/
 
 				// Pad the edges with zeros
 				for(unsigned int iii=0;iii<width+1;iii++)
@@ -971,9 +1004,9 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 				extract->Process();
 				extract->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
 				
-				cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
+				/*cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
-				cvWaitKey(2);
+				cvWaitKey(2);*/
 			}
 
 
@@ -1012,7 +1045,8 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 	vector<double> hist(DESC_NUM_BINS);
 
 	// Loop over all keypoints
-	for(unsigned int ikp = 0;ikp<m_numKeypoints;ikp++)
+
+	for(unsigned int ikp = 0; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
@@ -1148,6 +1182,8 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 		// We're done with this descriptor. Store it into a list
 		m_keyDescs.push_back(Descriptor(descxi, descyi, fv));
 	}
+
+	m_numKeypoints = 150;  // -----------------------------------------------------------------------
 
 	assert(m_keyDescs.size()==m_numKeypoints);
 

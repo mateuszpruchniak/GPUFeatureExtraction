@@ -4,6 +4,14 @@
 
 #include "../GPUBase.h"
 
+typedef struct
+{
+	float	x;
+	float	y;	
+	float	mag;	
+	float	orien;	
+	float	scale;	
+} Keys;
 
 class AssignOrientations :
 	public GPUBase
@@ -20,16 +28,8 @@ public:
 	*/
 	AssignOrientations();
 
-	bool Process(float sigma, int scale, int scale2);
+	Keys* Process(float sigma, int scale, int scale2);
 
 };
 
 
-typedef struct
-{
-	float	x;
-	float	y;	
-	float	mag;	
-	float	orien;	
-	float	scale;	
-} Keys;
