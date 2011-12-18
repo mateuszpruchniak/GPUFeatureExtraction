@@ -163,11 +163,3 @@ class GPUTransferManager
 };
 
 
-typedef struct
-{
-	float	x;
-	float	y;	
-	float	mag;	
-	float	orien;	
-	float	scale;	
-} Keys;

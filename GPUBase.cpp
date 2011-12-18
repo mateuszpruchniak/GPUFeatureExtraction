@@ -1,4 +1,4 @@
-
+﻿
 
 #include "GPUBase.h"
 
@@ -11,6 +11,8 @@ GPUBase::GPUBase(char* source, char* KernelName)
 	size_t szKernelLengthSum;
 	char* SourceOpenCLShared;
 	char* SourceOpenCL;
+	iBlockDimX = 16;
+	iBlockDimY = 16;
 
 	GPUError = oclGetPlatformID(&cpPlatform);
 	CheckError(GPUError);
@@ -63,6 +65,12 @@ GPUBase::GPUBase(char* source, char* KernelName)
 
 }
 
+GPUBase::GPUBase()
+{
+	iBlockDimX = 16;
+	iBlockDimY = 16;
+}
+
 bool GPUBase::CreateBuffersIn(int maxBufferSize, int numbOfBuffers)
 {
 	numberOfBuffersIn = numbOfBuffers;
@@ -75,6 +83,16 @@ bool GPUBase::CreateBuffersIn(int maxBufferSize, int numbOfBuffers)
 		CheckError(GPUError);
 	}
 	return true;
+}
+
+int GPUBase::GetKernelSize(double sigma, double cut_off)
+{
+	unsigned int i;
+	for (i=0;i<MAX_KERNEL_SIZE;i++)
+		if (exp(-((double)(i*i))/(2.0*sigma*sigma))<cut_off)
+			break;
+	unsigned int size = 2*i-1;
+	return size;
 }
 
 
@@ -111,8 +129,11 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 	if(buffersListIn == NULL)
 		return false;
 
-	sizeBuffersIn[0] = img->nSize;
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
+	imageHeight = img->height;
+	imageWidth = img->width;
+
+	sizeBuffersIn[0] = img->width*img->height*img->nChannels*sizeof(char);
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->width*img->height*img->nChannels*sizeof(char) , (void*)img->imageData, 0, NULL, NULL);
 	CheckError(GPUError);
 
 	va_list arg_ptr;
@@ -121,8 +142,8 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 	for(int i = 1 ; i<numberOfBuffersIn ; i++)
 	{
 		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		sizeBuffersIn[i] = tmpImg->nSize;
-		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
+		sizeBuffersIn[i] = tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char);
+		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char) , (void*)tmpImg->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
 	}
 	va_end(arg_ptr);
@@ -134,8 +155,8 @@ bool GPUBase::ReceiveImageData( IplImage* img, ... )
 	if(buffersListOut == NULL)
 		return false;
 
-	sizeBuffersOut[0] = img->nSize;
-	GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[0], CL_TRUE, 0, img->nSize , (void*)img->imageData, 0, NULL, NULL);
+	sizeBuffersOut[0] = img->width*img->height*img->nChannels*sizeof(char);
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[0], CL_TRUE, 0, img->width*img->height*img->nChannels*sizeof(char) , (void*)img->imageData, 0, NULL, NULL);
 	CheckError(GPUError);
 
 	va_list arg_ptr;
@@ -144,8 +165,8 @@ bool GPUBase::ReceiveImageData( IplImage* img, ... )
 	for(int i = 1 ; i<numberOfBuffersOut ; i++)
 	{
 		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		sizeBuffersOut[i] = tmpImg->nSize;
-		GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[i], CL_TRUE, 0, tmpImg->nSize , (void*)tmpImg->imageData, 0, NULL, NULL);
+		sizeBuffersOut[i] = tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char);
+		GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*tmpImg->nChannels*sizeof(char) , (void*)tmpImg->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
 	}
 	va_end(arg_ptr);

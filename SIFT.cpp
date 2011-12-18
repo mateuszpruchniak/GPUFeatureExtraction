@@ -809,11 +809,12 @@ void SIFT::AssignOrientationsFunc()
 				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
 				cvZero(imgMask);
 
-
-
-				GPUAssignOrientations->Process(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1], 1.5*abs_sigma);
-				GPUAssignOrientations->Transfer->ReceiveImageData(imgMask->imageData);
-				
+				AssignOrientations* assign = new AssignOrientations();
+				assign->CreateBuffersIn(imgMask->width*imgMask->height*imgMask->nChannels*sizeof(char),4);
+				assign->CreateBuffersOut(imgMask->width*imgMask->height*imgMask->nChannels*sizeof(char),1);
+				assign->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
+				assign->Process(1.5*abs_sigma);
+				assign->ReceiveImageData(imgMask);
 
 
 

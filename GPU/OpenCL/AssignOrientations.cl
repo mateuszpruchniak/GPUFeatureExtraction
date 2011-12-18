@@ -51,7 +51,6 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 
 
-
 	if( ucSourceExtrema[GMEMOffset] != 0.0 )
 	{
 

@@ -1,4 +1,4 @@
-
+﻿
 
 #pragma once
 
@@ -14,6 +14,8 @@
 #include "highgui.h"
 
 using namespace std;
+
+#define MAX_KERNEL_SIZE	20
 
 class GPUBase
 {
@@ -66,6 +68,31 @@ class GPUBase
 		 */
         cl_kernel GPUKernel;
 
+		/*!
+		 * Work-group size - dim X.
+		 */
+        int iBlockDimX;                    
+
+		/*!
+		 * Work-group size - dim Y.
+		 */
+        int iBlockDimY;  
+
+		/*!
+		 * Image width.
+		 */
+        unsigned int imageWidth;   
+
+		/*!
+		 * Image height.
+		 */
+        unsigned int imageHeight; 
+
+		/*!
+		 * Global size of NDRange.
+		 */
+        size_t GPUGlobalWorkSize[2];
+
 		char* kernelFuncName;
 		
 		cl_mem* buffersListIn;
@@ -80,6 +107,8 @@ class GPUBase
 
 		int numberOfBuffersOut;
 
+		GPUBase();
+
 		GPUBase(char* source, char* KernelName);
 
 		bool CreateBuffersIn(int maxBufferSize, int numberOfBuffers);
@@ -93,5 +122,7 @@ class GPUBase
 		size_t shrRoundUp(int group_size, int global_size);
 
 		char* oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* szFinalLength);
+
+		int GetKernelSize(double sigma, double cut_off=0.001);
 };
 

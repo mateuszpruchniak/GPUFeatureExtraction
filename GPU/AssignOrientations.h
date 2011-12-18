@@ -1,12 +1,12 @@
 ﻿
 
 #pragma once
-#include "ContextFilter.h"
 
+#include "../GPUBase.h"
 
 
 class AssignOrientations :
-	public ContextFilter
+	public GPUBase
 {
 public:
 
@@ -18,20 +18,18 @@ public:
 	/*!
 	* Constructor, creates a program object for a context, loads the source code (.cl files) and build the program.
 	*/
-	AssignOrientations(cl_context GPUContext ,GPUTransferManager* transfer);
+	AssignOrientations();
 
-	int number;
+	bool Process(float sigma);
 
-	int numberReject;
-
-	/*!
-	* Start
-	*/
-
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b);
-
-	bool filter(cl_command_queue GPUCommandQueue, float s);
-	bool filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c , float sigma = 0);
-
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma = 0);
 };
+
+
+typedef struct
+{
+	float	x;
+	float	y;	
+	float	mag;	
+	float	orien;	
+	float	scale;	
+} Keys;
