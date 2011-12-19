@@ -1046,7 +1046,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 	// Loop over all keypoints
 
-	for(unsigned int ikp = 140 ; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp = 0; ikp <  m_numKeypoints ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
@@ -1081,14 +1081,23 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 		CvMat *weight = cvCreateMat(FEATURE_WINDOW_SIZE, FEATURE_WINDOW_SIZE, CV_32FC1);
 		vector<double> fv(FVSIZE);
 
+
+
 		for(i=0;i<FEATURE_WINDOW_SIZE;i++)
 		{
 			for(j=0;j<FEATURE_WINDOW_SIZE;j++)
 			{
+				
 				if(ii+i+1<hfsz || ii+i+1>width+hfsz || jj+j+1<hfsz || jj+j+1>height+hfsz)
                     cvSetReal2D(weight, j, i, 0);
-				else
-					cvSetReal2D(weight, j, i, cvGetReal2D(G, j, i)*cvGetReal2D(imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals], jj+j+1-hfsz, ii+i+1-hfsz));
+				else 
+				{
+					int szer = imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals]->width;
+					int wys = imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals]->height;
+					int x = szer <= jj+j+1-hfsz ? szer - 1 : jj+j+1-hfsz;
+					int y = wys <= ii+i+1-hfsz ? wys - 1 : ii+i+1-hfsz;
+					cvSetReal2D(weight, j, i, cvGetReal2D(G, j, i)*cvGetReal2D(imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals], x, y));
+				}
 			}
 		}
 
@@ -1120,7 +1129,16 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 							continue;
 
 						// This is where rotation invariance is done
-						double sample_orien = cvGetReal2D(imgInterpolatedOrientation[scale/m_numIntervals][scale%m_numIntervals], t, k);
+
+						
+
+						int szer = imgInterpolatedOrientation[scale/m_numIntervals][scale%m_numIntervals]->width;
+						int wys = imgInterpolatedOrientation[scale/m_numIntervals][scale%m_numIntervals]->height;
+						int x = szer <= t ? szer - 1 : t;
+						int y = wys <= k ? wys - 1 : k;
+
+						cout << "x = " << x << " y = " << y << endl;
+						double sample_orien = cvGetReal2D(imgInterpolatedOrientation[scale/m_numIntervals][scale%m_numIntervals], x, y);
 						sample_orien -= main_orien;
 
 						while(sample_orien<0)
@@ -1144,7 +1162,13 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 						assert(k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE);
 
 						// Add to the bin
-						hist[bin]+=(1-fabs(bin_f-(bin+0.5))) * cvGetReal2D(weight, t+hfsz-1-jj, k+hfsz-1-ii);
+						szer = weight->width;
+						wys = weight->height;
+						x = szer <= t+hfsz-1-jj ? szer - 1 : t+hfsz-1-jj;
+						y = wys <= k+hfsz-1-ii ? wys - 1 : k+hfsz-1-ii;
+
+						cout << "xx = " << x << " yy = " << y << endl;
+						hist[bin]+=(1-fabs(bin_f-(bin+0.5))) * cvGetReal2D(weight, x, y );
 					}
 				}
 
@@ -1183,7 +1207,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 		m_keyDescs.push_back(Descriptor(descxi, descyi, fv));
 	}
 
-	m_numKeypoints = 150;  // -----------------------------------------------------------------------
+	// -----------------------------------------------------------------------
 
 	assert(m_keyDescs.size()==m_numKeypoints);
 
