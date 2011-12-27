@@ -1,10 +1,8 @@
 
 
 __kernel void ckConv(__global float* ucSource,__global float* ucDest,
-                      int ImageWidth, int ImageHeight, int channels, float sigma, int sizeMask)
+                      int ImageWidth, int ImageHeight, float sigma, int sizeMask)
 {
-		int nChannels = channels;
-	    unsigned int isZero = 0;
 	    int iImagePosX = get_global_id(0) > ImageWidth  ? ImageWidth  : get_global_id(0);
 	    int iDevYPrime = get_global_id(1) > ImageHeight ? ImageHeight : get_global_id(1);
 		

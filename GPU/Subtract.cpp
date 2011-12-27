@@ -6,7 +6,7 @@ Subtract::~Subtract(void)
 {
 }
 
-Subtract::Subtract(cl_context GPUContext ,GPUTransferManager* transfer): ContextFreeFilter("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\Subtract.cl","ckSub")
+Subtract::Subtract(cl_context GPUContext ,GPUTransferManager* transfer): ContextFreeFilter("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\Subtract.cl","ckSub")
 {
 	Filter::onInit(GPUContext,transfer);
 }

@@ -1,23 +1,13 @@
-﻿/*!
- * \file MedianFilter.h
- * \brief Filte content class mean filter.
- * \author Mateusz Pruchniak
- * \date 2010-05-05
- */
+﻿
 
 #pragma once
-#include "lowpassfilter.h"
 
-/*!
- * \class MeanFilter
- * \brief Mean filter. Mean filtering is a simple, intuitive and easy to implement method of smoothing images, i.e. reducing the amount of intensity variation between one pixel and the next. It is often used to reduce noise in images.
- * \author Mateusz Pruchniak
- * \date 2010-05-05
- */
+#include "../GPUBase.h"
+
+
 class MeanFilter :
-	public LowpassFilter
+	public GPUBase
 {
-
 public:
 
 	/*!
@@ -26,10 +16,10 @@ public:
 	~MeanFilter(void);
 
 	/*!
-	* Constructor. Send mask to GPU memory. Creates a program object for a context, loads the source code (.cl files) and build the program.
+	* Constructor.
 	*/
-	MeanFilter(cl_context GPUContext ,GPUTransferManager* transfer);
+	MeanFilter();
 	
-
+	bool Process(int sigma);
 };
 

@@ -11,14 +11,13 @@ ExtractKeypointDescriptors::~ExtractKeypointDescriptors(void)
 
 
 
-ExtractKeypointDescriptors::ExtractKeypointDescriptors(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\ExtractKeypointDescriptors.cl","ckExtract")
+ExtractKeypointDescriptors::ExtractKeypointDescriptors(): GPUBase("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\ExtractKeypointDescriptors.cl","ckExtract")
 {
 
 }
 
 bool ExtractKeypointDescriptors::Process()
 {
-	
 	size_t GPULocalWorkSize[2];
 	GPULocalWorkSize[0] = iBlockDimX;
 	GPULocalWorkSize[1] = iBlockDimY;
@@ -33,8 +32,6 @@ bool ExtractKeypointDescriptors::Process()
 	GPUError |= clSetKernelArg(GPUKernel, 4, sizeof(cl_uint), (void*)&imageHeight);
 	if(GPUError) return false;
 
-
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
-
 	return true;
 }

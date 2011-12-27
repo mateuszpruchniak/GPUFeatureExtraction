@@ -1,4 +1,6 @@
-﻿#include <oclUtils.h>
+﻿
+
+#include <oclUtils.h>
 #include <iostream>
 #include "cv.h"
 #include "cxmisc.h"

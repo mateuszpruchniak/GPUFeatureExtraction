@@ -10,7 +10,7 @@ AssignOrientations::~AssignOrientations(void)
 
 
 
-AssignOrientations::AssignOrientations(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","AssignOrient")
+AssignOrientations::AssignOrientations(): GPUBase("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","AssignOrient")
 {
 
 }

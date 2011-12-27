@@ -61,16 +61,17 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	m_numOctaves = octaves;
 	m_numIntervals = intervals;
 
+	meanFilter = new MeanFilter();
+
+
 	GPU = new GPUImageProcessor(640 * 2,480 * 2, 4);
-	GPU2 = new GPUImageProcessor(640 * 2,480 * 2, 4);
-	GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	GPUAssignOrientations = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	//GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	//GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
+	//GPUAssignOrientations = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	
-	GPU2->AddProcessing( new MeanFilter(GPU2->GPUContext,GPU2->Transfer) );
 	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
-	GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
-	GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
+	//GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
+	//GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
 	//for(int j = -2 ; j <= 2; j++ ) //y
 	//{
 	//	for(int i = -2 ; i <= 2; i++ ) //x
@@ -159,7 +160,7 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	start = clock();
+	/*start = clock();
 	DetectExtremaFunc();
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
@@ -180,7 +181,7 @@ void SIFT::DoSift()
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
 	cout << "ExtractKeypointDescriptors: " << endl;
-	cout << duration << endl;
+	cout << duration << endl;*/
 
 
 
@@ -233,9 +234,11 @@ void SIFT::BuildScaleSpace()
 		cvSmooth(imgGray, imgGray, CV_GAUSSIAN, 0, 0, SIGMA_ANTIALIAS);   
 	else
 	{
-		GPU2->Transfer->SendImage(imgGray);
-		GPU2->Process(SIGMA_ANTIALIAS);
-		imgGray = GPU2->Transfer->ReceiveImage();
+		meanFilter->CreateBuffersIn(imgGray->width*imgGray->height*sizeof(float),1);
+		meanFilter->CreateBuffersOut(imgGray->width*imgGray->height*sizeof(float),1);
+		meanFilter->SendImageToBuffers(imgGray);
+		meanFilter->Process(SIGMA_ANTIALIAS);
+		meanFilter->ReceiveImageData(imgGray);
 	}
 	
 
@@ -250,9 +253,11 @@ void SIFT::BuildScaleSpace()
 		cvSmooth(m_gList[0][0], m_gList[0][0], CV_GAUSSIAN, 0, 0, SIGMA_PREBLUR); 
 	else
 	{
-		GPU2->Transfer->SendImage(m_gList[0][0]);
-		GPU2->Process(SIGMA_PREBLUR);
-		m_gList[0][0] = GPU2->Transfer->ReceiveImage();
+		meanFilter->CreateBuffersIn(m_gList[0][0]->width*m_gList[0][0]->height*sizeof(float),1);
+		meanFilter->CreateBuffersOut(m_gList[0][0]->width*m_gList[0][0]->height*sizeof(float),1);
+		meanFilter->SendImageToBuffers(m_gList[0][0]);
+		meanFilter->Process(SIGMA_PREBLUR);
+		meanFilter->ReceiveImageData(m_gList[0][0]);
 	}
 	
     //SaveFloatingPointImage("C:\\g_octave_0_scale_0.jpg", m_gList[0][0]);
@@ -289,9 +294,11 @@ void SIFT::BuildScaleSpace()
 				cvSmooth(m_gList[i][j-1], m_gList[i][j], CV_GAUSSIAN, 0, 0, sigma_f);
 			else 
 			{
-				GPU2->Transfer->SendImageData(m_gList[i][j-1]->imageData,m_gList[i][j-1]->height,m_gList[i][j-1]->width);
-				GPU2->Process(sigma_f);
-				GPU2->Transfer->ReceiveImageData(m_gList[i][j]->imageData);
+				meanFilter->CreateBuffersIn(m_gList[i][j-1]->width*m_gList[i][j-1]->height*sizeof(float),1);
+				meanFilter->CreateBuffersOut(m_gList[i][j]->width*m_gList[i][j]->height*sizeof(float),1);
+				meanFilter->SendImageToBuffers(m_gList[i][j-1]);
+				meanFilter->Process(sigma_f);
+				meanFilter->ReceiveImageData(m_gList[i][j]);
 			}
 
 			
@@ -608,7 +615,7 @@ void SIFT::AssignOrientationsFunc()
 	// The histogram with 8 bins
 	double* hist_orient = new double[NUM_BINS];
 
-	m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
+	//m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
 
 	// Go through all octaves
 	for(i=0;i<m_numOctaves;i++)
@@ -632,9 +639,11 @@ void SIFT::AssignOrientationsFunc()
 				cvSmooth(magnitude[i][j-1], imgWeight, CV_GAUSSIAN, 0, 0, 1.5*abs_sigma);
 			else 
 			{
-				GPU2->Transfer->SendImageData(magnitude[i][j-1]->imageData,magnitude[i][j-1]->height,magnitude[i][j-1]->width);
-				GPU2->Process(1.5*abs_sigma);
-				GPU2->Transfer->ReceiveImageData(imgWeight->imageData);
+				meanFilter->CreateBuffersIn(magnitude[i][j-1]->width*magnitude[i][j-1]->height*sizeof(float),1);
+				meanFilter->CreateBuffersOut(imgWeight->width*imgWeight->height*sizeof(float),1);
+				meanFilter->SendImageToBuffers(magnitude[i][j-1]);
+				meanFilter->Process(1.5*abs_sigma);
+				meanFilter->ReceiveImageData(imgWeight);
 			}
 
 
@@ -1137,7 +1146,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 						int x = szer <= t ? szer - 1 : t;
 						int y = wys <= k ? wys - 1 : k;
 
-						cout << "x = " << x << " y = " << y << endl;
+						//cout << "x = " << x << " y = " << y << endl;
 						double sample_orien = cvGetReal2D(imgInterpolatedOrientation[scale/m_numIntervals][scale%m_numIntervals], x, y);
 						sample_orien -= main_orien;
 
@@ -1167,7 +1176,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 						x = szer <= t+hfsz-1-jj ? szer - 1 : t+hfsz-1-jj;
 						y = wys <= k+hfsz-1-ii ? wys - 1 : k+hfsz-1-ii;
 
-						cout << "xx = " << x << " yy = " << y << endl;
+						//cout << "xx = " << x << " yy = " << y << endl;
 						hist[bin]+=(1-fabs(bin_f-(bin+0.5))) * cvGetReal2D(weight, x, y );
 					}
 				}

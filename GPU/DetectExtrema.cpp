@@ -6,7 +6,7 @@ DetectExtrema::~DetectExtrema(void)
 {
 }
 
-DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer): ContextFreeFilter("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\DetectExtrema.cl","ckDetect")
+DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer): ContextFreeFilter("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\DetectExtrema.cl","ckDetect")
 {
 	Filter::onInit(GPUContext,transfer);
 	number = 0;

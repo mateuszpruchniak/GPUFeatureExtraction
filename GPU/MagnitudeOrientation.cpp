@@ -6,7 +6,7 @@ MagnitudeOrientation::~MagnitudeOrientation(void)
 {
 }
 
-MagnitudeOrientation::MagnitudeOrientation(cl_context GPUContext ,GPUTransferManager* transfer): ContextFilter("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","ckMagnOrien")
+MagnitudeOrientation::MagnitudeOrientation(cl_context GPUContext ,GPUTransferManager* transfer): ContextFilter("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","ckMagnOrien")
 {
 	Filter::onInit(GPUContext,transfer);
 	number = 0;

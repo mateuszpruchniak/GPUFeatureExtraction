@@ -17,10 +17,12 @@ class SIFT
 public:
 
 	GPUImageProcessor* GPU;
-	GPUImageProcessor* GPU2;
 	GPUImageProcessor* GPUDetectExtrema;
 	GPUImageProcessor* GPUMagnitudeOrientation;
 	GPUImageProcessor* GPUOrientation;
+
+
+	MeanFilter* meanFilter;
 
 
 	SIFT(IplImage* img, int octaves, int intervals);
