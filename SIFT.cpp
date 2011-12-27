@@ -65,25 +65,9 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	subtract = new Subtract();
 	detectExt = new DetectExtrema();
 	magOrient = new MagnitudeOrientation();
+	assignOrient = new AssignOrientations();
+	extractKeys = new ExtractKeypointDescriptors();
 
-	//GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	//GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	//GPUAssignOrientations = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-
-	//GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
-	//GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
-	//for(int j = -2 ; j <= 2; j++ ) //y
-	//{
-	//	for(int i = -2 ; i <= 2; i++ ) //x
-	//	{
-	//		float G = (1.0 / (2.0 * 3.14 * 2 * 2)) * exp((float)((-1.0) * (i * i + j * j) / (2.0 * 2 * 2) ));
-	//		cout << G << endl;
-	//	}
-	//}
-
-
-
-	// Proceed to initialize the algorithm
 	GenerateLists();
 }
 
@@ -598,16 +582,11 @@ void SIFT::AssignOrientationsFunc()
 			} else 
 			{
 
-				GPUMagnitudeOrientation->Transfer->SendImageData(m_gList[i][j]->imageData, m_gList[i][j]->height, m_gList[i][j]->width);
-				GPUMagnitudeOrientation->Process(0);
-				GPUMagnitudeOrientation->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData, orientation[i][j-1]->imageData);
-
-
 				magOrient->CreateBuffersIn(m_gList[i][j]->width*m_gList[i][j]->height*sizeof(float),1);
-				magOrient->CreateBuffersOut(m_extrema[i][j-1]->width*m_extrema[i][j-1]->height*sizeof(float),2);
-				magOrient->SendImageToBuffers(down,middle,up);
-				magOrient->Process(&num, &numRemoved);
-				magOrient->ReceiveImageData(m_extrema[i][j-1]);
+				magOrient->CreateBuffersOut(magnitude[i][j-1]->width*magnitude[i][j-1]->height*sizeof(float),2);
+				magOrient->SendImageToBuffers(m_gList[i][j]);
+				magOrient->Process();
+				magOrient->ReceiveImageData(magnitude[i][j-1],orientation[i][j-1]);
 
 				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", orientation[i][j-1] );
@@ -846,12 +825,11 @@ void SIFT::AssignOrientationsFunc()
 
 				
 
-				AssignOrientations* assign = new AssignOrientations();
-				assign->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
-				assign->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
-				assign->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
-				Keys* keys = assign->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
-				assign->ReceiveImageData(imgMask);
+				assignOrient->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
+				assignOrient->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
+				assignOrient->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
+				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
+				assignOrient->ReceiveImageData(imgMask);
 
 				
 
@@ -933,17 +911,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 	}
 
 
-	ExtractKeypointDescriptors* extract;
-
-	if(SIFTCPU)
-	{
-
-	}
-	else
-	{
-		extract = new ExtractKeypointDescriptors();
-	}
-
+	
 
 	// These two loops calculate the interpolated thingy for all octaves
 	// and subimages
@@ -1020,11 +988,12 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 				cvZero(imgInterpolatedMagnitude[i][j-1]);
 				cvZero(imgInterpolatedOrientation[i][j-1]);
 				
-				extract->CreateBuffersIn((width)*(height)*sizeof(float),1);
-				extract->CreateBuffersOut((width)*(height)*sizeof(float),2);
-				extract->SendImageToBuffers(m_gList[i][j]);
-				extract->Process();
-				extract->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
+				
+				extractKeys->CreateBuffersIn(width*height*sizeof(float),1);
+				extractKeys->CreateBuffersOut((width)*(height)*sizeof(float),2);
+				extractKeys->SendImageToBuffers(m_gList[i][j]);
+				extractKeys->Process();
+				extractKeys->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
 				
 				/*cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
@@ -1047,15 +1016,6 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 			cvReleaseImage(&imgTemp);
 
 		}
-	}
-
-
-	if(SIFTCPU)
-	{
-
-	} else
-	{
-		delete extract;
 	}
 
 	// Build an Interpolated Gaussian Table of size FEATURE_WINDOW_SIZE

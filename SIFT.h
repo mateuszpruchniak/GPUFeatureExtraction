@@ -9,6 +9,7 @@
 #include "GPU\DetectExtrema.h"
 #include "GPU\MagnitudeOrientation.h"
 #include "GPU\AssignOrientations.h"
+#include "GPU\ExtractKeypointDescriptors.h"
 #include "GPUImageProcessor.h"
 
 
@@ -16,13 +17,14 @@ class SIFT
 {
 public:
 
-	GPUImageProcessor* GPUOrientation;
-
 
 	MeanFilter* meanFilter;
 	Subtract* subtract;
 	DetectExtrema* detectExt;
-	MagnitudeOrientation magOrient;
+	MagnitudeOrientation* magOrient;
+	AssignOrientations* assignOrient;
+	ExtractKeypointDescriptors* extractKeys;
+
 
 	SIFT(IplImage* img, int octaves, int intervals);
 	SIFT(const char* filename, int octaves, int intervals);
