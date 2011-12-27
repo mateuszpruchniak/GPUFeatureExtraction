@@ -64,6 +64,7 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	meanFilter = new MeanFilter();
 	subtract = new Subtract();
 	detectExt = new DetectExtrema();
+	magOrient = new MagnitudeOrientation();
 
 	//GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	//GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
@@ -167,7 +168,7 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	/*start = clock();
+	start = clock();
 	AssignOrientationsFunc();
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
@@ -180,7 +181,7 @@ void SIFT::DoSift()
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
 	cout << "ExtractKeypointDescriptors: " << endl;
-	cout << duration << endl;*/
+	cout << duration << endl;
 
 
 
@@ -601,6 +602,13 @@ void SIFT::AssignOrientationsFunc()
 				GPUMagnitudeOrientation->Process(0);
 				GPUMagnitudeOrientation->Transfer->ReceiveImageData(magnitude[i][j-1]->imageData, orientation[i][j-1]->imageData);
 
+
+				magOrient->CreateBuffersIn(m_gList[i][j]->width*m_gList[i][j]->height*sizeof(float),1);
+				magOrient->CreateBuffersOut(m_extrema[i][j-1]->width*m_extrema[i][j-1]->height*sizeof(float),2);
+				magOrient->SendImageToBuffers(down,middle,up);
+				magOrient->Process(&num, &numRemoved);
+				magOrient->ReceiveImageData(m_extrema[i][j-1]);
+
 				/*cvNamedWindow("AssignOrientations", CV_WINDOW_AUTOSIZE); 
 				cvShowImage("AssignOrientations", orientation[i][j-1] );
 				cvWaitKey(2);*/
@@ -608,12 +616,12 @@ void SIFT::AssignOrientationsFunc()
 			}
 
 			// Save these images for fun
-			char* filename = new char[200];
+			/*char* filename = new char[200];
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\mag_oct_%d_scl_%d.jpg", i, j-1);
 			cvSaveImage(filename, magnitude[i][j-1]);
 
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\ori_oct_%d_scl_%d.jpg", i, j-1);
-			cvSaveImage(filename, orientation[i][j-1]);
+			cvSaveImage(filename, orientation[i][j-1]);*/
 		}
 	}
 
