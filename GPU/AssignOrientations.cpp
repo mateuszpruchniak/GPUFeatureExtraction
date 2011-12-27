@@ -15,7 +15,7 @@ AssignOrientations::AssignOrientations(): GPUBase("C:\\Users\\Mati\\Desktop\\Dro
 
 }
 
-Keys* AssignOrientations::Process( float sigma, int scale, int scale2 )
+Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
 {
 	int maskSize = GetKernelSize(sigma);
 	Keys keys[36*700];

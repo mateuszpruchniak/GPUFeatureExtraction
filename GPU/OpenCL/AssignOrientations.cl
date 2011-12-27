@@ -63,6 +63,10 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 		for(int i=0;i<36;i++)
 			histOrient[i]=0.0;
 
+
+		// sprawdzic !!!!!!!!!!!!!!!!!!!!!! wszystko ponizej!
+
+
 		int r = (int)floor( (float)maskSize/2 );
 		
 		for(int j = -r ; j <= r; j++ ) //y

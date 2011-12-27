@@ -607,7 +607,7 @@ void SIFT::AssignOrientationsFunc()
 	// The histogram with 8 bins
 	double* hist_orient = new double[NUM_BINS];
 
-	//m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
+	m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
 
 	// Go through all octaves
 	for(i=0;i<m_numOctaves;i++)
@@ -833,7 +833,7 @@ void SIFT::AssignOrientationsFunc()
 
 				
 
-				for (int i =0 ; i < 36*350 ; i++)
+				for (int i =0 ; i < 36*700 ; i++)
 				{
 					if( keys[i].x != 0 ) 
 					{
@@ -874,7 +874,11 @@ void SIFT::AssignOrientationsFunc()
 
 	// Finally, we're done with all the magnitude and orientation images.
 	// Erase them from RAM
+
+
 	assert(m_keyPoints.size() == m_numKeypoints);
+
+
 	for(i=0;i<m_numOctaves;i++)
 	{
 		for(j=1;j<m_numIntervals+1;j++)
@@ -1129,19 +1133,26 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 						while(sample_orien>2*M_PI)
 							sample_orien-=2*M_PI;
 
+
 						// This should never happen
-						if(!(sample_orien>=0 && sample_orien<2*M_PI))
+						if(!(sample_orien>=0 && sample_orien<=2*M_PI))
 							printf("BAD: %f\n", sample_orien);
-						assert(sample_orien>=0 && sample_orien<2*M_PI);
+
+						assert(sample_orien>=0 && sample_orien<=2*M_PI);
 
 						unsigned int sample_orien_d = sample_orien*180/M_PI;
-						assert(sample_orien_d<360);
+						
+						if(sample_orien_d<360)
+							printf("sample_orien_d<360 \n");
 
 						unsigned int bin = sample_orien_d/(360/DESC_NUM_BINS);					// The bin
 						double bin_f = (double)sample_orien_d/(double)(360/DESC_NUM_BINS);		// The actual entry
 
-						assert(bin<DESC_NUM_BINS);
-						assert(k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE);
+						if(bin<DESC_NUM_BINS)
+							printf("bin<DESC_NUM_BINS \n");
+
+						if(k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE)
+							printf("k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE \n");
 
 						// Add to the bin
 						szer = weight->width;
