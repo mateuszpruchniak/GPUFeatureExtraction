@@ -1032,7 +1032,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 	// Loop over all keypoints
 
-	for(unsigned int ikp = 0; ikp <  m_numKeypoints ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp =100; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
@@ -1202,7 +1202,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 	// -----------------------------------------------------------------------
 
-	assert(m_keyDescs.size()==m_numKeypoints);
+	///assert(m_keyDescs.size()==m_numKeypoints);
 
 	// Get rid of memory we don't need anylonger
 	for(i=0;i<m_numOctaves;i++)

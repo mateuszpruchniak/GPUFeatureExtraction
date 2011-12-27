@@ -42,7 +42,7 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 {
 	int pozX = get_global_id(0) > ImageWidth  ? ImageWidth  : get_global_id(0);
 	int pozY = get_global_id(1) > ImageHeight ? ImageHeight : get_global_id(1);
-	float pi = 3.141592653;
+	float pi = 3.1415926535897932384626433832795;
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
 	
 
@@ -57,14 +57,11 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 		int numberExtrema = atomic_add(count, (int)1);
 		int numberPointInHist = 1;
-		//keys[numberExtrema * 36 * 5] = (float)numberExtrema;
+		
 		
 		float histOrient[36];
 		for(int i=0;i<36;i++)
 			histOrient[i]=0.0;
-
-
-		// sprawdzic !!!!!!!!!!!!!!!!!!!!!! wszystko ponizej!
 
 
 		int r = (int)floor( (float)maskSize/2 );
@@ -73,8 +70,12 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 		{
 			for(int i = -r ; i <= r; i++ ) //x
 			{
-				int x = pozX + i >= 0 && pozX + i <= ImageWidth  ? pozX + i : 0;
-				int y = pozY + j >= 0 && pozY + j <= ImageHeight ? pozY + j : 0;
+				int x = pozX + i;
+				int y = pozY + j;
+
+				if( x < 0 || x >= ImageWidth || y < 0 || y >= ImageHeight)
+					continue;
+
 				int localOffest = Offset(x,y,ImageWidth);
 
 				float sampleOrient = ucSourceOrientation[localOffest];
@@ -89,6 +90,9 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 			}
 		}
 
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+		
 
 		float max_peak = histOrient[0];
 		int max_peak_index = 0;
@@ -153,8 +157,8 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 				//Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1)
 
-				keys[numberExtrema*numberPointInHist*5] = (float)pozX * scale / 2.0;
-				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY * scale / 2.0;
+				keys[numberExtrema*numberPointInHist*5] = (float)pozX; //pozX * scale / 2.0;
+				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY; //pozY * scale / 2.0;
 				keys[numberExtrema*numberPointInHist*5 + 2] = (float)histOrient[k];
 				keys[numberExtrema*numberPointInHist*5 + 3] = (float)x0_n;
 				keys[numberExtrema*numberPointInHist*5 + 4] = (float)scale2;
