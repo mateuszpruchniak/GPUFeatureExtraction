@@ -1,9 +1,8 @@
 
 
 __kernel void ckSub(__global float* ucSource, __global float* ucSource2, __global float* ucDest,
-                      int ImageWidth, int ImageHeight, int channels)
+                      int ImageWidth, int ImageHeight)
 {
-	    unsigned int isZero = 0;
 	    int iImagePosX = get_global_id(0) > ImageWidth  ? ImageWidth  : get_global_id(0);
 	    int iDevYPrime = get_global_id(1) > ImageHeight ? ImageHeight : get_global_id(1);
 		

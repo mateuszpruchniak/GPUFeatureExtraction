@@ -62,14 +62,13 @@ SIFT::SIFT(const char* filename, int octaves, int intervals)
 	m_numIntervals = intervals;
 
 	meanFilter = new MeanFilter();
+	subtract = new Subtract();
+	detectExt = new DetectExtrema();
 
-
-	GPU = new GPUImageProcessor(640 * 2,480 * 2, 4);
 	//GPUDetectExtrema = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	//GPUMagnitudeOrientation = new GPUImageProcessor(640 * 2, 480 * 2, 4);
 	//GPUAssignOrientations = new GPUImageProcessor(640 * 2, 480 * 2, 4);
-	
-	GPU->AddProcessing( new Subtract(GPU->GPUContext,GPU->Transfer) );
+
 	//GPUDetectExtrema->AddProcessing(new DetectExtrema(GPUDetectExtrema->GPUContext,GPUDetectExtrema->Transfer));
 	//GPUMagnitudeOrientation->AddProcessing(new MagnitudeOrientation(GPUMagnitudeOrientation->GPUContext,GPUMagnitudeOrientation->Transfer));
 	//for(int j = -2 ; j <= 2; j++ ) //y
@@ -160,7 +159,7 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	/*start = clock();
+	start = clock();
 	DetectExtremaFunc();
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
@@ -168,7 +167,7 @@ void SIFT::DoSift()
 	cout << duration << endl;
 
 
-	start = clock();
+	/*start = clock();
 	AssignOrientationsFunc();
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
@@ -239,6 +238,7 @@ void SIFT::BuildScaleSpace()
 		meanFilter->SendImageToBuffers(imgGray);
 		meanFilter->Process(SIGMA_ANTIALIAS);
 		meanFilter->ReceiveImageData(imgGray);
+
 	}
 	
 
@@ -307,8 +307,12 @@ void SIFT::BuildScaleSpace()
 				cvSub(m_gList[i][j-1], m_gList[i][j], m_dogList[i][j-1]);   
 			else
 			{
-				GPU->Process(m_gList[i][j-1],m_gList[i][j]);
-				GPU->Transfer->ReceiveImageData(m_dogList[i][j-1]->imageData);
+				subtract->CreateBuffersIn(m_gList[i][j-1]->width*m_gList[i][j-1]->height*sizeof(float),2);
+				subtract->CreateBuffersOut(m_dogList[i][j-1]->width*m_dogList[i][j-1]->height*sizeof(float),1);
+				subtract->SendImageToBuffers(m_gList[i][j-1],m_gList[i][j]);
+				subtract->Process();
+				subtract->ReceiveImageData(m_dogList[i][j-1]);
+
 			}
 
 
@@ -356,8 +360,8 @@ void SIFT::DetectExtremaFunc()
 	int scale;
 	double dxx, dyy, dxy, trH, detH;
 
-	unsigned int num=0;				// Number of keypoins detected
-	unsigned int numRemoved=0;		// The number of key points rejected because they failed a test
+	int num=0;				// Number of keypoins detected
+	int numRemoved=0;		// The number of key points rejected because they failed a test
 
 	curvature_threshold = (CURVATURE_THRESHOLD+1)*(CURVATURE_THRESHOLD+1)/CURVATURE_THRESHOLD;
 
@@ -505,15 +509,16 @@ void SIFT::DetectExtremaFunc()
 			else 
 			{
 				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
-				GPUDetectExtrema->Process(down,middle,up);
-				GPUDetectExtrema->Transfer->ReceiveImageData(m_extrema[i][j-1]->imageData);
-				/*cvNamedWindow("Detect", CV_WINDOW_AUTOSIZE); 
-				cvShowImage("Detect", m_extrema[i][j-1] );
-				cvWaitKey(2);*/
+
+				detectExt->CreateBuffersIn(down->width*down->height*sizeof(float),3);
+				detectExt->CreateBuffersOut(m_extrema[i][j-1]->width*m_extrema[i][j-1]->height*sizeof(float),1);
+				detectExt->SendImageToBuffers(down,middle,up);
+				detectExt->Process(&num, &numRemoved);
+				detectExt->ReceiveImageData(m_extrema[i][j-1]);
 			}
 			
-			printf("Found keypoints CPU : %d \n", num);
-			printf("Reject keypoints CPU : %d \n", numRemoved);
+			printf("Found keypoints : %d \n", num);
+			printf("Reject keypoints : %d \n", numRemoved);
 			printf("\n");
 
 			// Save the image

@@ -1,5 +1,9 @@
 
 
+
+#define CURVATURE_THRESHOLD		5.0
+
+
 float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHeight )
 {
 	int X = x > ImageWidth  ? ImageWidth  : x;
@@ -27,11 +31,11 @@ __kernel void ckDetect(__global float* down, __global float* middle, __global fl
 
 		ucDest[GMEMOffset] = 0.0;
 
-		//// 00 01 02
-		//// 10 11 12
-		//// 20 21 22
+		// 00 01 02
+		// 10 11 12
+		// 20 21 22
 
-		curvature_threshold = (5.0+1)*(5.0+1)/5.0;
+		curvature_threshold = (CURVATURE_THRESHOLD+1)*(CURVATURE_THRESHOLD+1)/CURVATURE_THRESHOLD;
 		
 		if( pozX < ImageWidth-1 && pozY < ImageHeight-1 && pozX > 1 && pozY > 1 )
 		{
@@ -98,8 +102,9 @@ __kernel void ckDetect(__global float* down, __global float* middle, __global fl
 			{			
 				ucDest[GMEMOffset] = 1.0;
 				justSet = true;
-				atomic_add((int)number, (int)1);
+				atomic_add(number, (int)1);
 			}
+			// Check if it's a minimum
 			else if (
 				mid11 < mid00 &&
 				mid11 < mid01 &&

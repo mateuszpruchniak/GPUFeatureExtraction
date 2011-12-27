@@ -1,12 +1,11 @@
 
-
 #pragma once
-#include "contextfreefilter.h"
 
+#include "../GPUBase.h"
 
 
 class Subtract :
-	public ContextFreeFilter
+	public GPUBase
 {
 public:
 
@@ -16,18 +15,9 @@ public:
 	~Subtract(void);
 
 	/*!
-	* Constructor, creates a program object for a context, loads the source code (.cl files) and build the program.
+	* Constructor.
 	*/
-	Subtract(cl_context GPUContext ,GPUTransferManager* transfer);
-
-	/*!
-	* Start
-	*/
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b );
-
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c , float sigma = 0 );
-
-	bool filter(cl_command_queue GPUCommandQueue,  IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma = 0);
-
-	bool filter(cl_command_queue GPUCommandQueue, float s);
+	Subtract();
+	
+	bool Process();
 };

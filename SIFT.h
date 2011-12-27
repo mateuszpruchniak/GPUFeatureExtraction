@@ -16,14 +16,13 @@ class SIFT
 {
 public:
 
-	GPUImageProcessor* GPU;
-	GPUImageProcessor* GPUDetectExtrema;
 	GPUImageProcessor* GPUMagnitudeOrientation;
 	GPUImageProcessor* GPUOrientation;
 
 
 	MeanFilter* meanFilter;
-
+	Subtract* subtract;
+	DetectExtrema* detectExt;
 
 	SIFT(IplImage* img, int octaves, int intervals);
 	SIFT(const char* filename, int octaves, int intervals);

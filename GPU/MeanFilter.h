@@ -20,6 +20,6 @@ public:
 	*/
 	MeanFilter();
 	
-	bool Process(int sigma);
+	bool Process(float sigma);
 };
 

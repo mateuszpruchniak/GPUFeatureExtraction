@@ -8,12 +8,12 @@ MeanFilter::~MeanFilter(void)
 {
 }
 
-MeanFilter::MeanFilter(): GPUBase("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\BlurGaussFilter.cl","ckConv")
+MeanFilter::MeanFilter(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\BlurGaussFilter.cl","ckConv")
 {
 
 }
 
-bool MeanFilter::Process( int sigma )
+bool MeanFilter::Process( float sigma )
 {
 	int maskSize = cvRound(sigma * 3 * 2 + 1) | 1;
 	size_t GPULocalWorkSize[2];

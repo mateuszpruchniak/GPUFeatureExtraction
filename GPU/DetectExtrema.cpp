@@ -1,90 +1,58 @@
 
-
 #include "DetectExtrema.h"
+
+
 
 DetectExtrema::~DetectExtrema(void)
 {
 }
 
-DetectExtrema::DetectExtrema(cl_context GPUContext ,GPUTransferManager* transfer): ContextFreeFilter("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\DetectExtrema.cl","ckDetect")
+DetectExtrema::DetectExtrema(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\DetectExtrema.cl","ckDetect")
 {
-	Filter::onInit(GPUContext,transfer);
-	number = 0;
-	numberReject = 0;
 
 }
 
-bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, IplImage* d, float sigma )
-{
-	return false;
-}
 
-bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b, IplImage* c, float sigma )
+bool DetectExtrema::Process( int* num, int* numRej )
 {
 
-	GPUTransfer->SendImageData(a->imageData,a->height,a->width);
-
-	
-	// wyslalenie drugiego obrazku !!!!!! poprawic!
-	int ImageHeight = b->height;
-	int ImageWidth = b->width;
-	int szBuffBytesLocal = ImageWidth * ImageHeight * 4 * sizeof (char);
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, GPUTransfer->cmDevBuf2, CL_TRUE, 0, szBuffBytesLocal, (void*)b->imageData, 0, NULL, NULL);
+	cl_mem cmDevBufNumber = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
+	CheckError(GPUError);
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
 	CheckError(GPUError);
 
-	// wyslalenie trzeciego obrazku !!!!!! poprawic!
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, GPUTransfer->cmDevBuf3, CL_TRUE, 0, szBuffBytesLocal, (void*)c->imageData, 0, NULL, NULL);
-    CheckError(GPUError);
-
-
-	cl_mem cmDevBufNumber = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
+	cl_mem cmDevBufNumberReject = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
 	CheckError(GPUError);
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)&number, 0, NULL, NULL);
-	CheckError(GPUError);
-
-	cl_mem cmDevBufNumberReject = clCreateBuffer(GPUTransfer->GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
-	CheckError(GPUError);
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)&numberReject, 0, NULL, NULL);
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)numRej, 0, NULL, NULL);
 	CheckError(GPUError);
 
 	size_t GPULocalWorkSize[2];
 	GPULocalWorkSize[0] = iBlockDimX;
 	GPULocalWorkSize[1] = iBlockDimY;
-	GPUGlobalWorkSize[0] = shrRoundUp((int)GPULocalWorkSize[0], (int)GPUTransfer->ImageWidth);
-	GPUGlobalWorkSize[1] = shrRoundUp((int)GPULocalWorkSize[1], (int)GPUTransfer->ImageHeight);
+	GPUGlobalWorkSize[0] = shrRoundUp((int)GPULocalWorkSize[0], (int)imageWidth);
+	GPUGlobalWorkSize[1] = shrRoundUp((int)GPULocalWorkSize[1], (int)imageHeight);
 	
 	int iLocalPixPitch = iBlockDimX + 2;
-	GPUError = clSetKernelArg(GPUFilter, 0, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf);
-	GPUError |= clSetKernelArg(GPUFilter, 1, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf2);
-	GPUError |= clSetKernelArg(GPUFilter, 2, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBuf3);
-	GPUError |= clSetKernelArg(GPUFilter, 3, sizeof(cl_mem), (void*)&GPUTransfer->cmDevBufOutput);
-	GPUError |= clSetKernelArg(GPUFilter, 4, sizeof(cl_uint), (void*)&a->width);
-	GPUError |= clSetKernelArg(GPUFilter, 5, sizeof(cl_uint), (void*)&a->height);
-	GPUError |= clSetKernelArg(GPUFilter, 6, sizeof(cl_mem), (void*)&cmDevBufNumber);
-	GPUError |= clSetKernelArg(GPUFilter, 7, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
+	GPUError = clSetKernelArg(GPUKernel, 0, sizeof(cl_mem), (void*)&buffersListIn[0]);
+	GPUError |= clSetKernelArg(GPUKernel, 1, sizeof(cl_mem), (void*)&buffersListIn[1]);
+	GPUError |= clSetKernelArg(GPUKernel, 2, sizeof(cl_mem), (void*)&buffersListIn[2]);
+	GPUError |= clSetKernelArg(GPUKernel, 3, sizeof(cl_mem), (void*)&buffersListOut[0]);
+	GPUError |= clSetKernelArg(GPUKernel, 4, sizeof(cl_uint), (void*)&imageWidth);
+	GPUError |= clSetKernelArg(GPUKernel, 5, sizeof(cl_uint), (void*)&imageHeight);
+	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_mem), (void*)&cmDevBufNumber);
+	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
-	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUFilter, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
+	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
 
 
-	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)&number, 0, NULL, NULL);
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
 	CheckError(GPUError);
-	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)&numberReject, 0, NULL, NULL);
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)numRej, 0, NULL, NULL);
 	CheckError(GPUError);
 
-	cout << "Number GPU: " << number << endl;
-	cout << "Number reject GPU: " << numberReject << endl;
+	/*cout << "Number GPU: " << *num << endl;
+	cout << "Number reject GPU: " << *numRej << endl;*/
 
 	return true;
 }
-
-bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, float sigma)
-{
-	return false;
-}
-
-bool DetectExtrema::filter(cl_command_queue GPUCommandQueue, IplImage* a, IplImage* b)
-{
-	return false;
-}
-
