@@ -821,17 +821,17 @@ void SIFT::AssignOrientationsFunc()
 				imgMask = cvCreateImage(cvSize(width, height), 32, 1);
 				cvZero(imgMask);
 
-				
+				int countKeys = 0;
 
 				assignOrient->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
 				assignOrient->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
 				assignOrient->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
-				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1);
+				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1, &countKeys);
 				assignOrient->ReceiveImageData(imgMask);
 
 				
 
-				for (int i =0 ; i < m_numKeypoints ; i++)
+				for (int i =0 ; i < countKeys ; i++)
 				{
 					if( keys[i].mag != 0 ) 
 					{

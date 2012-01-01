@@ -15,7 +15,7 @@ AssignOrientations::AssignOrientations(): GPUBase("C:\\Users\\Mati\\Desktop\\Dro
 
 }
 
-Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
+Keys* AssignOrientations::Process( float sigma, int scale, int scale2, int* countKeys )
 {
 	int maskSize = GetKernelSize(sigma);
 	Keys keys[700];
@@ -36,7 +36,7 @@ Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufCount, CL_TRUE, 0, sizeof(int), (void*)&count, 0, NULL, NULL);
 	CheckError(GPUError);
 
-	cl_mem cmDevBufKeys = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, 700*36*sizeof(Keys), NULL, &GPUError);
+	cl_mem cmDevBufKeys = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, 700*sizeof(Keys), NULL, &GPUError);
 	CheckError(GPUError);
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, sizeof(int), (void*)&keys, 0, NULL, NULL);
 	CheckError(GPUError);
@@ -69,8 +69,9 @@ Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, 700*sizeof(Keys), (void*)&keys, 0, NULL, NULL);
 	CheckError(GPUError);
 	
-	/*cout << "count: " << count << endl;
-	for (int i =0 ; i < 36*350 ; i++)
+	*countKeys = count;
+
+	/*for (int i =0 ; i < 36*350 ; i++)
 	{
 		if( keys[i].x != 0 ) 
 		{

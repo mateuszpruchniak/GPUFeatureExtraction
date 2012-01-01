@@ -28,7 +28,7 @@ public:
 	*/
 	AssignOrientations();
 
-	Keys* Process(float sigma, int scale, int scale2);
+	Keys* Process(float sigma, int scale, int scale2, int* countKeys);
 
 };
 

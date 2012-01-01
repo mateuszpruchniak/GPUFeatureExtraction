@@ -51,7 +51,7 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 
 
-	if( ucSourceExtrema[GMEMOffset] != 0.0 )
+	if( ucSourceExtrema[GMEMOffset] == 1.0 )
 	{
 
 
@@ -154,8 +154,8 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 
 		//Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1)
 
-		keys[numberExtrema*5] = (float)pozX;//pozX * scale / 2.0;
-		keys[numberExtrema*5 + 1] = (float)pozY;//pozY * scale / 2.0;
+		keys[numberExtrema*5] = (float)pozX * scale / 2.0;
+		keys[numberExtrema*5 + 1] = (float)pozY * scale / 2.0;
 		keys[numberExtrema*5 + 2] = (float)histOrient[max_peak_index];
 		keys[numberExtrema*5 + 3] = (float)x0_n;
 		keys[numberExtrema*5 + 4] = (float)scale2;
