@@ -607,11 +607,6 @@ void SIFT::AssignOrientationsFunc()
 	// The histogram with 8 bins
 	double* hist_orient = new double[NUM_BINS];
 
-	if(!SIFTCPU)
-	{
-		m_numKeypoints = 0;
-	}
-
 	// Go through all octaves
 	for(i=0;i<m_numOctaves;i++)
 	{
@@ -836,9 +831,9 @@ void SIFT::AssignOrientationsFunc()
 
 				
 
-				for (int i =0 ; i < 36*700 ; i++)
+				for (int i =0 ; i < m_numKeypoints ; i++)
 				{
-					if( keys[i].x != 0 ) 
+					if( keys[i].mag != 0 ) 
 					{
 						vector<double> orien;
 						vector<double> mag;
@@ -846,7 +841,7 @@ void SIFT::AssignOrientationsFunc()
 						mag.push_back(keys[i].mag);
 						m_keyPoints.push_back(Keypoint(keys[i].x, keys[i].y, mag, orien, keys[i].scale));
 
-						++m_numKeypoints;
+						//++m_numKeypoints;
 
 						/*cout << "i: " << i << endl;
 						cout << " x: " << keys[i].x;
@@ -1034,8 +1029,9 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 	vector<double> hist(DESC_NUM_BINS);
 
 	// Loop over all keypoints
+	//m_numKeypoints
 
-	for(unsigned int ikp = 0 ; ikp <  m_numKeypoints ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp = 0 ; ikp < 300  ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;

@@ -106,67 +106,60 @@ __kernel void AssignOrient(__global float* ucSourceExtrema, __global float* imgW
 			}
 		}
 
-		for(int k = 0; k < 36; k++)
+
+
+		float x1 = max_peak_index-1;
+		float y1 = 0.0;
+		float x2 = max_peak_index;
+		float y2 = histOrient[max_peak_index];
+		float x3 = max_peak_index+1;
+		float y3 = 0.0;
+				
+		if(max_peak_index == 0)
 		{
-			
-			if(histOrient[k]> 0.8 * max_peak)
-			{
-				float x1 = k-1;
-				float y1 = 0.0;
-				float x2 = k;
-				float y2 = histOrient[k];
-				float x3 = k+1;
-				float y3 = 0.0;
-				
-				if(k == 0)
-				{
-					y1 = histOrient[35];
-					y3 = histOrient[1];
-				}
-				else if(k == 35)
-				{
-					y1 = histOrient[35];
-					y3 = histOrient[0];
-				}
-				else
-				{
-					y1 = histOrient[k-1];
-					y3 = histOrient[k+1];
-				}
-
-				float b[3];
-				float denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
-				b[0]  = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
-				b[1]  = (x3*x3 * (y1 - y2) + x2*x2 * (y3 - y1) + x1*x1 * (y2 - y3)) / denom;
-				b[2]  = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
-
-				float x0 = -b[1]/(2*b[0]);
-
-
-				if( x0 > 36.0 * 2.0 || x0 < 36.0 * 2.0 * -1 )
-					x0=x2;
-
-				while( x0 < 0 )
-					x0 += 36;
-				
-				while(x0 >= 36)
-					x0 -= 36;
-
-				float x0_n = x0*(2*pi/36);
-				x0_n -= pi;
-
-				//Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1)
-
-				keys[numberExtrema*numberPointInHist*5] = (float)pozX; //pozX * scale / 2.0;
-				keys[numberExtrema*numberPointInHist*5 + 1] = (float)pozY; //pozY * scale / 2.0;
-				keys[numberExtrema*numberPointInHist*5 + 2] = (float)histOrient[k];
-				keys[numberExtrema*numberPointInHist*5 + 3] = (float)x0_n;
-				keys[numberExtrema*numberPointInHist*5 + 4] = (float)scale2;
-				
-				++numberPointInHist;
-			}
+			y1 = histOrient[35];
+			y3 = histOrient[1];
+		}
+		else if(max_peak_index == 35)
+		{
+			y1 = histOrient[35];
+			y3 = histOrient[0];
+		}
+		else
+		{
+			y1 = histOrient[max_peak_index-1];
+			y3 = histOrient[max_peak_index+1];
 		}
 
+		float b[3];
+		float denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
+		b[0]  = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
+		b[1]  = (x3*x3 * (y1 - y2) + x2*x2 * (y3 - y1) + x1*x1 * (y2 - y3)) / denom;
+		b[2]  = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
+
+		float x0 = -b[1]/(2*b[0]);
+
+
+		if( x0 > 36.0 * 2.0 || x0 < 36.0 * 2.0 * -1 )
+			x0=x2;
+
+		while( x0 < 0 )
+			x0 += 36;
+				
+		while(x0 >= 36)
+			x0 -= 36;
+
+		float x0_n = x0*(2*pi/36);
+		x0_n -= pi;
+
+		//Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1)
+
+		keys[numberExtrema*5] = (float)pozX;//pozX * scale / 2.0;
+		keys[numberExtrema*5 + 1] = (float)pozY;//pozY * scale / 2.0;
+		keys[numberExtrema*5 + 2] = (float)histOrient[max_peak_index];
+		keys[numberExtrema*5 + 3] = (float)x0_n;
+		keys[numberExtrema*5 + 4] = (float)scale2;
+		
 		ucDest[GMEMOffset] = 1.0;
 	}
 

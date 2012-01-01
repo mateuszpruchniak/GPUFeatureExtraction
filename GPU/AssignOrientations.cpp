@@ -18,9 +18,9 @@ AssignOrientations::AssignOrientations(): GPUBase("C:\\Users\\Mati\\Desktop\\Dro
 Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
 {
 	int maskSize = GetKernelSize(sigma);
-	Keys keys[36*700];
+	Keys keys[700];
 
-	for (int i =0 ; i < 36*700 ; i++)
+	for (int i =0 ; i < 700 ; i++)
 	{
 		keys[i].x = 0.0;
 		keys[i].y = 0.0;
@@ -66,7 +66,7 @@ Keys* AssignOrientations::Process( float sigma, int scale, int scale2)
 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufCount, CL_TRUE, 0, sizeof(int), (void*)&count, 0, NULL, NULL);
 	CheckError(GPUError);
-	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, 700*36*sizeof(Keys), (void*)&keys, 0, NULL, NULL);
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, 700*sizeof(Keys), (void*)&keys, 0, NULL, NULL);
 	CheckError(GPUError);
 	
 	/*cout << "count: " << count << endl;
