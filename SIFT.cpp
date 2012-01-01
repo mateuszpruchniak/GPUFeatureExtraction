@@ -607,7 +607,10 @@ void SIFT::AssignOrientationsFunc()
 	// The histogram with 8 bins
 	double* hist_orient = new double[NUM_BINS];
 
-	m_numKeypoints = 0;  // moje --------------------------------------------------------------------------
+	if(!SIFTCPU)
+	{
+		m_numKeypoints = 0;
+	}
 
 	// Go through all octaves
 	for(i=0;i<m_numOctaves;i++)
@@ -1032,7 +1035,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 	// Loop over all keypoints
 
-	for(unsigned int ikp =100; ikp <  150 ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp = 0 ; ikp <  m_numKeypoints ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
