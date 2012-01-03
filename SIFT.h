@@ -27,7 +27,7 @@ public:
 
 	void FindMatches(vector<Descriptor> keysToFind);
 	Descriptor CheckForMatch(Descriptor k1, vector<Descriptor> keysList);
-	int DistSquared(Keypoint k1, Keypoint k2);
+	double DistSquared(Descriptor k1, Descriptor k2);
 
 
 	SIFT(IplImage* img, int octaves, int intervals);

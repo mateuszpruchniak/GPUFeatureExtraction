@@ -982,22 +982,19 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 				extractKeys->ReceiveImageData(imgInterpolatedMagnitude[i][j-1],imgInterpolatedOrientation[i][j-1]);
 				
 				/*cvNamedWindow("ExtractKeypointDescriptors", CV_WINDOW_AUTOSIZE); 
-				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedOrientation[i][j-1] );
+				cvShowImage("ExtractKeypointDescriptors", imgInterpolatedMagnitude[i][j-1] );
 				cvWaitKey(2);*/
+
 			}
 
 
-			
-
-
-
 			// Now we have the imgInterpolated* ready. Store and get started
-			char* filename = new char[200];
+			/*char* filename = new char[200];
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\intmag_oct_%d_scl_%d.jpg", i, j-1);
 			cvSaveImage(filename, imgInterpolatedMagnitude[i][j-1]);
 
 			sprintf(filename, "C:\\Users\\Mati\\Pictures\\intori_oct_%d_scl_%d.jpg", i, j-1);
-			cvSaveImage(filename, imgInterpolatedOrientation[i][j-1]);
+			cvSaveImage(filename, imgInterpolatedOrientation[i][j-1]);*/
 
 			cvReleaseImage(&imgTemp);
 
@@ -1065,7 +1062,10 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 					int wys = imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals]->height;
 					int x = szer <= jj+j+1-hfsz ? szer - 1 : jj+j+1-hfsz;
 					int y = wys <= ii+i+1-hfsz ? wys - 1 : ii+i+1-hfsz;
-					cvSetReal2D(weight, j, i, cvGetReal2D(G, j, i)*cvGetReal2D(imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals], x, y));
+					double g = cvGetReal2D(G, j, i);
+					double imgInter = cvGetReal2D(imgInterpolatedMagnitude[scale/m_numIntervals][scale%m_numIntervals], x, y);
+					double tmp =  g * imgInter;
+					cvSetReal2D(weight, j, i, tmp );
 				}
 			}
 		}
@@ -1299,21 +1299,25 @@ void SIFT::ShowAbsSigma()
 
 void SIFT::FindMatches( vector<Descriptor> keysToFind )
 {
-	
-	Descriptor desc;
+	Descriptor match;
+
 	for ( int i = 0; i < keysToFind.size() ; i++) {
 		
-		desc = CheckForMatch(keysToFind[i], m_keyDescs); 
+		match = CheckForMatch(keysToFind[i], m_keyDescs); 
 
 
-		/*if (match != NULL) {
-			count++;
-			DrawLine(result, (int) k->row, (int) k->col,
-				(int) (match->row + im1->rows), (int) match->col);
-		}*/
+		if (match.xi != -1) {
+
+			cout << "match " << match.xi << " " << match.yi << endl;
+
+			cvLine(m_srcImage, cvPoint(match.xi, match.yi), cvPoint(match.xi, match.yi), CV_RGB(0,255,255), 3);
+			
+		}
 	}
 
-
+	cvNamedWindow("match");
+	cvShowImage("match", m_srcImage);
+	cvWaitKey(0);
 
 
 }
@@ -1322,20 +1326,48 @@ void SIFT::FindMatches( vector<Descriptor> keysToFind )
 
 Descriptor SIFT::CheckForMatch( Descriptor k1, vector<Descriptor> keysList )
 {
-	Descriptor descriptor;
+	double dsq, distsq1 = 100000000, distsq2 = 100000000;
+    Descriptor minkey;
+	Descriptor res;
+	res.xi = -1;
 
+    /* Find the two closest matches, and put their squared distances in
+       distsq1 and distsq2.
+    */
 
+	for ( int i = 0; i < keysList.size() ; i++) {
+		dsq = DistSquared(k1, keysList[i]);
+		
+		if (dsq < distsq1) {
+			distsq2 = distsq1;
+			distsq1 = dsq;
+			minkey =  keysList[i];
+		} else if (dsq < distsq2) {
+			distsq2 = dsq;
+		}
+	}
 
+    /* Check whether closest distance is less than 0.6 of second. */
+    if (10 * 10 * distsq1 < 6 * 6 * distsq2)
+      return minkey;
 
-	return descriptor;
+	return res;
 }
 
 
 
-int SIFT::DistSquared( Keypoint k1, Keypoint k2 )
+double SIFT::DistSquared( Descriptor k1, Descriptor k2 )
 {
+	float dif, distsq = 0;
+	vector<double> pk1, pk2;
 
 
+	pk1 = k1.fv;
+	pk2 = k2.fv;
 
-	return 0;
+	for (int i = 0; i < 128; i++) {
+		dif = pk1[i] - pk2[i];
+		distsq += dif * dif;
+	}
+	return distsq;
 }
