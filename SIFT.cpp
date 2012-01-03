@@ -137,31 +137,15 @@ void SIFT::DoSift()
 	double duration = 0;
 	
 	start = clock();
+
 	BuildScaleSpace();
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "BuildScaleSpace: " << endl;
-	cout << duration << endl;
 
-
-	start = clock();
 	DetectExtremaFunc();
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "DetectExtrema: " << endl;
-	cout << duration << endl;
 
-
-	start = clock();
 	AssignOrientationsFunc();
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "AssignOrientations: " << endl;
-	cout << duration << endl;
-	
-	
-	start = clock();
+
 	ExtractKeypointDescriptorsFunc();
+
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
 	cout << "ExtractKeypointDescriptors: " << endl;
@@ -826,7 +810,7 @@ void SIFT::AssignOrientationsFunc()
 				assignOrient->CreateBuffersIn(imgMask->width*imgMask->height*sizeof(float),4);
 				assignOrient->CreateBuffersOut(imgMask->width*imgMask->height*sizeof(float),1);
 				assignOrient->SendImageToBuffers(m_extrema[i][j-1], imgWeight, imgMask, orientation[i][j-1]);
-				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1, &countKeys);
+				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1, &countKeys, m_numKeypoints);
 				assignOrient->ReceiveImageData(imgMask);
 
 				
@@ -1031,7 +1015,7 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 	// Loop over all keypoints
 	//m_numKeypoints
 
-	for(unsigned int ikp = 0 ; ikp < 300  ;ikp++) // -----------------------------------------------------------------------------------------------------
+	for(unsigned int ikp = 0 ; ikp < m_numKeypoints  ;ikp++) // -----------------------------------------------------------------------------------------------------
 	{
 		unsigned int scale = m_keyPoints[ikp].scale;
 		float kpxi = m_keyPoints[ikp].xi;
@@ -1141,17 +1125,17 @@ void SIFT::ExtractKeypointDescriptorsFunc()
 
 						unsigned int sample_orien_d = sample_orien*180/M_PI;
 						
-						if(sample_orien_d<360)
-							printf("sample_orien_d<360 \n");
+						//if(sample_orien_d<360)
+						//	printf("sample_orien_d<360 \n");
 
 						unsigned int bin = sample_orien_d/(360/DESC_NUM_BINS);					// The bin
 						double bin_f = (double)sample_orien_d/(double)(360/DESC_NUM_BINS);		// The actual entry
 
-						if(bin<DESC_NUM_BINS)
-							printf("bin<DESC_NUM_BINS \n");
+						//if(bin<DESC_NUM_BINS)
+						//	printf("bin<DESC_NUM_BINS \n");
 
-						if(k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE)
-							printf("k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE \n");
+						//if(k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE)
+						//	printf("k+hfsz-1-ii<FEATURE_WINDOW_SIZE && t+hfsz-1-jj<FEATURE_WINDOW_SIZE \n");
 
 						// Add to the bin
 						szer = weight->width;
@@ -1288,8 +1272,8 @@ void SIFT::ShowKeypoints()
 	{
 		Keypoint kp = m_keyPoints[i];
 
-		cvLine(img, cvPoint(kp.xi, kp.yi), cvPoint(kp.xi, kp.yi), CV_RGB(255,255,255), 3);
-		cvLine(img, cvPoint(kp.xi, kp.yi), cvPoint(kp.xi+10*cos(kp.orien[0]), kp.yi+10*sin((double)kp.orien[0])), CV_RGB(255,255,255), 1);
+		cvLine(img, cvPoint(kp.xi, kp.yi), cvPoint(kp.xi, kp.yi), CV_RGB(0,255,255), 3);
+		cvLine(img, cvPoint(kp.xi, kp.yi), cvPoint(kp.xi+10*cos(kp.orien[0]), kp.yi+10*sin((double)kp.orien[0])), CV_RGB(0,255,255), 1);
 	}
 
 	cvNamedWindow("Keypoints");
@@ -1308,4 +1292,38 @@ void SIFT::ShowAbsSigma()
 		}
 		printf("\n");
 	}
+}
+
+
+
+
+void SIFT::FindMatches( IplImage* im1, vector<Descriptor> keys1, IplImage* im2, vector<Descriptor> keys2 )
+{
+	
+
+
+
+
+
+
+}
+
+
+
+Keypoint SIFT::CheckForMatch( Keypoint k1, vector<Descriptor> keysList )
+{
+	Keypoint keypoint;
+
+
+	return keypoint;
+}
+
+
+
+int SIFT::DistSquared( Keypoint k1, Keypoint k2 )
+{
+
+
+
+	return 0;
 }

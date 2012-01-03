@@ -25,6 +25,10 @@ public:
 	AssignOrientations* assignOrient;
 	ExtractKeypointDescriptors* extractKeys;
 
+	void FindMatches(IplImage* im1, vector<Descriptor> keys1, IplImage* im2, vector<Descriptor> keys2);
+	Keypoint CheckForMatch(Keypoint k1, vector<Descriptor> keysList);
+	int DistSquared(Keypoint k1, Keypoint k2);
+
 
 	SIFT(IplImage* img, int octaves, int intervals);
 	SIFT(const char* filename, int octaves, int intervals);
