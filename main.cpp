@@ -27,15 +27,23 @@ using namespace std;
 int main()
 {
 	// Create an instance of SIFT
-	SIFT *sift = new SIFT("C:\\car.jpg", 4, 2);
+	SIFT *sift = new SIFT("C:\\fela.jpg", 4, 2);
+	sift->DoSift();
 
-	sift->DoSift();				// Find keypoints
-	sift->ShowAbsSigma();		// Display the sigma table
-	sift->ShowKeypoints();		// Show the keypoints
+	SIFT *sift2 = new SIFT("C:\\opel.jpg", 4, 2);
+	sift2->DoSift();				// Find keypoints
+	sift2->ShowAbsSigma();		// Display the sigma table
+	sift2->ShowKeypoints();		// Show the keypoints
 	cvWaitKey(0);				// Wait for a keypress
+
+	sift2->FindMatches(sift->m_keyDescs);
+
+
+
 
 	// Cleanup and exit
 	delete sift;
+	delete sift2;
 	return 0;
 }
 

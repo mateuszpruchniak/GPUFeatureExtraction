@@ -1297,11 +1297,21 @@ void SIFT::ShowAbsSigma()
 
 
 
-void SIFT::FindMatches( IplImage* im1, vector<Descriptor> keys1, IplImage* im2, vector<Descriptor> keys2 )
+void SIFT::FindMatches( vector<Descriptor> keysToFind )
 {
 	
+	Descriptor desc;
+	for ( int i = 0; i < keysToFind.size() ; i++) {
+		
+		desc = CheckForMatch(keysToFind[i], m_keyDescs); 
 
 
+		/*if (match != NULL) {
+			count++;
+			DrawLine(result, (int) k->row, (int) k->col,
+				(int) (match->row + im1->rows), (int) match->col);
+		}*/
+	}
 
 
 
@@ -1310,12 +1320,14 @@ void SIFT::FindMatches( IplImage* im1, vector<Descriptor> keys1, IplImage* im2, 
 
 
 
-Keypoint SIFT::CheckForMatch( Keypoint k1, vector<Descriptor> keysList )
+Descriptor SIFT::CheckForMatch( Descriptor k1, vector<Descriptor> keysList )
 {
-	Keypoint keypoint;
+	Descriptor descriptor;
 
 
-	return keypoint;
+
+
+	return descriptor;
 }
 
 
