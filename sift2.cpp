@@ -616,7 +616,23 @@ paper.
 	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
 	H = hessian_3D( dog_pyr, octv, intvl, r, c );
 	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
+
 	cvInvert( H, H_inv );
+	
+	float det;
+
+    det = cvmGet(H,0,0)*( cvmGet(H,1,1)* cvmGet(H,2,2)- cvmGet(H,2,1)* cvmGet(H,1,2))- cvmGet(H,0,1)*( cvmGet(H,1,0)* cvmGet(H,2,2)- cvmGet(H,1,2)* cvmGet(H,2,0))+ cvmGet(H,0,2)*( cvmGet(H,1,0)* cvmGet(H,2,1)- cvmGet(H,1,1)* cvmGet(H,2,0));//adjoin
+    
+	cvmSet(H_inv,0,0, ( cvmGet(H,1,1)* cvmGet(H,2,2)- cvmGet(H,2,1)* cvmGet(H,1,2))/det);
+    cvmSet(H_inv,0,1, - ( cvmGet(H,1,0)* cvmGet(H,2,2)- cvmGet(H,1,2)* cvmGet(H,2,0))/det);
+    cvmSet(H_inv,0,2, (cvmGet(H,1,0)* cvmGet(H,2,1)- cvmGet(H,2,0)* cvmGet(H,1,1))/det);
+    cvmSet(H_inv,0,0,- ( cvmGet(H,0,1)* cvmGet(H,2,2)- cvmGet(H,0,2)* cvmGet(H,2,1))/det);
+    cvmSet(H_inv,0,1, ( cvmGet(H,0,0)* cvmGet(H,2,2)- cvmGet(H,0,2)* cvmGet(H,2,0))/det);
+    cvmSet(H_inv,0,2,- ( cvmGet(H,0,0)* cvmGet(H,2,1)- cvmGet(H,2,0)* cvmGet(H,0,1))/det);
+    cvmSet(H_inv,0,0, ( cvmGet(H,0,1)* cvmGet(H,1,2)- cvmGet(H,0,2)* cvmGet(H,1,1))/det);
+    cvmSet(H_inv,0,1, - ( cvmGet(H,0,0)* cvmGet(H,1,2)- cvmGet(H,1,0)* cvmGet(H,0,2))/det);
+    cvmSet(H_inv,0,2, ( cvmGet(H,0,0)* cvmGet(H,1,1)- cvmGet(H,1,0)* cvmGet(H,0,1))/det);
+	
 	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
 	cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
 
