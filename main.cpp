@@ -80,10 +80,10 @@ int main()
 
 	if( display )
 	{
-		//draw_features( img, features, n );
-		//cvNamedWindow( img_file_name, 1 );
-		//cvShowImage( img_file_name, img );
-		//cvWaitKey( 0 );
+		draw_features( img, features, n );
+		cvNamedWindow( img_file_name, 1 );
+		cvShowImage( img_file_name, img );
+		cvWaitKey( 0 );
 	}
 
 	if( out_file_name != NULL )

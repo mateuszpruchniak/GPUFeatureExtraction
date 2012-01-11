@@ -110,7 +110,7 @@ struct Feature;
 #define feat_detection_data(f) ( (struct detection_data*)(f->feature_data) )
 
 
-#define	SIFTCPU					0
+#define	SIFTCPU		0
 
 
 class SIFTGPU
@@ -147,9 +147,9 @@ class SIFTGPU
 
 		int sift_features( IplImage* img, feature** feat );
 
-		IplImage* create_init_img( IplImage*, int, double );
+		IplImage* createInitImg( IplImage*, int, double );
 
-
+		 IplImage*** build_gauss_pyr( IplImage*, int, int, double );
 
 
 };

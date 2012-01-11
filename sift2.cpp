@@ -30,9 +30,9 @@ that accompanied this distribution.
 
 /************************* Local Function Prototypes *************************/
 
- IplImage* create_init_img( IplImage*, int, double );
+
  IplImage* convert_to_gray32( IplImage* );
- IplImage*** build_gauss_pyr( IplImage*, int, int, double );
+
  IplImage* downsample( IplImage* );
  IplImage*** build_dog_pyr( IplImage***, int, int );
  CvSeq* scale_space_extrema( IplImage***, int, int, double, int, CvMemStorage*);
@@ -129,12 +129,16 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 	/* build scale space pyramid; smallest dimension of top level is ~4 pixels */
 
-	init_img = create_init_img( img, img_dbl, sigma );
-
-
-
+	init_img = createInitImg( img, img_dbl, sigma );
 	octvs = log( (double)MIN( init_img->width, init_img->height ) ) / log((double)2) - 2;
+
+
+
 	gauss_pyr = build_gauss_pyr( init_img, octvs, intvls, sigma );
+
+
+
+
 	dog_pyr = build_dog_pyr( gauss_pyr, octvs, intvls );
 
 	storage = cvCreateMemStorage( 0 );
@@ -175,7 +179,7 @@ optionally doubled in size prior to smoothing.
 @param img_dbl if true, image is doubled in size prior to smoothing
 @param sigma total std of Gaussian smoothing
 */
- IplImage* SIFTGPU::create_init_img( IplImage* img, int img_dbl, double sigma )
+ IplImage* SIFTGPU::createInitImg( IplImage* img, int img_dbl, double sigma )
 {
 	IplImage* gray, * dbl;
 	float sig_diff;
@@ -188,19 +192,19 @@ optionally doubled in size prior to smoothing.
 			IPL_DEPTH_32F, 1 );
 		cvResize( gray, dbl, CV_INTER_CUBIC );
 
+		/************************ GPU **************************/
 		if(SIFTCPU)
 			cvSmooth( dbl, dbl, CV_GAUSSIAN, 0, 0, sig_diff, sig_diff );
 		else
 		{
-			meanFilter->CreateBuffersIn(imgGray->width*imgGray->height*sizeof(float),1);
-			meanFilter->CreateBuffersOut(imgGray->width*imgGray->height*sizeof(float),1);
-			meanFilter->SendImageToBuffers(imgGray);
-			meanFilter->Process(SIGMA_ANTIALIAS);
-			meanFilter->ReceiveImageData(imgGray);
+			meanFilter->CreateBuffersIn(dbl->width*dbl->height*sizeof(float),1);
+			meanFilter->CreateBuffersOut(dbl->width*dbl->height*sizeof(float),1);
+			meanFilter->SendImageToBuffers(dbl);
+			meanFilter->Process(sig_diff);
+			meanFilter->ReceiveImageData(dbl);
 		}
-
+		/************************ GPU **************************/
 		
-
 		cvReleaseImage( &gray );
 		return dbl;
 	}
@@ -208,19 +212,19 @@ optionally doubled in size prior to smoothing.
 	{
 		sig_diff = sqrt( sigma * sigma - SIFT_INIT_SIGMA * SIFT_INIT_SIGMA );
 
+		/************************ GPU **************************/
 		if(SIFTCPU)
 			cvSmooth( gray, gray, CV_GAUSSIAN, 0, 0, sig_diff, sig_diff );
 		else
 		{
-			meanFilter->CreateBuffersIn(imgGray->width*imgGray->height*sizeof(float),1);
-			meanFilter->CreateBuffersOut(imgGray->width*imgGray->height*sizeof(float),1);
-			meanFilter->SendImageToBuffers(imgGray);
-			meanFilter->Process(SIGMA_ANTIALIAS);
-			meanFilter->ReceiveImageData(imgGray);
+			meanFilter->CreateBuffersIn(gray->width*gray->height*sizeof(float),1);
+			meanFilter->CreateBuffersOut(gray->width*gray->height*sizeof(float),1);
+			meanFilter->SendImageToBuffers(gray);
+			meanFilter->Process(sig_diff);
+			meanFilter->ReceiveImageData(gray);
 		}
-
+		/************************ GPU **************************/
 		
-
 		return gray;
 	}
 }
@@ -264,7 +268,7 @@ Builds Gaussian scale space pyramid from an image
 
 @return Returns a Gaussian scale space pyramid as an octvs x (intvls + 3) array
 */
- IplImage*** build_gauss_pyr( IplImage* base, int octvs,
+ IplImage*** SIFTGPU::build_gauss_pyr( IplImage* base, int octvs,
 									int intvls, double sigma )
 {
 	IplImage*** gauss_pyr;
@@ -281,6 +285,7 @@ Builds Gaussian scale space pyramid from an image
 
 		\sigma_{total}^2 = \sigma_{i}^2 + \sigma_{i-1}^2
 	*/
+
 	sig[0] = sigma;
 	k = pow( 2.0, 1.0 / intvls );
 	for( i = 1; i < intvls + 3; i++ )
@@ -306,10 +311,18 @@ Builds Gaussian scale space pyramid from an image
 				gauss_pyr[o][i] = cvCreateImage( cvGetSize(gauss_pyr[o][i-1]),
 					IPL_DEPTH_32F, 1 );
 
-
-				cvSmooth( gauss_pyr[o][i-1], gauss_pyr[o][i],
-					CV_GAUSSIAN, 0, 0, sig[i], sig[i] );
-			
+				/************************ GPU **************************/
+				if(SIFTCPU)
+					cvSmooth( gauss_pyr[o][i-1], gauss_pyr[o][i],CV_GAUSSIAN, 0, 0, sig[i], sig[i] );
+				else
+				{
+					meanFilter->CreateBuffersIn(gauss_pyr[o][i-1]->width*gauss_pyr[o][i-1]->height*sizeof(float),1);
+					meanFilter->CreateBuffersOut(gauss_pyr[o][i]->width*gauss_pyr[o][i]->height*sizeof(float),1);
+					meanFilter->SendImageToBuffers(gauss_pyr[o][i-1]);
+					meanFilter->Process(sig[i]);
+					meanFilter->ReceiveImageData(gauss_pyr[o][i]);
+				}
+				/************************ GPU **************************/
 				
 			}
 		}
