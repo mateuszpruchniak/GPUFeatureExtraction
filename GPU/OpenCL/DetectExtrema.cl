@@ -6,6 +6,15 @@
 /* maximum steps of keypoint interpolation before failure */
 #define SIFT_MAX_INTERP_STEPS 5
 
+/** default number of sampled intervals per octave */
+#define SIFT_INTVLS 3
+
+/** default threshold on keypoint contrast |D(x)| */
+#define SIFT_CONTR_THR 0.04
+
+/* absolute value */
+#define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
+
 float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHeight )
 {
 	int X = x > ImageWidth  ? ImageWidth  : x;
@@ -15,6 +24,13 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 	return dataIn[GMEMOffset];
 }
 
+/*
+Determines whether a pixel is a scale-space extremum by comparing it to it's
+3x3x3 pixel neighborhood.
+
+@return Returns 1 if the specified pixel is an extremum (max or min) among
+	it's 3x3x3 pixel neighborhood.
+*/
 int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
 {
 	float val = GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight);
@@ -77,7 +93,7 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 	| Ixy  Iyy  Iys | <BR>
 	\ Ixs  Iys  Iss /
 */
-float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
+float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float H[][3] )
 {
 	float v, dxx, dyy, dss, dxy, dxs, dys;
 
@@ -107,53 +123,89 @@ float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global fl
 			GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) +
 			GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) ) / 4.0;
 
-	float H[9];
 
-	// 0 1 2
-	// 3 4 5
-	// 6 7 8
 
-	H[0] = dxx;
-	H[1] = dxy;
-	H[2] = dxs;
-	H[3] = dxy;
-	H[4] = dyy;
-	H[5] = dys;
-	H[6] = dxs;
-	H[7] = dys;
-	H[8] = dss;
+	H[0][0] = dxx;
+	H[0][1] = dxy;
+	H[0][2] = dxs;
+	H[1][0] = dxy;
+	H[1][1] = dyy;
+	H[1][2] = dys;
+	H[2][0] = dxs;
+	H[2][1] = dys;
+	H[2][2] = dss;
 
 	return H;
 }
 
+/*
+Performs one step of extremum interpolation.  Based on Eqn. (3) in Lowe's
+paper.
+*/
 void interp_step(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight,
 						 float* xi, float* xr, float* xc )
 {
-	//CvMat* dD, * H, * H_inv, X;
+	
 	float x[3] = { 0, 0 , 0 };
 	float *dD;
-	float* H;
+	float H[3][3];
+	float H_inv[3][3];
 
 	dD = deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight);
-	H = hessian_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight);
+	hessian_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, H);
 
+	float a = H[0][0];
+	float b = H[0][1];
+	float c = H[0][2];
+	float d = H[1][0];
+	float e = H[1][1];
+	float f = H[1][2];
+	float g = H[2][0];
+	float h = H[2][1];
+	float k = H[2][2];
 
-	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
-	/*cvInvert( H, H_inv, CV_SVD );
-	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
-	cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
+	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
+	float det_inv = 1 / det;
 
-	cvReleaseMat( &dD );
-	cvReleaseMat( &H );
-	cvReleaseMat( &H_inv );*/
+	H_inv[0][0] = (e*k - f*h)*det_inv;
+	H_inv[0][1] = (c*h - b*k)*det_inv;
+	H_inv[0][2] = (b*f - c*e)*det_inv;
+
+	H_inv[1][0] = (f*g - d*k)*det_inv;
+	H_inv[1][1] = (a*k - c*g)*det_inv;
+	H_inv[1][2] = (c*d - a*f)*det_inv;
+
+	H_inv[2][0] = (d*h - e*g)*det_inv;
+	H_inv[2][1] = (g*b - a*h)*det_inv;
+	H_inv[2][2] = (a*e - b*d)*det_inv;
+
+	x[0] = H_inv[0][0]*dD[0] + H_inv[1][0]*dD[1] + H_inv[2][0]*dD[2];
+	x[1] = H_inv[0][1]*dD[0] + H_inv[1][1]*dD[1] + H_inv[2][1]*dD[2];
+	x[2] = H_inv[0][2]*dD[0] + H_inv[1][2]*dD[1] + H_inv[2][2]*dD[2];
+
 
 	*xi = x[2];
 	*xr = x[1];
 	*xc = x[0];
 }
 
+/*
+Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 
-int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, int intvls, float contr_thr )
+@param Returns interpolated contrast.
+*/
+float interp_contr(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float xi, float xr, float xc )
+{
+	float *dD;
+	float x[3] = { xc, xr, xi };
+
+	dD = deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight);
+	float res = x[0]*dD[0] + x[1]*dD[1] + x[2]*dD[2];
+
+	return GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) + res * 0.5;
+}
+
+int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, int intvls, float contr_thr, int intvl )
 {
 	
 	float xi, xr, xc, contr;
@@ -163,35 +215,36 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	while( i < SIFT_MAX_INTERP_STEPS )
 	{
 		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, &xi, &xr, &xc );
-		/*if( ABS( xi ) < 0.5  &&  ABS( xr ) < 0.5  &&  ABS( xc ) < 0.5 )
+		if( xi < 0.5 && xi > -0.5  &&  xr < 0.5 && xr > -0.5  &&  xc < 0.5 && xc > -0.5 )
 			break;
-
-		c += cvRound( xc );
-		r += cvRound( xr );
-		intvl += cvRound( xi );
+		
+		
+		pozX += (int)xc;
+		pozY += (int)xr;
+		intvl += (int)xi;
 
 		if( intvl < 1  ||
 			intvl > intvls  ||
-			c < SIFT_IMG_BORDER  ||
-			r < SIFT_IMG_BORDER  ||
-			c >= dog_pyr[octv][0]->width - SIFT_IMG_BORDER  ||
-			r >= dog_pyr[octv][0]->height - SIFT_IMG_BORDER )
+			pozX < SIFT_IMG_BORDER  ||
+			pozY < SIFT_IMG_BORDER  ||
+			pozX >= ImageWidth - SIFT_IMG_BORDER  ||
+			pozY >= ImageHeight - SIFT_IMG_BORDER )
 		{
 			return 0;
-		}*/
-
+		}
 		i++;
 	}
 
 	/* ensure convergence of interpolation */
-	/*if( i >= SIFT_MAX_INTERP_STEPS )
-		return NULL;
+	if( i >= SIFT_MAX_INTERP_STEPS )
+		return 0;
 
-	contr = interp_contr( dog_pyr, octv, intvl, r, c, xi, xr, xc );
+	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
 	if( ABS( contr ) < contr_thr / intvls )
-		return NULL;
+		return 0;
 
-	feat = new_feature();
+
+	/*feat = new_feature();
 	ddata = feat_detection_data( feat );
 	feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
 	feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
@@ -205,14 +258,11 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 }
 
 __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest, __global int* numberExtrema, __global float* keys,
-                      int ImageWidth, int ImageHeight, int prelim_contr_thr, __global int* number, __global int* numberRej)
+                      int ImageWidth, int ImageHeight, int prelim_contr_thr, int intvl, __global int* number, __global int* numberRej)
 {
 	int pozX = get_global_id(0);
 	int pozY = get_global_id(1);
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
-		
-	//float mid00 = GetPixel(middle, pozX-1, pozY-1, ImageWidth, ImageHeight);
-
 
 	if( pozX < ImageWidth-SIFT_IMG_BORDER && pozY < ImageHeight-SIFT_IMG_BORDER && pozX > SIFT_IMG_BORDER && pozY > SIFT_IMG_BORDER )
 	{
@@ -224,10 +274,13 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 		{
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
 			{
-				//int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, intvls, contr_thr);
-				/*if( feat )
+				int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
+				if( feat )
 				{
-					ddata = feat_detection_data( feat );
+
+
+
+					/*ddata = feat_detection_data( feat );
 					if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
 						ddata->r, ddata->c, curv_thr ) )
 					{
@@ -235,8 +288,8 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 					}
 					else
 						free( ddata );
-					free( feat );
-				}*/
+					free( feat );*/
+				}
 				
 
 

@@ -23,8 +23,6 @@
 using namespace std;
 
 
-
-
 // The main function!
 int main()
 {
@@ -46,6 +44,8 @@ int main()
 	//// Cleanup and exit
 	//delete sift;
 	//delete sift2;
+
+
 
 	char* img_file_name = "C:\\scene2.jpg";
 	char* out_file_name  = "C:\\Users\\Mati\\Pictures\\scene2.sift";;

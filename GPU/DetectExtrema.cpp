@@ -13,7 +13,7 @@ DetectExtrema::DetectExtrema(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\
 }
 
 
-bool DetectExtrema::Process( int* num, int* numRej, int prelim_contr_thr )
+bool DetectExtrema::Process( int* num, int* numRej, int prelim_contr_thr, int intvl )
 {
 
 	int maxNumberKeys = 1000;
@@ -66,8 +66,9 @@ bool DetectExtrema::Process( int* num, int* numRej, int prelim_contr_thr )
 	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_uint), (void*)&imageWidth);
 	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_uint), (void*)&imageHeight);
 	GPUError |= clSetKernelArg(GPUKernel, 8, sizeof(cl_uint), (void*)&prelim_contr_thr);
-	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_mem), (void*)&cmDevBufNumber);
-	GPUError |= clSetKernelArg(GPUKernel, 10, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
+	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_uint), (void*)&intvl);
+	GPUError |= clSetKernelArg(GPUKernel, 10, sizeof(cl_mem), (void*)&cmDevBufNumber);
+	GPUError |= clSetKernelArg(GPUKernel, 11, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;

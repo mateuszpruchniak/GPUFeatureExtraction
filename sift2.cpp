@@ -465,7 +465,7 @@ based on contrast and ratio of principal curvatures.
 				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
-				detectExt->Process(&num, &numRemoved, prelim_contr_thr);
+				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i);
 				detectExt->ReceiveImageData(dog_pyr[o][i]);
 			}
 			/************************ GPU **************************/
@@ -607,42 +607,58 @@ paper.
 @param xc output as interpolated subpixel increment to col
 */
 
- void interp_step( IplImage*** dog_pyr, int octv, int intvl, int r, int c,
+ void interp_step( IplImage*** dog_pyr, int octv, int intvl, int rr, int cc,
 						 double* xi, double* xr, double* xc )
 {
 	CvMat* dD, * H, * H_inv, X;
-	double x[3] = { 0 };
+	double x[3] = { 0, 0 , 0 };
+	double xx[3] = { 0, 0 , 0 };
 
-	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
-	H = hessian_3D( dog_pyr, octv, intvl, r, c );
+	dD = deriv_3D( dog_pyr, octv, intvl, rr, cc );
+	H = hessian_3D( dog_pyr, octv, intvl, rr, cc );
+
 	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
 
-	cvInvert( H, H_inv );
-	
-	float det;
+	//cvInvert( H, H_inv );
+	float a = cvGetReal2D(H, 0, 0);
+	float b = cvGetReal2D(H, 0, 1);
+	float c = cvGetReal2D(H, 0, 2);
+	float d = cvGetReal2D(H, 1, 0);
+	float e = cvGetReal2D(H, 1, 1);
+	float f = cvGetReal2D(H, 1, 2);
+	float g = cvGetReal2D(H, 2, 0);
+	float h = cvGetReal2D(H, 2, 1);
+	float k = cvGetReal2D(H, 2, 2);
 
-    det = cvmGet(H,0,0)*( cvmGet(H,1,1)* cvmGet(H,2,2)- cvmGet(H,2,1)* cvmGet(H,1,2))- cvmGet(H,0,1)*( cvmGet(H,1,0)* cvmGet(H,2,2)- cvmGet(H,1,2)* cvmGet(H,2,0))+ cvmGet(H,0,2)*( cvmGet(H,1,0)* cvmGet(H,2,1)- cvmGet(H,1,1)* cvmGet(H,2,0));//adjoin
-    
-	cvmSet(H_inv,0,0, ( cvmGet(H,1,1)* cvmGet(H,2,2)- cvmGet(H,2,1)* cvmGet(H,1,2))/det);
-    cvmSet(H_inv,0,1, - ( cvmGet(H,1,0)* cvmGet(H,2,2)- cvmGet(H,1,2)* cvmGet(H,2,0))/det);
-    cvmSet(H_inv,0,2, (cvmGet(H,1,0)* cvmGet(H,2,1)- cvmGet(H,2,0)* cvmGet(H,1,1))/det);
-    cvmSet(H_inv,0,0,- ( cvmGet(H,0,1)* cvmGet(H,2,2)- cvmGet(H,0,2)* cvmGet(H,2,1))/det);
-    cvmSet(H_inv,0,1, ( cvmGet(H,0,0)* cvmGet(H,2,2)- cvmGet(H,0,2)* cvmGet(H,2,0))/det);
-    cvmSet(H_inv,0,2,- ( cvmGet(H,0,0)* cvmGet(H,2,1)- cvmGet(H,2,0)* cvmGet(H,0,1))/det);
-    cvmSet(H_inv,0,0, ( cvmGet(H,0,1)* cvmGet(H,1,2)- cvmGet(H,0,2)* cvmGet(H,1,1))/det);
-    cvmSet(H_inv,0,1, - ( cvmGet(H,0,0)* cvmGet(H,1,2)- cvmGet(H,1,0)* cvmGet(H,0,2))/det);
-    cvmSet(H_inv,0,2, ( cvmGet(H,0,0)* cvmGet(H,1,1)- cvmGet(H,1,0)* cvmGet(H,0,1))/det);
-	
-	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
-	cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
+	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
+	float det_inv = 1 / det;
+
+	cvSetReal2D(H_inv, 0, 0, (e*k - f*h)*det_inv );
+	cvSetReal2D(H_inv, 0, 1, (c*h - b*k)*det_inv );
+	cvSetReal2D(H_inv, 0, 2, (b*f - c*e)*det_inv );
+
+	cvSetReal2D(H_inv, 1, 0, (f*g - d*k)*det_inv );
+	cvSetReal2D(H_inv, 1, 1, (a*k - c*g)*det_inv );
+	cvSetReal2D(H_inv, 1, 2, (c*d - a*f)*det_inv );
+
+	cvSetReal2D(H_inv, 2, 0, (d*h - e*g)*det_inv );
+	cvSetReal2D(H_inv, 2, 1, (g*b - a*h)*det_inv );
+	cvSetReal2D(H_inv, 2, 2, (a*e - b*d)*det_inv );
+
+	//cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
+	//cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
+
+	xx[0] = cvGetReal2D(H_inv, 0, 0)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 0)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 0)*cvGetReal2D(dD, 2, 0);
+	xx[1] = cvGetReal2D(H_inv, 0, 1)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 1)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 1)*cvGetReal2D(dD, 2, 0);
+	xx[2] = cvGetReal2D(H_inv, 0, 2)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 2)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 2)*cvGetReal2D(dD, 2, 0);
 
 	cvReleaseMat( &dD );
 	cvReleaseMat( &H );
 	cvReleaseMat( &H_inv );
 
-	*xi = x[2];
-	*xr = x[1];
-	*xc = x[0];
+	*xi = (-1)*xx[2];
+	*xr = (-1)*xx[1];
+	*xc = (-1)*xx[0];
 }
 
 
@@ -766,7 +782,10 @@ Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
 	cvInitMatHeader( &T, 1, 1, CV_64FC1, t, CV_AUTOSTEP );
 	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
-	cvGEMM( dD, &X, 1, NULL, 0, &T,  CV_GEMM_A_T );
+
+	//cvGEMM( dD, &X, 1, NULL, 0, &T,  CV_GEMM_A_T );
+	t[0] = cvGetReal2D(dD, 0, 0) * x[0] + cvGetReal2D(dD, 1, 0) * x[1] + cvGetReal2D(dD, 2, 0) * x[2];
+
 	cvReleaseMat( &dD );
 
 	return pixval32f( dog_pyr[octv][intvl], r, c ) + t[0] * 0.5;
