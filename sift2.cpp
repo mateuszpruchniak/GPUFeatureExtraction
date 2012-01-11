@@ -689,18 +689,23 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 	v = pixval32f( dog_pyr[octv][intvl], r, c );
 	dxx = ( pixval32f( dog_pyr[octv][intvl], r, c+1 ) + 
 			pixval32f( dog_pyr[octv][intvl], r, c-1 ) - 2 * v );
+
 	dyy = ( pixval32f( dog_pyr[octv][intvl], r+1, c ) +
 			pixval32f( dog_pyr[octv][intvl], r-1, c ) - 2 * v );
+
 	dss = ( pixval32f( dog_pyr[octv][intvl+1], r, c ) +
 			pixval32f( dog_pyr[octv][intvl-1], r, c ) - 2 * v );
+
 	dxy = ( pixval32f( dog_pyr[octv][intvl], r+1, c+1 ) -
 			pixval32f( dog_pyr[octv][intvl], r+1, c-1 ) -
 			pixval32f( dog_pyr[octv][intvl], r-1, c+1 ) +
 			pixval32f( dog_pyr[octv][intvl], r-1, c-1 ) ) / 4.0;
+
 	dxs = ( pixval32f( dog_pyr[octv][intvl+1], r, c+1 ) -
 			pixval32f( dog_pyr[octv][intvl+1], r, c-1 ) -
 			pixval32f( dog_pyr[octv][intvl-1], r, c+1 ) +
 			pixval32f( dog_pyr[octv][intvl-1], r, c-1 ) ) / 4.0;
+
 	dys = ( pixval32f( dog_pyr[octv][intvl+1], r+1, c ) -
 			pixval32f( dog_pyr[octv][intvl+1], r-1, c ) -
 			pixval32f( dog_pyr[octv][intvl-1], r+1, c ) +
