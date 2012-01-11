@@ -72,8 +72,21 @@ int main()
 		fprintf( stderr, "unable to load image from %s", img_file_name );
 		exit( 1 );
 	}
-	n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
-						img_dbl, descr_width, descr_hist_bins );
+
+	clock_t start, finish;
+	double duration = 0;
+	start = clock();
+
+	for(int i = 0 ; i < 10 ; i++ )
+	{
+		n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
+							img_dbl, descr_width, descr_hist_bins );
+	}
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "ExtractKeypointDescriptors: " << endl;
+	cout << duration << endl;
+
 	fprintf( stderr, "Found %d features.\n", n );
 
 

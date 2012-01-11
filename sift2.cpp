@@ -34,8 +34,8 @@ that accompanied this distribution.
  IplImage* convert_to_gray32( IplImage* );
 
  IplImage* downsample( IplImage* );
- IplImage*** build_dog_pyr( IplImage***, int, int );
- CvSeq* scale_space_extrema( IplImage***, int, int, double, int, CvMemStorage*);
+
+
  int is_extremum( IplImage***, int, int, int, int );
  feature* interp_extremum( IplImage***, int, int, int, int, int, double);
  void interp_step( IplImage***, int, int, int, int, double*, double*, double* );
@@ -131,19 +131,15 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 	init_img = createInitImg( img, img_dbl, sigma );
 	octvs = log( (double)MIN( init_img->width, init_img->height ) ) / log((double)2) - 2;
-
-
-
-	gauss_pyr = build_gauss_pyr( init_img, octvs, intvls, sigma );
-
-
-
-
-	dog_pyr = build_dog_pyr( gauss_pyr, octvs, intvls );
-
+	gauss_pyr = buildGaussPyr( init_img, octvs, intvls, sigma );
+	dog_pyr = buildDogPyr( gauss_pyr, octvs, intvls );
 	storage = cvCreateMemStorage( 0 );
+
+
 	features = scale_space_extrema( dog_pyr, octvs, intvls, contr_thr,
 		curv_thr, storage );
+
+
 	calc_feature_scales( features, sigma, intvls );
 	if( img_dbl )
 		adjust_for_img_dbl( features );
@@ -268,7 +264,7 @@ Builds Gaussian scale space pyramid from an image
 
 @return Returns a Gaussian scale space pyramid as an octvs x (intvls + 3) array
 */
- IplImage*** SIFTGPU::build_gauss_pyr( IplImage* base, int octvs,
+ IplImage*** SIFTGPU::buildGaussPyr( IplImage* base, int octvs,
 									int intvls, double sigma )
 {
 	IplImage*** gauss_pyr;
@@ -363,7 +359,7 @@ intervals of a Gaussian pyramid
 @return Returns a difference of Gaussians scale space pyramid as an
 	octvs x (intvls + 2) array
 */
- IplImage*** build_dog_pyr( IplImage*** gauss_pyr, int octvs, int intvls )
+ IplImage*** SIFTGPU::buildDogPyr( IplImage*** gauss_pyr, int octvs, int intvls )
 {
 	IplImage*** dog_pyr;
 	int i, o;
@@ -375,9 +371,30 @@ intervals of a Gaussian pyramid
 	for( o = 0; o < octvs; o++ )
 		for( i = 0; i < intvls + 2; i++ )
 		{
+			/*cvNamedWindow( "sub1", 1 );
+			cvShowImage( "sub1", gauss_pyr[o][i+1] );
+			cvWaitKey( 0 );*/
+
 			dog_pyr[o][i] = cvCreateImage( cvGetSize(gauss_pyr[o][i]),
 				IPL_DEPTH_32F, 1 );
-			cvSub( gauss_pyr[o][i+1], gauss_pyr[o][i], dog_pyr[o][i], NULL );
+
+			/************************ GPU **************************/
+			if(SIFTCPU)
+				cvSub( gauss_pyr[o][i+1], gauss_pyr[o][i], dog_pyr[o][i], NULL );
+			else
+			{
+				subtract->CreateBuffersIn(gauss_pyr[o][i+1]->width*gauss_pyr[o][i+1]->height*sizeof(float),2);
+				subtract->CreateBuffersOut(gauss_pyr[o][i]->width*gauss_pyr[o][i]->height*sizeof(float),1);
+				subtract->SendImageToBuffers(gauss_pyr[o][i+1],gauss_pyr[o][i]);
+				subtract->Process();
+				subtract->ReceiveImageData(dog_pyr[o][i]);
+			}
+			/************************ GPU **************************/
+
+			/*cvNamedWindow( "sub", 1 );
+			cvShowImage( "sub", dog_pyr[o][i] );
+			cvWaitKey( 0 );*/
+			
 		}
 
 	return dog_pyr;
@@ -399,7 +416,7 @@ based on contrast and ratio of principal curvatures.
 @return Returns an array of detected features whose scales, orientations,
 	and descriptors are yet to be determined.
 */
- CvSeq* scale_space_extrema( IplImage*** dog_pyr, int octvs, int intvls,
+ CvSeq* SIFTGPU::scale_space_extrema( IplImage*** dog_pyr, int octvs, int intvls,
 								   double contr_thr, int curv_thr,
 								   CvMemStorage* storage )
 {
@@ -408,16 +425,22 @@ based on contrast and ratio of principal curvatures.
 	feature* feat;
 	struct detection_data* ddata;
 	int o, i, r, c;
+	int num=0;				// Number of keypoins detected
+	int numRemoved=0;		// The number of key points rejected because they failed a test
 
 	features = cvCreateSeq( 0, sizeof(CvSeq), sizeof(feature), storage );
 	for( o = 0; o < octvs; o++ )
 		for( i = 1; i <= intvls; i++ )
 		{
 
-			for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
+			/************************ GPU **************************/
+			if(SIFTCPU)
+			{
+				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
 
+					// dataIn1 = dog_pyr[o][i]
 
 					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
 						if( is_extremum( dog_pyr, o, i, r, c ) )
@@ -436,6 +459,19 @@ based on contrast and ratio of principal curvatures.
 								free( feat );
 							}
 						}
+			}
+			else 
+			{
+
+				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
+				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
+				detectExt->SendImageToBuffers(dog_pyr[o][i]);
+				detectExt->Process(&num, &numRemoved);
+				detectExt->ReceiveImageData(dog_pyr[o][i]);
+			}
+			/************************ GPU **************************/
+
+			
 		}
 
 	return features;
@@ -1350,7 +1386,11 @@ De-allocates memory held by a scale space pyramid
 
 
 	meanFilter = new MeanFilter();
-
+	subtract = new Subtract();
+	detectExt = new DetectExtrema();
+	/*magOrient = new MagnitudeOrientation();
+	assignOrient = new AssignOrientations();
+	extractKeys = new ExtractKeypointDescriptors();*/
 
 
  }

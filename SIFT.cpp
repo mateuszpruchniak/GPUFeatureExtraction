@@ -278,7 +278,6 @@ void SIFT::BuildScaleSpace()
 				subtract->SendImageToBuffers(m_gList[i][j-1],m_gList[i][j]);
 				subtract->Process();
 				subtract->ReceiveImageData(m_dogList[i][j-1]);
-
 			}
 
 

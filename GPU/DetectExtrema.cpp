@@ -13,7 +13,7 @@ DetectExtrema::DetectExtrema(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\
 }
 
 
-bool DetectExtrema::Process( int* num, int* numRej )
+bool DetectExtrema::Process( int* num, int* numRej, int* prelim_contr_thr )
 {
 
 	cl_mem cmDevBufNumber = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
@@ -39,8 +39,9 @@ bool DetectExtrema::Process( int* num, int* numRej )
 	GPUError |= clSetKernelArg(GPUKernel, 3, sizeof(cl_mem), (void*)&buffersListOut[0]);
 	GPUError |= clSetKernelArg(GPUKernel, 4, sizeof(cl_uint), (void*)&imageWidth);
 	GPUError |= clSetKernelArg(GPUKernel, 5, sizeof(cl_uint), (void*)&imageHeight);
-	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_mem), (void*)&cmDevBufNumber);
-	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
+	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_uint), (void*)&prelim_contr_thr);
+	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_mem), (void*)&cmDevBufNumber);
+	GPUError |= clSetKernelArg(GPUKernel, 8, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;

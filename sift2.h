@@ -149,9 +149,11 @@ class SIFTGPU
 
 		IplImage* createInitImg( IplImage*, int, double );
 
-		 IplImage*** build_gauss_pyr( IplImage*, int, int, double );
+		IplImage*** buildGaussPyr( IplImage*, int, int, double );
 
+		IplImage*** buildDogPyr( IplImage***, int, int );
 
+		CvSeq* scale_space_extrema( IplImage***, int, int, double, int, CvMemStorage*);
 };
 
 
