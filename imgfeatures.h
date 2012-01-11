@@ -69,6 +69,26 @@ typedef struct
 	void* feature_data;            /**< user-definable data */
 } feature;
 
+
+typedef struct
+{
+	float x;                      /**< x coord */
+	float y;                      /**< y coord */
+	float a;                      /**< Oxford-type affine region parameter */
+	float b;                      /**< Oxford-type affine region parameter */
+	float c;                      /**< Oxford-type affine region parameter */
+	float scl;                    /**< scale of a Lowe-style feature */
+	float ori;                    /**< orientation of a Lowe-style feature */
+	int d;                         /**< descriptor length */
+	float descr[FEATURE_MAX_D];   /**< descriptor */
+	int type;                      /**< feature type, OXFD or LOWE */
+	int category;                  /**< all-purpose feature category */
+
+	//CvPoint2D64f img_pt;           /**< location in image */
+	//CvPoint2D64f mdl_pt;           /**< location in model */
+	//void* feature_data;            /**< user-definable data */
+} featureGPU;
+
 /**
 Reads image features from file.  The file should be formatted as from
 the code provided by the Visual Geometry Group at Oxford or from the

@@ -440,7 +440,6 @@ based on contrast and ratio of principal curvatures.
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
 
-					// dataIn1 = dog_pyr[o][i]
 
 					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
 						if( is_extremum( dog_pyr, o, i, r, c ) )
@@ -465,8 +464,8 @@ based on contrast and ratio of principal curvatures.
 
 				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
-				detectExt->SendImageToBuffers(dog_pyr[o][i]);
-				detectExt->Process(&num, &numRemoved);
+				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
+				detectExt->Process(&num, &numRemoved, prelim_contr_thr);
 				detectExt->ReceiveImageData(dog_pyr[o][i]);
 			}
 			/************************ GPU **************************/

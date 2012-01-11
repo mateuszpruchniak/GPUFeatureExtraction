@@ -110,7 +110,7 @@ struct Feature;
 #define feat_detection_data(f) ( (struct detection_data*)(f->feature_data) )
 
 
-#define	SIFTCPU		0
+#define	SIFTCPU		1
 
 
 class SIFTGPU

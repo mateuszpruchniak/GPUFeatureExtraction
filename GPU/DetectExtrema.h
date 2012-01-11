@@ -4,7 +4,6 @@
 
 #include "../GPUBase.h"
 
-
 class DetectExtrema :
 	public GPUBase
 {
@@ -20,6 +19,6 @@ public:
 	*/
 	DetectExtrema();
 	
-	bool Process(int* num, int* numRej);
+	bool Process( int* num, int* numRej, int prelim_contr_thr );
 };
 

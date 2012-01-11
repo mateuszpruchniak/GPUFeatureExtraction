@@ -17,6 +17,15 @@ using namespace std;
 
 #define MAX_KERNEL_SIZE	20
 
+typedef struct
+{
+	float	x;
+	float	y;	
+	float	mag;	
+	float	orien;	
+	float	scale;	
+} Keys;
+
 class GPUBase
 {
     public:

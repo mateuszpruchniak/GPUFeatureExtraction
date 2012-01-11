@@ -13,9 +13,44 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 	return dataIn[GMEMOffset];
 }
 
+int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
+{
+	float val = GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight);
+	int i, j, k;
 
+	/* check for maximum */
+	if( val > 0 )
+	{
+			for( j = -1; j <= 1; j++ )
+				for( k = -1; k <= 1; k++ )
+				{
+					if( val < GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val < GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val < GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+				}
+	}
+	/* check for minimum */
+	else
+	{
+			for( j = -1; j <= 1; j++ )
+				for( k = -1; k <= 1; k++ )
+				{
+					if( val > GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val > GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val > GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+						return 0;
+				}
+	}
 
-__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest,
+	return 1;
+}
+
+__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest, __global int* numberExtrema, __global float* keys,
                       int ImageWidth, int ImageHeight, int prelim_contr_thr, __global int* number, __global int* numberRej)
 {
 	int pozX = get_global_id(0);
@@ -27,200 +62,20 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 	if( pozX < ImageWidth-SIFT_IMG_BORDER && pozY < ImageHeight-SIFT_IMG_BORDER && pozX > SIFT_IMG_BORDER && pozY > SIFT_IMG_BORDER )
 	{
+		float pixel = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+		if( pixel < 0 )
+			pixel = -1 * pixel;
 
-		if( abs( GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) ) > prelim_contr_thr )
+		if( pixel > prelim_contr_thr )
 		{
+			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+			{
+
+				
 
 
+			}
 		}
 	}
 
 }
-
-
-
-//for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
-//				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
-//					/* perform preliminary check on contrast */
-//
-//
-//					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
-//						if( is_extremum( dog_pyr, o, i, r, c ) )
-//						{
-//							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
-//							if( feat )
-//							{
-//								ddata = feat_detection_data( feat );
-//								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
-//									ddata->r, ddata->c, curv_thr ) )
-//								{
-//									cvSeqPush( features, feat );
-//								}
-//								else
-//									free( ddata );
-//								free( feat );
-//							}
-//						}
-
-//
-//		bool justSet = false;
-//		int pozX = get_global_id(0);
-//		int pozY = get_global_id(1);
-//		int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
-//		float dxx, dyy, dxy, trH, detH;
-//		float curvature_ratio, curvature_threshold;
-//
-//		float contrastThreshold = 0.03;
-//
-//		ucDest[GMEMOffset] = 0.0;
-//
-//		// 00 01 02
-//		// 10 11 12
-//		// 20 21 22
-//
-//		curvature_threshold = (CURVATURE_THRESHOLD+1)*(CURVATURE_THRESHOLD+1)/CURVATURE_THRESHOLD;
-//		
-//		if( pozX < ImageWidth-1 && pozY < ImageHeight-1 && pozX > 1 && pozY > 1 )
-//		{
-//
-//
-//			float mid00 = GetPixel(middle, pozX-1, pozY-1, ImageWidth, ImageHeight);
-//			float mid01 = GetPixel(middle, pozX, pozY-1, ImageWidth, ImageHeight);
-//			float mid02 = GetPixel(middle, pozX+1, pozY-1, ImageWidth, ImageHeight);
-//			float mid10 = GetPixel(middle, pozX-1, pozY, ImageWidth, ImageHeight);
-//			float mid11 = GetPixel(middle, pozX, pozY, ImageWidth, ImageHeight);
-//			float mid12 = GetPixel(middle, pozX+1, pozY, ImageWidth, ImageHeight);
-//			float mid20 = GetPixel(middle, pozX-1, pozY+1, ImageWidth, ImageHeight);
-//			float mid21 = GetPixel(middle, pozX, pozY+1, ImageWidth, ImageHeight);
-//			float mid22 = GetPixel(middle, pozX+1, pozY+1, ImageWidth, ImageHeight);
-//
-//			float up00 = GetPixel(up, pozX-1, pozY-1, ImageWidth, ImageHeight);
-//			float up01 = GetPixel(up, pozX, pozY-1, ImageWidth, ImageHeight);
-//			float up02 = GetPixel(up, pozX+1, pozY-1, ImageWidth, ImageHeight);
-//			float up10 = GetPixel(up, pozX-1, pozY, ImageWidth, ImageHeight);
-//			float up11 = GetPixel(up, pozX, pozY, ImageWidth, ImageHeight);
-//			float up12 = GetPixel(up, pozX+1, pozY, ImageWidth, ImageHeight);
-//			float up20 = GetPixel(up, pozX-1, pozY+1, ImageWidth, ImageHeight);
-//			float up21 = GetPixel(up, pozX, pozY+1, ImageWidth, ImageHeight);
-//			float up22 = GetPixel(up, pozX+1, pozY+1, ImageWidth, ImageHeight);
-//
-//			float down00 = GetPixel(down, pozX-1, pozY-1, ImageWidth, ImageHeight);
-//			float down01 = GetPixel(down, pozX, pozY-1, ImageWidth, ImageHeight);
-//			float down02 = GetPixel(down, pozX+1, pozY-1, ImageWidth, ImageHeight);
-//			float down10 = GetPixel(down, pozX-1, pozY, ImageWidth, ImageHeight);
-//			float down11 = GetPixel(down, pozX, pozY, ImageWidth, ImageHeight);
-//			float down12 = GetPixel(down, pozX+1, pozY, ImageWidth, ImageHeight);
-//			float down20 = GetPixel(down, pozX-1, pozY+1, ImageWidth, ImageHeight);
-//			float down21 = GetPixel(down, pozX, pozY+1, ImageWidth, ImageHeight);
-//			float down22 = GetPixel(down, pozX+1, pozY+1, ImageWidth, ImageHeight);
-//
-//
-//			// Check for a maximum
-//			if (mid11 > mid00 &&
-//				mid11 > mid01 &&
-//				mid11 > mid02 &&
-//				mid11 > mid10 &&
-//				mid11 > mid12 &&
-//				mid11 > mid20 &&
-//				mid11 > mid21 &&
-//				mid11 > mid22 &&
-//				mid11 > up00 &&
-//				mid11 > up01 &&
-//				mid11 > up02 &&
-//				mid11 > up10 &&
-//				mid11 > up11 &&
-//				mid11 > up12 &&
-//				mid11 > up20 &&
-//				mid11 > up21 &&
-//				mid11 > up22 &&
-//				mid11 > down00 &&
-//				mid11 > down01 &&
-//				mid11 > down02 &&
-//				mid11 > down10 &&
-//				mid11 > down11 &&
-//				mid11 > down12 &&
-//				mid11 > down20 &&
-//				mid11 > down21 &&
-//				mid11 > down22 )
-//			{			
-//				ucDest[GMEMOffset] = 1.0;
-//				justSet = true;
-//				atomic_add(number, (int)1);
-//			}
-//			// Check if it's a minimum
-//			else if (
-//				mid11 < mid00 &&
-//				mid11 < mid01 &&
-//				mid11 < mid02 &&
-//				mid11 < mid10 &&
-//				mid11 < mid12 &&
-//				mid11 < mid20 &&
-//				mid11 < mid21 &&
-//				mid11 < mid22 &&
-//				mid11 < up00 &&
-//				mid11 < up01 &&
-//				mid11 < up02 &&
-//				mid11 < up10 &&
-//				mid11 < up11 &&
-//				mid11 < up12 &&
-//				mid11 < up20 &&
-//				mid11 < up21 &&
-//				mid11 < up22 &&
-//				mid11 < down00 &&
-//				mid11 < down01 &&
-//				mid11 < down02 &&
-//				mid11 < down10 &&
-//				mid11 < down11 &&
-//				mid11 < down12 &&
-//				mid11 < down20 &&
-//				mid11 < down21 &&
-//				mid11 < down22 )
-//			{
-//				ucDest[GMEMOffset] = 1.0;
-//				justSet = true;
-//				atomic_add(number, (int)1);
-//			}
-//
-//			// The contrast check
-//			if(justSet && mid11 < contrastThreshold && mid11> -contrastThreshold)
-//			{
-//				ucDest[GMEMOffset] = 0.0;
-//				atomic_sub(number, (int)1);
-//				atomic_add(numberRej, (int)1);
-//				justSet=false;
-//			}
-//
-//			//The edge check
-//			if(justSet)
-//			{
-//				dxx = (GetPixel(middle, pozX, pozY-1, ImageWidth, ImageHeight) +
-//						GetPixel(middle, pozX, pozY+1, ImageWidth, ImageHeight) -
-//						2.0*GetPixel(middle, pozX, pozY, ImageWidth, ImageHeight));
-//
-//				dyy = (GetPixel(middle, pozX-1, pozY, ImageWidth, ImageHeight) +
-//						GetPixel(middle, pozX+1, pozY, ImageWidth, ImageHeight) -
-//						2.0* GetPixel(middle, pozX, pozY, ImageWidth, ImageHeight));
-//
-//				dxy = (GetPixel(middle, pozX-1, pozY-1, ImageWidth, ImageHeight) +
-//						GetPixel(middle, pozX+1, pozY+1, ImageWidth, ImageHeight) -
-//						GetPixel(middle, pozX-1, pozY+1, ImageWidth, ImageHeight) - 
-//						GetPixel(middle, pozX+1, pozY-1, ImageWidth, ImageHeight)) / 4.0;
-//
-//
-//				trH = dxx + dyy;
-//				detH = dxx*dyy - dxy*dxy;
-//
-//				curvature_ratio = trH*trH/detH;
-//
-//				if(detH<0 || curvature_ratio>curvature_threshold)
-//				{
-//					ucDest[GMEMOffset] = 0.0;
-//					atomic_sub(number, (int)1);
-//					atomic_add(numberRej, (int)1);
-//					justSet=false;
-//				}
-//			}
-//		}
-//
-//
-//}

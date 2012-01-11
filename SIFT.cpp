@@ -478,7 +478,7 @@ void SIFT::DetectExtremaFunc()
 				detectExt->CreateBuffersIn(down->width*down->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(m_extrema[i][j-1]->width*m_extrema[i][j-1]->height*sizeof(float),1);
 				detectExt->SendImageToBuffers(down,middle,up);
-				detectExt->Process(&num, &numRemoved);
+				detectExt->Process(&num, &numRemoved,0);
 				detectExt->ReceiveImageData(m_extrema[i][j-1]);
 			}
 			

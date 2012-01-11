@@ -4,14 +4,7 @@
 
 #include "../GPUBase.h"
 
-typedef struct
-{
-	float	x;
-	float	y;	
-	float	mag;	
-	float	orien;	
-	float	scale;	
-} Keys;
+
 
 class AssignOrientations :
 	public GPUBase
