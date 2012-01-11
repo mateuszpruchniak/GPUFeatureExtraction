@@ -77,7 +77,7 @@ int main()
 	double duration = 0;
 	start = clock();
 
-	for(int i = 0 ; i < 10 ; i++ )
+	for(int i = 0 ; i < 2 ; i++ )
 	{
 		n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
 							img_dbl, descr_width, descr_hist_bins );

@@ -616,7 +616,7 @@ paper.
 	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
 	H = hessian_3D( dog_pyr, octv, intvl, r, c );
 	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
-	cvInvert( H, H_inv, CV_SVD );
+	cvInvert( H, H_inv );
 	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
 	cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
 
