@@ -51,11 +51,11 @@ int main()
 		fprintf( stderr, "unable to load image from %s", img_file_name );
 		exit( 1 );
 	}
-	n = _sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
+	n = getSIFTFeatures( img, &features, intvls, sigma, contr_thr, curv_thr,
 						img_dbl, descr_width, descr_hist_bins );
 	fprintf( stderr, "Found %d features.\n", n );
 
-
+	meanFilter = new MeanFilter();
 
 	if( display )
 	{

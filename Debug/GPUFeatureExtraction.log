@@ -1,0 +1,76 @@
+﻿Build started 2012-01-11 10:21:09.
+     1>Project "C:\Users\Mati\Desktop\Dropbox\MGR\GPUFeatureExtraction\GPUFeatureExtraction.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Debug\GPUFeatureExtraction.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I../../common/inc/ /I../../../shared/inc/ /IC:\opencv\build\install\bin /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp sift2.cpp
+         sift2.cpp
+         Note: including windows.h
+         Note: including math.h
+         Note: including assert.h
+         Note: including shrUtils.h
+         Note: including opencl.h
+     1>c:\opencv\build\install\include\opencv2\flann\logger.h(66): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files (x86)\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\opencv\build\install\include\opencv2\flann\flann.hpp(233): warning C4996: 'cv::flann::Index_<T>': was declared deprecated
+                 c:\opencv\build\install\include\opencv2\flann\flann.hpp(278) : see reference to class template instantiation 'cv::flann::Index_<T>' being compiled
+     1>c:\users\mati\desktop\dropbox\mgr\gpufeatureextraction\sift2.cpp(132): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mati\desktop\dropbox\mgr\gpufeatureextraction\sift2.cpp(182): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\mati\desktop\dropbox\mgr\gpufeatureextraction\sift2.cpp(192): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\mati\desktop\dropbox\mgr\gpufeatureextraction\sift2.cpp(1073): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mati\desktop\dropbox\mgr\gpufeatureextraction\sift2.cpp(1194): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+         Generating Code...
+         Compiling...
+         main.cpp
+         Note: including windows.h
+         Note: including math.h
+         Note: including assert.h
+         Note: including shrUtils.h
+         Note: including opencl.h
+     1>c:\opencv\build\install\include\opencv2\flann\logger.h(66): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files (x86)\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\opencv\build\install\include\opencv2\flann\flann.hpp(233): warning C4996: 'cv::flann::Index_<T>': was declared deprecated
+                 c:\opencv\build\install\include\opencv2\flann\flann.hpp(278) : see reference to class template instantiation 'cv::flann::Index_<T>' being compiled
+         Generating Code...
+       ManifestResourceCompile:
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\bin\Win32\Debug\GPUFeatureExtraction.exe" /INCREMENTAL /NOLOGO /LIBPATH:../../common/lib/ /LIBPATH:../../../shared/lib /LIBPATH:../../common/lib/Win32/ oclUtils32D.lib OpenCL.lib shrUtils32D.lib C:\opencv\build\install\lib\opencv_core231d.lib C:\opencv\build\install\lib\opencv_highgui231d.lib C:\opencv\build\install\lib\opencv_ml231d.lib C:\opencv\build\install\lib\opencv_imgproc231d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\GPUFeatureExtraction.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Mati\Desktop\Dropbox\bin\Win32\Debug\GPUFeatureExtraction.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"..\..\bin\Win32\Debug\GPUFeatureExtraction.lib" /MACHINE:X86 Debug\GPUFeatureExtraction.exe.embed.manifest.res
+         Debug\GPUBase.obj
+         Debug\GPUImageProcessor.obj
+         Debug\GPUTransferManager.obj
+         Debug\Feature.obj
+         Debug\AssignOrientations.obj
+         Debug\ContextFilter.obj
+         Debug\ContextFreeFilter.obj
+         Debug\DetectExtrema.obj
+         Debug\ExtractKeypointDescriptors.obj
+         Debug\Filter.obj
+         Debug\HighpassFilter.obj
+         Debug\LinearFilter.obj
+         Debug\LowpassFilter.obj
+         Debug\MagnitudeOrientation.obj
+         Debug\MeanFilter.obj
+         Debug\NonLinearFilter.obj
+         Debug\Subtract.obj
+         Debug\Transformation.obj
+         Debug\imgfeatures.obj
+         Debug\SIFT.obj
+         Debug\sift2.obj
+         Debug\stdafx.obj
+         Debug\main.obj
+         Debug\utils.obj
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\GPUFeatureExtraction.exe.embed.manifest" /manifest Debug\GPUFeatureExtraction.exe.intermediate.manifest
+         All outputs are up-to-date.
+       LinkEmbedManifest:
+         All outputs are up-to-date.
+         GPUFeatureExtraction.vcxproj -> C:\Users\Mati\Desktop\Dropbox\MGR\GPUFeatureExtraction\..\..\bin\Win32\Debug\GPUFeatureExtraction.exe
+       FinalizeBuildStatus:
+         Deleting file "Debug\GPUFeatureExtraction.unsuccessfulbuild".
+         Touching "Debug\GPUFeatureExtraction.lastbuildstate".
+     1>Done Building Project "C:\Users\Mati\Desktop\Dropbox\MGR\GPUFeatureExtraction\GPUFeatureExtraction.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.62

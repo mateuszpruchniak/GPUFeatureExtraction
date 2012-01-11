@@ -22,6 +22,9 @@
     <ClCompile Include="GPU\AssignOrientations.cpp" />
     <ClCompile Include="GPUBase.cpp" />
     <ClCompile Include="GPU\ExtractKeypointDescriptors.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="sift2.cpp" />
+    <ClCompile Include="imgfeatures.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h">
@@ -83,6 +86,9 @@
     <ClInclude Include="GPU\AssignOrientations.h" />
     <ClInclude Include="GPUBase.h" />
     <ClInclude Include="GPU\ExtractKeypointDescriptors.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="sift2.h" />
+    <ClInclude Include="imgfeatures.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />

@@ -151,9 +151,6 @@ void SIFT::DoSift()
 	cout << "ExtractKeypointDescriptors: " << endl;
 	cout << duration << endl;
 
-
-
-
 }
 
 // BuildScaleSpace()
