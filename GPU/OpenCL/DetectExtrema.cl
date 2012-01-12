@@ -22,7 +22,7 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 {
 	int X = x > ImageWidth  ? ImageWidth  : x;
 	int Y = y > ImageHeight ? ImageHeight : y;
-	int GMEMOffset = mul24(Y, ImageWidth) + X;
+	int GMEMOffset = Y *ImageWidth + X;
 
 	return dataIn[GMEMOffset];
 }
@@ -36,41 +36,98 @@ Determines whether a pixel is a scale-space extremum by comparing it to it's
 */
 int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
 {
-	float val = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
-	int i, j, k;
+	float mid00 = GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight);
+	float mid01 = GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight);
+	float mid02 = GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight);
+	float mid10 = GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight);
+	float mid11 = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+	float mid12 = GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight);
+	float mid20 = GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight);
+	float mid21 = GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight);
+	float mid22 = GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight);
+
+	float up00 = GetPixel(dataIn3, pozX-1, pozY-1, ImageWidth, ImageHeight);
+	float up01 = GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight);
+	float up02 = GetPixel(dataIn3, pozX+1, pozY-1, ImageWidth, ImageHeight);
+	float up10 = GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight);
+	float up11 = GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight);
+	float up12 = GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight);
+	float up20 = GetPixel(dataIn3, pozX-1, pozY+1, ImageWidth, ImageHeight);
+	float up21 = GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight);
+	float up22 = GetPixel(dataIn3, pozX+1, pozY+1, ImageWidth, ImageHeight);
+
+	float down00 = GetPixel(dataIn1, pozX-1, pozY-1, ImageWidth, ImageHeight);
+	float down01 = GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight);
+	float down02 = GetPixel(dataIn1, pozX+1, pozY-1, ImageWidth, ImageHeight);
+	float down10 = GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight);
+	float down11 = GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight);
+	float down12 = GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight);
+	float down20 = GetPixel(dataIn1, pozX-1, pozY+1, ImageWidth, ImageHeight);
+	float down21 = GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight);
+	float down22 = GetPixel(dataIn1, pozX+1, pozY+1, ImageWidth, ImageHeight);
 
 
-	float max = val;
-	float min = val;
-
-
-	for( j = -1; j <= 1; j++ )
-		for( k = -1; k <= 1; k++ )
-		{
-			if( j!=0 && k!=0 &&  max < GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				max = GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-			if( j!=0 && k!=0 && val < GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				max = GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-			if( j!=0 && k!=0 &&  val < GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				max = GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-		}
-
-	if( val > max )
+	// Check for a maximum
+	if (mid11 > mid00 &&
+		mid11 > mid01 &&
+		mid11 > mid02 &&
+		mid11 > mid10 &&
+		mid11 > mid12 &&
+		mid11 > mid20 &&
+		mid11 > mid21 &&
+		mid11 > mid22 &&
+		mid11 > up00 &&
+		mid11 > up01 &&
+		mid11 > up02 &&
+		mid11 > up10 &&
+		mid11 >= up11 &&
+		mid11 > up12 &&
+		mid11 > up20 &&
+		mid11 > up21 &&
+		mid11 > up22 &&
+		mid11 > down00 &&
+		mid11 > down01 &&
+		mid11 > down02 &&
+		mid11 > down10 &&
+		mid11 >= down11 &&
+		mid11 > down12 &&
+		mid11 > down20 &&
+		mid11 > down21 &&
+		mid11 > down22 )
+	{			
 		return 1;
-	
-	for( j = -1; j <= 1; j++ )
-		for( k = -1; k <= 1; k++ )
-		{
-			if( j!=0 && k!=0 &&  min > GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				min = GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-			if( j!=0 && k!=0 && min > GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				min = GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-			if( j!=0 && k!=0 &&  min > GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				min = GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight);
-		}
-	if( val < min )
+	}
+	// Check if it's a minimum
+	else if (
+		mid11 < mid00 &&
+		mid11 < mid01 &&
+		mid11 < mid02 &&
+		mid11 < mid10 &&
+		mid11 < mid12 &&
+		mid11 < mid20 &&
+		mid11 < mid21 &&
+		mid11 < mid22 &&
+		mid11 < up00 &&
+		mid11 < up01 &&
+		mid11 < up02 &&
+		mid11 < up10 &&
+		mid11 <= up11 &&
+		mid11 < up12 &&
+		mid11 < up20 &&
+		mid11 < up21 &&
+		mid11 < up22 &&
+		mid11 < down00 &&
+		mid11 < down01 &&
+		mid11 < down02 &&
+		mid11 < down10 &&
+		mid11 <= down11 &&
+		mid11 < down12 &&
+		mid11 < down20 &&
+		mid11 < down21 &&
+		mid11 < down22 )
+	{
 		return 1;
-	
+	}
 
 	return 0;
 }

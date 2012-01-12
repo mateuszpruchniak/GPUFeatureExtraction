@@ -434,7 +434,7 @@ based on contrast and ratio of principal curvatures.
 		{
 
 			/************************ GPU **************************/
-			if(0)
+			if(1)
 			{
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
@@ -539,6 +539,8 @@ Determines whether a pixel is a scale-space extremum by comparing it to it's
 					if( val > pixval32f( dog_pyr[octv][intvl+i], r + j, c + k ) )
 						return 0;
 	}
+
+
 
 	return 1;
 }
