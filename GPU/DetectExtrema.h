@@ -19,6 +19,6 @@ public:
 	*/
 	DetectExtrema();
 	
-	bool Process( int* num, int* numRej, int prelim_contr_thr, int intvl );
+	bool Process( int* num, int* numRej, float prelim_contr_thr, int intvl );
 };
 

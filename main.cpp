@@ -53,7 +53,7 @@ int main()
 	int display = 1;
 	int intvls = SIFT_INTVLS;
 	double sigma = SIFT_SIGMA;
-	double contr_thr = SIFT_CONTR_THR;
+	float contr_thr = 0.04;
 	int curv_thr = SIFT_CURV_THR;
 	int img_dbl = SIFT_IMG_DBL;
 	int descr_width = SIFT_DESCR_WIDTH;
@@ -77,7 +77,7 @@ int main()
 	double duration = 0;
 	start = clock();
 
-	for(int i = 0 ; i < 2 ; i++ )
+	for(int i = 0 ; i < 1 ; i++ )
 	{
 		n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
 							img_dbl, descr_width, descr_hist_bins );

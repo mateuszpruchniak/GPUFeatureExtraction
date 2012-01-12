@@ -421,7 +421,7 @@ based on contrast and ratio of principal curvatures.
 								   CvMemStorage* storage )
 {
 	CvSeq* features;
-	double prelim_contr_thr = 0.5 * contr_thr / intvls;
+	float prelim_contr_thr = 0.5 * contr_thr / intvls;
 	feature* feat;
 	struct detection_data* ddata;
 	int o, i, r, c;
@@ -434,23 +434,33 @@ based on contrast and ratio of principal curvatures.
 		{
 
 			/************************ GPU **************************/
-			if(SIFTCPU)
+			if(0)
 			{
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
 
+					
 
 					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
+					{
+						
+
 						if( is_extremum( dog_pyr, o, i, r, c ) )
 						{
+
+							++num;
+
+
 							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
 							if( feat )
 							{
+								
 								ddata = feat_detection_data( feat );
 								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
 									ddata->r, ddata->c, curv_thr ) )
 								{
+									
 									cvSeqPush( features, feat );
 								}
 								else
@@ -458,6 +468,7 @@ based on contrast and ratio of principal curvatures.
 								free( feat );
 							}
 						}
+					}
 			}
 			else 
 			{
@@ -467,6 +478,19 @@ based on contrast and ratio of principal curvatures.
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i);
 				detectExt->ReceiveImageData(dog_pyr[o][i]);
+
+				/*num = 0;
+				for(r = 0; r < dog_pyr[o][i]->height; r++)
+				for(c = 0; c < dog_pyr[o][i]->width; c++)
+				{
+					float tmp = pixval32f( dog_pyr[o][i], r, c ); 
+					if( tmp != 0.0)
+						num++;
+				}
+*/
+				cvNamedWindow( "detectExt", 1 );
+				cvShowImage( "detectExt", dog_pyr[o][i] );
+				cvWaitKey( 0 );
 			}
 			/************************ GPU **************************/
 

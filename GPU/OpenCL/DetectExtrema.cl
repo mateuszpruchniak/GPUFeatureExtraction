@@ -12,6 +12,9 @@
 /** default threshold on keypoint contrast |D(x)| */
 #define SIFT_CONTR_THR 0.04
 
+/** default threshold on keypoint ratio of principle curvatures */
+#define SIFT_CURV_THR 10
+
 /* absolute value */
 #define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
 
@@ -33,38 +36,43 @@ Determines whether a pixel is a scale-space extremum by comparing it to it's
 */
 int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
 {
-	float val = GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight);
+	float val = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
 	int i, j, k;
 
-	/* check for maximum */
-	if( val > 0 )
-	{
-			for( j = -1; j <= 1; j++ )
-				for( k = -1; k <= 1; k++ )
-				{
-					if( val < GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-					if( val < GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-					if( val < GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-				}
-	}
-	/* check for minimum */
-	else
-	{
-			for( j = -1; j <= 1; j++ )
-				for( k = -1; k <= 1; k++ )
-				{
-					if( val > GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-					if( val > GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-					if( val > GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-						return 0;
-				}
-	}
-	return 1;
+
+	float max = val;
+	float min = val;
+
+
+	for( j = -1; j <= 1; j++ )
+		for( k = -1; k <= 1; k++ )
+		{
+			if( j!=0 && k!=0 &&  max < GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				max = GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+			if( j!=0 && k!=0 && val < GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				max = GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+			if( j!=0 && k!=0 &&  val < GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				max = GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+		}
+
+	if( val > max )
+		return 1;
+	
+	for( j = -1; j <= 1; j++ )
+		for( k = -1; k <= 1; k++ )
+		{
+			if( j!=0 && k!=0 &&  min > GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				min = GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+			if( j!=0 && k!=0 && min > GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				min = GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+			if( j!=0 && k!=0 &&  min > GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
+				min = GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight);
+		}
+	if( val < min )
+		return 1;
+	
+
+	return 0;
 }
 
 /*
@@ -76,8 +84,8 @@ float* deriv_3D( __global float* dataIn1, __global float* dataIn2, __global floa
 	float dI[3] = { 0, 0 , 0 };
 	float dx, dy, ds;
 
-	dx = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) ) / 2.0;
-	dy = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) ) / 2.0;
+	dx = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) ) / 2.0;
+	dy = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) ) / 2.0;
 	ds = ( GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) ) / 2.0;
 
 	dI[0] = dx;
@@ -99,29 +107,29 @@ float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global fl
 
 	v = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
 
-	dxx = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) + 
-			GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) - 2 * v );
-
-	dyy = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) +
+	dxx = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) + 
 			GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) - 2 * v );
+
+	dyy = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) - 2 * v );
 
 	dss = ( GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) +
 			GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) - 2 * v );
 
 	dxy = ( GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) -
-			GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) -
-			GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) +
 			GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
 
-	dxs = ( GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) -
-			GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) -
-			GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) +
-			GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
-
-	dys = ( GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) -
+	dxs = ( GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) -
 			GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) -
 			GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) +
 			GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) ) / 4.0;
+
+	dys = ( GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
 
 
 
@@ -257,8 +265,39 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	return 1;
 }
 
+/*
+Determines whether a feature is too edge like to be stable by computing the
+ratio of principal curvatures at that feature.  Based on Section 4.1 of
+Lowe's paper.
+
+@return Returns 0 if the feature at (r,c) in dog_img is sufficiently
+	corner-like or 1 otherwise.
+*/
+ int is_too_edge_like(__global float* dataIn2, int pozX, int pozY, int ImageWidth, int ImageHeight, int curv_thr )
+{
+	float d, dxx, dyy, dxy, tr, det;
+
+	//GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight)
+	/* principal curvatures are computed using the trace and det of Hessian */
+	d = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+	dxx = GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight)  + GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) - 2 * d;
+	dyy = GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) + GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) - 2 * d;
+	dxy = ( GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) + GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
+	tr = dxx + dyy;
+	det = dxx * dyy - dxy * dxy;
+
+	/* negative determinant -> curvatures have different signs; reject feature */
+	if( det <= 0 )
+		return 1;
+
+	if( tr * tr / det < ( curv_thr + 1.0 )*( curv_thr + 1.0 ) / curv_thr )
+		return 0;
+	return 1;
+}
+
 __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest, __global int* numberExtrema, __global float* keys,
-                      int ImageWidth, int ImageHeight, int prelim_contr_thr, int intvl, __global int* number, __global int* numberRej)
+                      int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, __global int* number, __global int* numberRej)
 {
 	int pozX = get_global_id(0);
 	int pozY = get_global_id(1);
@@ -266,35 +305,30 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 	if( pozX < ImageWidth-SIFT_IMG_BORDER && pozY < ImageHeight-SIFT_IMG_BORDER && pozX > SIFT_IMG_BORDER && pozY > SIFT_IMG_BORDER )
 	{
+		
 		float pixel = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
-		if( pixel < 0 )
-			pixel = -1 * pixel;
-
-		if( pixel > prelim_contr_thr )
+		
+		if( ABS(pixel) > prelim_contr_thr )
 		{
+			
+			
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
 			{
+				atomic_add(number, (int)1);
+				ucDest[GMEMOffset] = 1.0;
+				
 				int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
 				if( feat )
 				{
-
-
-
-					/*ddata = feat_detection_data( feat );
-					if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
-						ddata->r, ddata->c, curv_thr ) )
+					if( !is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) )
 					{
-						cvSeqPush( features, feat );
+						
 					}
-					else
-						free( ddata );
-					free( feat );*/
 				}
-				
-
-
 			}
 		}
+	} else {
+		
 	}
 
 }
