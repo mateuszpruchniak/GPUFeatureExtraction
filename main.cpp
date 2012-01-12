@@ -48,9 +48,9 @@ int main()
 
 
 
-	char* img_file_name = "C:\\scene2.jpg";
-	char* out_file_name  = "C:\\Users\\Mati\\Pictures\\scene2.sift";;
-	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut2.jpg";
+	char* img_file_name = "C:\\scene.jpg";
+	char* out_file_name  = "C:\\Users\\Mati\\Pictures\\scene.sift";;
+	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut.jpg";
 	int display = 1;
 	int intvls = SIFT_INTVLS;
 	double sigma = SIFT_SIGMA;

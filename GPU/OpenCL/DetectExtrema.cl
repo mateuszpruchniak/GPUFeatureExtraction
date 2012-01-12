@@ -3,8 +3,7 @@
 /* width of border in which to ignore keypoints */
 #define SIFT_IMG_BORDER 5
 
-/* maximum steps of keypoint interpolation before failure */
-#define SIFT_MAX_INTERP_STEPS 5
+
 
 /** default number of sampled intervals per octave */
 #define SIFT_INTVLS 3
@@ -185,7 +184,7 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 	| Ixy  Iyy  Iys | <BR>
 	\ Ixs  Iys  Iss /
 */
-float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float H[][3] )
+void hessian_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float H[][3] )
 {
 	float v, dxx, dyy, dss, dxy, dxs, dys;
 
@@ -226,8 +225,6 @@ float* hessian_3D( __global float* dataIn1, __global float* dataIn2, __global fl
 	H[2][0] = dxs;
 	H[2][1] = dys;
 	H[2][2] = dss;
-
-	return H;
 }
 
 /*
@@ -245,20 +242,30 @@ void interp_step(__global float* dataIn1, __global float* dataIn2, __global floa
 	deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, dD);
 	hessian_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, H);
 
-	float det = H[0][0]*(H[1][1]*H[2][2] - H[1][2]*H[2][1]) + H[0][1]*(H[1][2]*H[2][0] - H[2][2]*H[1][0]) + H[0][2]*(H[1][0]*H[2][1] - H[1][1]*H[2][0]);
-	float det_inv = 1 / det;
+	float a = H[0][0];
+	float b = H[0][1];
+	float c = H[0][2];
+	float d = H[1][0];
+	float e = H[1][1];
+	float f = H[1][2];
+	float g = H[2][0];
+	float h = H[2][1];
+	float k = H[2][2];
 
-	H_inv[0][0] = (H[1][1]*H[2][2] - H[1][2]*H[2][1])*det_inv;
-	H_inv[0][1] = (H[0][2]*H[2][1] - H[0][1]*H[2][2])*det_inv;
-	H_inv[0][2] = (H[0][1]*H[1][2] - H[0][2]*H[1][1])*det_inv;
+	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
+	float det_inv = 1.0 / det;
 
-	H_inv[1][0] = (H[1][2]*H[2][0] - H[1][0]*H[2][2])*det_inv;
-	H_inv[1][1] = (H[0][0]*H[2][2] - H[0][2]*H[2][0])*det_inv;
-	H_inv[1][2] = (H[0][2]*H[1][0] - H[0][0]*H[1][2])*det_inv;
+	H_inv[0][0] = (e*k - f*h)*det_inv;
+	H_inv[0][1] = (c*h - b*k)*det_inv;
+	H_inv[0][2] = (b*f - c*e)*det_inv;
 
-	H_inv[2][0] = (H[1][0]*H[2][1] - H[1][1]*H[2][0])*det_inv;
-	H_inv[2][1] = (H[2][0]*H[0][1] - H[0][0]*H[2][1])*det_inv;
-	H_inv[2][2] = (H[0][0]*H[1][1] - H[0][1]*H[1][0])*det_inv;
+	H_inv[1][0] = (f*g - d*k)*det_inv;
+	H_inv[1][1] = (a*k - c*g)*det_inv;
+	H_inv[1][2] = (c*d - a*f)*det_inv;
+
+	H_inv[2][0] = (d*h - e*g)*det_inv;
+	H_inv[2][1] = (g*b - a*h)*det_inv;
+	H_inv[2][2] = (a*e - b*d)*det_inv;
 
 	*xc = (-1)*( H_inv[0][0]*dD[0] + H_inv[1][0]*dD[1] + H_inv[2][0]*dD[2]);
 	*xr = (-1)*( H_inv[0][1]*dD[0] + H_inv[1][1]*dD[1] + H_inv[2][1]*dD[2]);
@@ -279,17 +286,19 @@ float interp_contr(__global float* dataIn1, __global float* dataIn2, __global fl
 	return GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) + res * 0.5;
 }
 
-int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, int intvls, float contr_thr, int intvl )
+float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, int intvls, float contr_thr, int intvl )
 {
 	
 	float xi, xr, xc, contr;
 
 	int i = 0;
+	int siftMaxInterpSteps = 5;
 
-	while( i < SIFT_MAX_INTERP_STEPS )
+	while( i < siftMaxInterpSteps )
 	{
 		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, &xi, &xr, &xc );
-		if( ABS( xi ) < 0.5  &&  ABS( xr ) < 0.5  &&  ABS( xc ) < 0.5 )
+		
+		if( xi < 0.5  && xi > -0.5 && xr < 0.5 && xr > -0.5  && xc < 0.5 && xc > -0.5 )
 			break;
 		
 		pozX += (int)xc;
@@ -309,23 +318,12 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	}
 
 	/* ensure convergence of interpolation */
-	if( i >= SIFT_MAX_INTERP_STEPS )
+	if( i >= siftMaxInterpSteps )
 		return 0;
 
-	//contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
-	if( ABS( contr ) < contr_thr / intvls )
+	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
+	if( (float)ABS( contr ) < (float)contr_thr / (float)intvls )
 		return 0;
-
-
-	/*feat = new_feature();
-	ddata = feat_detection_data( feat );
-	feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
-	feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
-	ddata->r = r;
-	ddata->H[0][2] = H[0][2];
-	ddata->octv = octv;
-	ddata->intvl = intvl;
-	ddata->subintvl = xi;*/
 
 	return 1;
 }
@@ -342,7 +340,6 @@ Lowe's paper.
 {
 	float d, dxx, dyy, dxy, tr, det;
 
-	//GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight)
 	/* principal curvatures are computed using the trace and det of Hessian */
 	d = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
 	dxx = GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight)  + GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) - 2 * d;
@@ -368,6 +365,8 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 	int pozY = get_global_id(1);
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
 
+	int numberExt = 0;
+
 	if( pozX < ImageWidth-SIFT_IMG_BORDER && pozY < ImageHeight-SIFT_IMG_BORDER && pozX > SIFT_IMG_BORDER && pozY > SIFT_IMG_BORDER )
 	{
 		
@@ -379,19 +378,31 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
 			{
-				
-
-				int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
+				float feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
 				if( feat )
 				{
-					
 					if( !is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) )
 					{
-						atomic_add(number, (int)1);
+						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
-					}
+						keys[numberExt*5] = pozX;
+						keys[numberExt*5 + 1] = pozY;
+						keys[numberExt*5 + 2] = 1;
+						keys[numberExt*5 + 3] = 1;
+						keys[numberExt*5 + 4] = 1;
 
+						/*feat = new_feature();
+						ddata = feat_detection_data( feat );
+						feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
+						feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
+						ddata->r = r;
+						ddata->H[0][2] = H[0][2];
+						ddata->octv = octv;
+						ddata->intvl = intvl;
+						ddata->subintvl = xi;*/
+
+					}
 				}
 				
 			} else {

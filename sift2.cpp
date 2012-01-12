@@ -40,7 +40,7 @@ that accompanied this distribution.
  feature* interp_extremum( IplImage***, int, int, int, int, int, double);
  void interp_step( IplImage***, int, int, int, int, double*, double*, double* );
  CvMat* deriv_3D( IplImage***, int, int, int, int );
- CvMat* hessian_3D( IplImage***, int, int, int, int );
+ void hessian_3D( IplImage***, int, int, int, int, float H[][3] );
  double interp_contr( IplImage***, int, int, int, int, double, double, double );
  feature* new_feature( void );
  int is_too_edge_like( IplImage*, int, int, int );
@@ -401,7 +401,6 @@ intervals of a Gaussian pyramid
 }
 
 
-
 /*
 Detects features at extrema in DoG scale space.  Bad features are discarded
 based on contrast and ratio of principal curvatures.
@@ -427,6 +426,11 @@ based on contrast and ratio of principal curvatures.
 	int o, i, r, c;
 	int num=0;				// Number of keypoins detected
 	int numRemoved=0;		// The number of key points rejected because they failed a test
+
+	
+	int numberExtrema = 0;
+	int number = 0;
+	int numberRej = 0;
 
 	features = cvCreateSeq( 0, sizeof(CvSeq), sizeof(feature), storage );
 	for( o = 0; o < octvs; o++ )
@@ -459,10 +463,10 @@ based on contrast and ratio of principal curvatures.
 								++num;
 
 								ddata = feat_detection_data( feat );
+
 								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
 									ddata->r, ddata->c, curv_thr ) )
 								{
-									
 									
 									cvSeqPush( features, feat );
 								}
@@ -475,7 +479,6 @@ based on contrast and ratio of principal curvatures.
 			}
 			else 
 			{
-				
 
 				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
@@ -506,6 +509,9 @@ based on contrast and ratio of principal curvatures.
 
 	return features;
 }
+
+
+
 
 
 
@@ -643,55 +649,49 @@ paper.
  void interp_step( IplImage*** dog_pyr, int octv, int intvl, int rr, int cc,
 						 double* xi, double* xr, double* xc )
 {
-	CvMat* dD, * H, * H_inv, X;
+	CvMat* dD, X;
 	double x[3] = { 0, 0 , 0 };
 	double xx[3] = { 0, 0 , 0 };
 
+	float H[3][3];
+	float H_inv[3][3];
+
 	dD = deriv_3D( dog_pyr, octv, intvl, rr, cc );
-	H = hessian_3D( dog_pyr, octv, intvl, rr, cc );
+	hessian_3D( dog_pyr, octv, intvl, rr, cc, H);
 
-	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
-
-	//cvInvert( H, H_inv );
-	float a = cvGetReal2D(H, 0, 0);
-	float b = cvGetReal2D(H, 0, 1);
-	float c = cvGetReal2D(H, 0, 2);
-	float d = cvGetReal2D(H, 1, 0);
-	float e = cvGetReal2D(H, 1, 1);
-	float f = cvGetReal2D(H, 1, 2);
-	float g = cvGetReal2D(H, 2, 0);
-	float h = cvGetReal2D(H, 2, 1);
-	float k = cvGetReal2D(H, 2, 2);
+	float a = H[0][0];
+	float b = H[0][1];
+	float c = H[0][2];
+	float d = H[1][0];
+	float e = H[1][1];
+	float f = H[1][2];
+	float g = H[2][0];
+	float h = H[2][1];
+	float k = H[2][2];
 
 	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
-	float det_inv = 1 / det;
+	float det_inv = 1.0 / det;
 
-	cvSetReal2D(H_inv, 0, 0, (e*k - f*h)*det_inv );
-	cvSetReal2D(H_inv, 0, 1, (c*h - b*k)*det_inv );
-	cvSetReal2D(H_inv, 0, 2, (b*f - c*e)*det_inv );
+	H_inv[0][0] = (e*k - f*h)*det_inv;
+	H_inv[0][1] = (c*h - b*k)*det_inv;
+	H_inv[0][2] = (b*f - c*e)*det_inv;
 
-	cvSetReal2D(H_inv, 1, 0, (f*g - d*k)*det_inv );
-	cvSetReal2D(H_inv, 1, 1, (a*k - c*g)*det_inv );
-	cvSetReal2D(H_inv, 1, 2, (c*d - a*f)*det_inv );
+	H_inv[1][0] = (f*g - d*k)*det_inv;
+	H_inv[1][1] = (a*k - c*g)*det_inv;
+	H_inv[1][2] = (c*d - a*f)*det_inv;
 
-	cvSetReal2D(H_inv, 2, 0, (d*h - e*g)*det_inv );
-	cvSetReal2D(H_inv, 2, 1, (g*b - a*h)*det_inv );
-	cvSetReal2D(H_inv, 2, 2, (a*e - b*d)*det_inv );
+	H_inv[2][0] = (d*h - e*g)*det_inv;
+	H_inv[2][1] = (g*b - a*h)*det_inv;
+	H_inv[2][2] = (a*e - b*d)*det_inv;
 
 	//cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
 	//cvGEMM( H_inv, dD, -1, NULL, 0, &X, 0 );
 
-	xx[0] = cvGetReal2D(H_inv, 0, 0)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 0)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 0)*cvGetReal2D(dD, 2, 0);
-	xx[1] = cvGetReal2D(H_inv, 0, 1)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 1)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 1)*cvGetReal2D(dD, 2, 0);
-	xx[2] = cvGetReal2D(H_inv, 0, 2)*cvGetReal2D(dD, 0, 0) + cvGetReal2D(H_inv, 1, 2)*cvGetReal2D(dD, 1, 0) + cvGetReal2D(H_inv, 2, 2)*cvGetReal2D(dD, 2, 0);
+	*xc = (-1)*( H_inv[0][0]*cvGetReal2D(dD, 0, 0) + H_inv[1][0]*cvGetReal2D(dD, 1, 0) + H_inv[2][0]*cvGetReal2D(dD, 2, 0));
+	*xr = (-1)*( H_inv[0][1]*cvGetReal2D(dD, 0, 0) + H_inv[1][1]*cvGetReal2D(dD, 1, 0) + H_inv[2][1]*cvGetReal2D(dD, 2, 0));
+	*xi = (-1)*( H_inv[0][2]*cvGetReal2D(dD, 0, 0) + H_inv[1][2]*cvGetReal2D(dD, 1, 0) + H_inv[2][2]*cvGetReal2D(dD, 2, 0));
 
 	cvReleaseMat( &dD );
-	cvReleaseMat( &H );
-	cvReleaseMat( &H_inv );
-
-	*xi = (-1)*xx[2];
-	*xr = (-1)*xx[1];
-	*xc = (-1)*xx[0];
 }
 
 
@@ -746,9 +746,8 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 	| Ixy  Iyy  Iys | <BR>
 	\ Ixs  Iys  Iss /
 */
- CvMat* hessian_3D( IplImage*** dog_pyr, int octv, int intvl, int r, int c )
+void hessian_3D( IplImage*** dog_pyr, int octv, int intvl, int r, int c, float H[][3] )
 {
-	CvMat* H;
 	double v, dxx, dyy, dss, dxy, dxs, dys;
 
 	v = pixval32f( dog_pyr[octv][intvl], r, c );
@@ -776,18 +775,16 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 			pixval32f( dog_pyr[octv][intvl-1], r+1, c ) +
 			pixval32f( dog_pyr[octv][intvl-1], r-1, c ) ) / 4.0;
 
-	H = cvCreateMat( 3, 3, CV_64FC1 );
-	cvmSet( H, 0, 0, dxx );
-	cvmSet( H, 0, 1, dxy );
-	cvmSet( H, 0, 2, dxs );
-	cvmSet( H, 1, 0, dxy );
-	cvmSet( H, 1, 1, dyy );
-	cvmSet( H, 1, 2, dys );
-	cvmSet( H, 2, 0, dxs );
-	cvmSet( H, 2, 1, dys );
-	cvmSet( H, 2, 2, dss );
 
-	return H;
+	H[0][0] = dxx;
+	H[0][1] = dxy;
+	H[0][2] = dxs;
+	H[1][0] = dxy;
+	H[1][1] = dyy;
+	H[1][2] = dys;
+	H[2][0] = dxs;
+	H[2][1] = dys;
+	H[2][2] = dss;
 }
 
 
