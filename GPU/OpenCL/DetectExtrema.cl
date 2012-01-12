@@ -27,6 +27,7 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 	return dataIn[GMEMOffset];
 }
 
+
 /*
 Determines whether a pixel is a scale-space extremum by comparing it to it's
 3x3x3 pixel neighborhood.
@@ -37,33 +38,57 @@ Determines whether a pixel is a scale-space extremum by comparing it to it's
 int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
 {
 	float val = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
-	int i, j, k;
+	
+	if( val > 0.0 )
+	{
+		for(int j = -1 ; j <= 1; j++ ) //y
+		{
+				if( val < GetPixel(dataIn1, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+		}
+	}
+	else 
+	{
+		for(int j = -1 ; j <= 1; j++ ) //y
+		{
+				if( val > GetPixel(dataIn1, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX + j, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+		}
+	}
 
-	/* check for maximum */
 	
-	for( j = -1; j <= 1; j++ )
-		for( k = -1; k <= 1; k++ )
-		{
-			if( val < GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-			if( val < GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-			if( val < GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-		}
-	
-	/* check for minimum */
-	
-	for( j = -1; j <= 1; j++ )
-		for( k = -1; k <= 1; k++ )
-		{
-			if( val > GetPixel(dataIn1, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-			if( val > GetPixel(dataIn2, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-			if( val > GetPixel(dataIn3, pozX+ j, pozY + k, ImageWidth, ImageHeight) )
-				return 0;
-		}
 	
 	return 1;
 }
@@ -303,17 +328,17 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 		
 		if( ABS(pixel) > prelim_contr_thr )
 		{
-			
+			ucDest[GMEMOffset] = 0.1;
 
-			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
 			{
 				
 				atomic_add(number, (int)1);
 				ucDest[GMEMOffset] = 1.0;
 
-				//int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
-				//if( feat )
-				//{
+				int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
+				if( feat )
+				{
 
 				//	
 				////	
@@ -326,7 +351,7 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 				////		//cvSeqPush( features, feat );
 				////	}
 
-				//}
+				}
 				
 
 

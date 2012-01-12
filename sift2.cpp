@@ -434,7 +434,7 @@ based on contrast and ratio of principal curvatures.
 		{
 
 			/************************ GPU **************************/
-			if(1)
+			if(0)
 			{
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
