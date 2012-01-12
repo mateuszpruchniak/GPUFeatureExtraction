@@ -41,51 +41,122 @@ int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float
 	
 	if( val > 0.0 )
 	{
-		for(int j = -1 ; j <= 1; j++ ) //y
-		{
-				if( val < GetPixel(dataIn1, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+		
+				if( val < GetPixel(dataIn1, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn2, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn3, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn3, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn1, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn2, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn3, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn1, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn1, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn2, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val < GetPixel(dataIn3, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val < GetPixel(dataIn3, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-		}
+
+				if( val < GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val < GetPixel(dataIn1, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
 	}
 	else 
 	{
-		for(int j = -1 ; j <= 1; j++ ) //y
-		{
-				if( val > GetPixel(dataIn1, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn1, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn2, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn3, pozX + j, pozY-1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn3, pozX-1, pozY-1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn1, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn2, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn3, pozX + j, pozY, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn1, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn1, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn2, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-				if( val > GetPixel(dataIn3, pozX + j, pozY+1, ImageWidth, ImageHeight) )
+				if( val > GetPixel(dataIn3, pozX-1, pozY+1, ImageWidth, ImageHeight) )
 					return 0;
-		}
+
+				if( val > GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val > GetPixel(dataIn1, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
 	}
 
 	
@@ -97,20 +168,15 @@ int is_extremum(__global float* dataIn1, __global float* dataIn2, __global float
 Computes the partial derivatives in x, y, and scale of a pixel in the DoG
 scale space pyramid
 */
-float* deriv_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
+void deriv_3D( __global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float* dI )
 {
-	float dI[3] = { 0, 0 , 0 };
 	float dx, dy, ds;
-
 	dx = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) ) / 2.0;
 	dy = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) ) / 2.0;
 	ds = ( GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) ) / 2.0;
-
 	dI[0] = dx;
 	dI[1] = dy;
 	dI[2] = ds;
-
-	return dI;
 }
 
 /*
@@ -172,47 +238,31 @@ void interp_step(__global float* dataIn1, __global float* dataIn2, __global floa
 						 float* xi, float* xr, float* xc )
 {
 	
-	float x[3] = { 0, 0 , 0 };
-	float *dD;
+	float dD[3] = { 0, 0 , 0 };
 	float H[3][3];
 	float H_inv[3][3];
 
-	dD = deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight);
+	deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, dD);
 	hessian_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, H);
 
-	float a = H[0][0];
-	float b = H[0][1];
-	float c = H[0][2];
-	float d = H[1][0];
-	float e = H[1][1];
-	float f = H[1][2];
-	float g = H[2][0];
-	float h = H[2][1];
-	float k = H[2][2];
-
-	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
+	float det = H[0][0]*(H[1][1]*H[2][2] - H[1][2]*H[2][1]) + H[0][1]*(H[1][2]*H[2][0] - H[2][2]*H[1][0]) + H[0][2]*(H[1][0]*H[2][1] - H[1][1]*H[2][0]);
 	float det_inv = 1 / det;
 
-	H_inv[0][0] = (e*k - f*h)*det_inv;
-	H_inv[0][1] = (c*h - b*k)*det_inv;
-	H_inv[0][2] = (b*f - c*e)*det_inv;
+	H_inv[0][0] = (H[1][1]*H[2][2] - H[1][2]*H[2][1])*det_inv;
+	H_inv[0][1] = (H[0][2]*H[2][1] - H[0][1]*H[2][2])*det_inv;
+	H_inv[0][2] = (H[0][1]*H[1][2] - H[0][2]*H[1][1])*det_inv;
 
-	H_inv[1][0] = (f*g - d*k)*det_inv;
-	H_inv[1][1] = (a*k - c*g)*det_inv;
-	H_inv[1][2] = (c*d - a*f)*det_inv;
+	H_inv[1][0] = (H[1][2]*H[2][0] - H[1][0]*H[2][2])*det_inv;
+	H_inv[1][1] = (H[0][0]*H[2][2] - H[0][2]*H[2][0])*det_inv;
+	H_inv[1][2] = (H[0][2]*H[1][0] - H[0][0]*H[1][2])*det_inv;
 
-	H_inv[2][0] = (d*h - e*g)*det_inv;
-	H_inv[2][1] = (g*b - a*h)*det_inv;
-	H_inv[2][2] = (a*e - b*d)*det_inv;
+	H_inv[2][0] = (H[1][0]*H[2][1] - H[1][1]*H[2][0])*det_inv;
+	H_inv[2][1] = (H[2][0]*H[0][1] - H[0][0]*H[2][1])*det_inv;
+	H_inv[2][2] = (H[0][0]*H[1][1] - H[0][1]*H[1][0])*det_inv;
 
-	x[0] = H_inv[0][0]*dD[0] + H_inv[1][0]*dD[1] + H_inv[2][0]*dD[2];
-	x[1] = H_inv[0][1]*dD[0] + H_inv[1][1]*dD[1] + H_inv[2][1]*dD[2];
-	x[2] = H_inv[0][2]*dD[0] + H_inv[1][2]*dD[1] + H_inv[2][2]*dD[2];
-
-
-	*xi = x[2];
-	*xr = x[1];
-	*xc = x[0];
+	*xc = (-1)*( H_inv[0][0]*dD[0] + H_inv[1][0]*dD[1] + H_inv[2][0]*dD[2]);
+	*xr = (-1)*( H_inv[0][1]*dD[0] + H_inv[1][1]*dD[1] + H_inv[2][1]*dD[2]);
+	*xi = (-1)*( H_inv[0][2]*dD[0] + H_inv[1][2]*dD[1] + H_inv[2][2]*dD[2]);
 }
 
 /*
@@ -222,11 +272,9 @@ Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 */
 float interp_contr(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float xi, float xr, float xc )
 {
-	float *dD;
-	float x[3] = { xc, xr, xi };
-
-	dD = deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight);
-	float res = x[0]*dD[0] + x[1]*dD[1] + x[2]*dD[2];
+	float dD[3] = { 0, 0, 0 };
+	deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, dD);
+	float res = xc*dD[0] + xr*dD[1] + xi*dD[2];
 
 	return GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) + res * 0.5;
 }
@@ -241,9 +289,8 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	while( i < SIFT_MAX_INTERP_STEPS )
 	{
 		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, &xi, &xr, &xc );
-		if( xi < 0.5 && xi > -0.5  &&  xr < 0.5 && xr > -0.5  &&  xc < 0.5 && xc > -0.5 )
+		if( ABS( xi ) < 0.5  &&  ABS( xr ) < 0.5  &&  ABS( xc ) < 0.5 )
 			break;
-		
 		
 		pozX += (int)xc;
 		pozY += (int)xr;
@@ -265,7 +312,7 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	if( i >= SIFT_MAX_INTERP_STEPS )
 		return 0;
 
-	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
+	//contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
 	if( ABS( contr ) < contr_thr / intvls )
 		return 0;
 
@@ -275,7 +322,7 @@ int interp_extremum(__global float* dataIn1, __global float* dataIn2, __global f
 	feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
 	feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
 	ddata->r = r;
-	ddata->c = c;
+	ddata->H[0][2] = H[0][2];
 	ddata->octv = octv;
 	ddata->intvl = intvl;
 	ddata->subintvl = xi;*/
@@ -288,7 +335,7 @@ Determines whether a feature is too edge like to be stable by computing the
 ratio of principal curvatures at that feature.  Based on Section 4.1 of
 Lowe's paper.
 
-@return Returns 0 if the feature at (r,c) in dog_img is sufficiently
+@return Returns 0 if the feature at (r,H[0][2]) in dog_img is sufficiently
 	corner-like or 1 otherwise.
 */
  int is_too_edge_like(__global float* dataIn2, int pozX, int pozY, int ImageWidth, int ImageHeight, int curv_thr )
@@ -333,28 +380,20 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
 			{
 				
-				atomic_add(number, (int)1);
-				ucDest[GMEMOffset] = 1.0;
 
 				int feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
 				if( feat )
 				{
+					
+					if( !is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) )
+					{
+						atomic_add(number, (int)1);
+						ucDest[GMEMOffset] = 1.0;
 
-				//	
-				////	
-
-				////	//ddata = feat_detection_data( feat );
-
-				////	if( !is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) )
-				////	{
-				////		
-				////		//cvSeqPush( features, feat );
-				////	}
+					}
 
 				}
 				
-
-
 			} else {
 				//ucDest[GMEMOffset] = 0.5;
 				//atomic_add(numberRej, (int)1);

@@ -185,7 +185,7 @@ optionally doubled in size prior to smoothing.
 	{
 		sig_diff = sqrt( sigma * sigma - SIFT_INIT_SIGMA * SIFT_INIT_SIGMA * 4 );
 		dbl = cvCreateImage( cvSize( img->width*2, img->height*2 ),
-			IPL_DEPTH_32F, 1 );
+			32, 1 );
 		cvResize( gray, dbl, CV_INTER_CUBIC );
 
 		/************************ GPU **************************/
@@ -238,7 +238,7 @@ Converts an image to 32-bit grayscale
 {
 	IplImage* gray8, * gray32;
 
-	gray32 = cvCreateImage( cvGetSize(img), IPL_DEPTH_32F, 1 );
+	gray32 = cvCreateImage( cvGetSize(img), 32, 1 );
 	if( img->nChannels == 1 )
 		gray8 = (IplImage*)cvClone( img );
 	else
@@ -305,7 +305,7 @@ Builds Gaussian scale space pyramid from an image
 			else
 			{
 				gauss_pyr[o][i] = cvCreateImage( cvGetSize(gauss_pyr[o][i-1]),
-					IPL_DEPTH_32F, 1 );
+					32, 1 );
 
 				/************************ GPU **************************/
 				if(SIFTCPU)
@@ -376,7 +376,7 @@ intervals of a Gaussian pyramid
 			cvWaitKey( 0 );*/
 
 			dog_pyr[o][i] = cvCreateImage( cvGetSize(gauss_pyr[o][i]),
-				IPL_DEPTH_32F, 1 );
+				32, 1 );
 
 			/************************ GPU **************************/
 			if(SIFTCPU)
@@ -432,6 +432,8 @@ based on contrast and ratio of principal curvatures.
 	for( o = 0; o < octvs; o++ )
 		for( i = 1; i <= intvls; i++ )
 		{
+			IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
+			cvZero(img);
 
 			/************************ GPU **************************/
 			if(0)
@@ -444,22 +446,23 @@ based on contrast and ratio of principal curvatures.
 
 					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
 					{
-						
+						setpix32f(img,r,c, 0.1);
 
 						if( is_extremum( dog_pyr, o, i, r, c ) )
 						{
-
-							++num;
-
+							
 
 							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
 							if( feat )
 							{
-								
+								setpix32f(img,r,c, 1.0);
+								++num;
+
 								ddata = feat_detection_data( feat );
 								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
 									ddata->r, ddata->c, curv_thr ) )
 								{
+									
 									
 									cvSeqPush( features, feat );
 								}
@@ -472,28 +475,32 @@ based on contrast and ratio of principal curvatures.
 			}
 			else 
 			{
+				
 
 				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i);
-				detectExt->ReceiveImageData(dog_pyr[o][i]);
+				detectExt->ReceiveImageData(img);
 
 				/*num = 0;
 				for(r = 0; r < dog_pyr[o][i]->height; r++)
 				for(c = 0; c < dog_pyr[o][i]->width; c++)
 				{
-					float tmp = pixval32f( dog_pyr[o][i], r, c ); 
+					float tmp = pixval32f( img, r, c ); 
 					if( tmp != 0.0)
 						num++;
-				}
-*/
-				cvNamedWindow( "detectExt", 1 );
-				cvShowImage( "detectExt", dog_pyr[o][i] );
-				cvWaitKey( 0 );
+				}*/
+
+				
 			}
 			/************************ GPU **************************/
 
+			cvSaveImage( "C:\\Users\\Mati\\Pictures\\scene.jpg", img, NULL );
+
+			cvNamedWindow( "detectExt", 1 );
+			cvShowImage( "detectExt", img );
+			cvWaitKey( 0 );
 			
 		}
 
