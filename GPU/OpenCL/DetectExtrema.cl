@@ -20,6 +20,17 @@
 /** default number of sampled intervals per octave */
 #define SIFT_INTVLS		3
 
+/* determines gaussian sigma for orientation assignment */
+#define SIFT_ORI_SIG_FCTR 1.5
+
+/* determines the radius of the region used in orientation assignment */
+#define SIFT_ORI_RADIUS 3.0 * SIFT_ORI_SIG_FCTR
+
+/* default number of bins in histogram for orientation assignment */
+#define SIFT_ORI_HIST_BINS 36
+
+
+
 /* absolute value */
 #define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
 
@@ -375,8 +386,43 @@ Lowe's paper.
 	return 1;
 }
 
-__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest, __global int* numberExtrema, __global float* keys,
-                      int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberRej)
+
+
+/*
+Computes a gradient orientation histogram at a specified pixel.
+
+@return Returns an n-element array containing an orientation histogram
+	representing orientations between 0 and 2 PI.
+*/
+
+float* ori_hist(__gloabal float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, int n, int rad, float sigma)
+{
+	double* hist;
+	double mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
+	int bin, i, j;
+
+	hist = (double*)calloc( n, sizeof( double ) );
+	exp_denom = 2.0 * sigma * sigma;
+	for( i = -rad; i <= rad; i++ )
+		for( j = -rad; j <= rad; j++ )
+			if( calc_grad_mag_ori( img, r + i, c + j, &mag, &ori ) )
+			{
+				w = exp( -( i*i + j*j ) / exp_denom );
+				bin = cvRound( n * ( ori + CV_PI ) / PI2 );
+				bin = ( bin < n )? bin : 0;
+				hist[bin] += w * mag;
+			}
+
+	return hist;
+}
+
+
+
+
+
+__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3,  __gloabal float* gauss_pyr, __global float* ucDest,
+						__global int* numberExtrema, __global float* keys,
+						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberRej)
 {
 	int pozX = get_global_id(0);
 	int pozY = get_global_id(1);
@@ -408,44 +454,62 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
-						keys[numberExt*10] = (float)( pozX + xc ) * pown( 2.0, (float)octv );
-						keys[numberExt*10 + 1] = (float)( pozY + xr ) * pow( 2.0, (float)octv );
-						keys[numberExt*10 + 2] = (float)pozX;
-						keys[numberExt*10 + 3] = (float)pozY;
-						keys[numberExt*10 + 4] = (float)xi;
-						keys[numberExt*10 + 5] = (float)intvl;
-						keys[numberExt*10 + 6] = (float)octv;
+
+						float intvl2 = intvl + xi;
+
+						float	scx = (float)(( pozX + xc ) * pow( 2.0, (float)octv ) / 2.0);
+						float	scy = (float)(( pozY + xr ) * pow( 2.0, (float)octv ) / 2.0);
+						float	x = pozX;
+						float	y = pozY;
+						float	subintvl = xi;
+						float	intvlRes = intvl;
+						float	octvRes = octv;
+						float	scl = (SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) ));
+						float	scl_octv = SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
+						float	ori = 0;
+						float	mag = 0;
+
+						keys[numberExt*10] = scx;
+						keys[numberExt*10 + 1] = scy;
+						keys[numberExt*10 + 2] = x;
+						keys[numberExt*10 + 3] = y;
+						keys[numberExt*10 + 4] = subintvl;
+						keys[numberExt*10 + 5] = intvlRes;
+						keys[numberExt*10 + 6] = octvRes;
+						keys[numberExt*10 + 7] = scl;
+						keys[numberExt*10 + 8] = scl_octv;
+						keys[numberExt*10 + 9] = ori;
+						keys[numberExt*10 + 10] = mag;
 
 
-						//float intvl2 = intvl + xi;
-
-						//float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
-						//float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
-						//float	x = (float)pozX;
-						//float	y = (float)pozY;
-						//float	subintvl = xi;
-						//float	intvl = (float)intvl;
-						//float	octv = (float)octv;
-						//float	scl = 0;//(SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) )) / 2.0;
-						//float	scl_octv = 0;//SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
-						//float	ori = 0;
 
 
-						//keys[numberExt*10] = scx;
-						//keys[numberExt*10+1] = scy;
-						//keys[numberExt*10+2] = x;
-						//keys[numberExt*10+3] = y;
-						//keys[numberExt*10+4] = subintvl;
-						//keys[numberExt*10+5] = intvl;
-						//keys[numberExt*10+6] = octv;
-						//keys[numberExt*10+7] = scl;
-						//keys[numberExt*10+8] = scl_octv;
-						//keys[numberExt*10+9] = ori;
+						hist = ori_hist( gauss_pyr,	pozX, pozY, ImageWidth, ImageHeight, SIFT_ORI_HIST_BINS, 
+							cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ), SIFT_ORI_SIG_FCTR * ddata->scl_octv );
 
-						//
 
-						//
-						
+
+
+						/*
+							
+
+							hist = ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
+											ddata->r, ddata->c, SIFT_ORI_HIST_BINS,
+											cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ),
+											SIFT_ORI_SIG_FCTR * ddata->scl_octv );
+
+
+							for( j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
+								smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
+
+
+							omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
+
+							add_good_ori_features( features, hist, SIFT_ORI_HIST_BINS,
+													omax * SIFT_ORI_PEAK_RATIO, feat );
+
+						}*/
+
 
 
 						// obliczamy mag i orient

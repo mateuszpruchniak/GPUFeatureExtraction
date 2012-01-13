@@ -115,7 +115,7 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 				   int img_dbl, int descr_width, int descr_hist_bins )
 {
 	IplImage* init_img;
-	IplImage*** gauss_pyr, *** dog_pyr;
+	IplImage*** dog_pyr;
 	CvMemStorage* storage;
 	CvSeq* features;
 	int octvs, i, n = 0;
@@ -139,16 +139,34 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 		curv_thr, storage );
 
 
+	if(SIFTCPU)
+	{
+		calcFeatureScales( features, sigma, intvls );
+	}
+	else
+	{
+	}
+
+	if(SIFTCPU)
+	{
+		if( img_dbl )
+			adjustForImgDbl( features );
+	}
+	else
+	{
+	}
 	
-	calcFeatureScales( features, sigma, intvls );
-	
-	
-	if( img_dbl )
-		adjustForImgDbl( features );
+	if(SIFTCPU)
+	{
+		calc_feature_oris( features, gauss_pyr );
+	}
+	else
+	{
+	}
 
 
 
-	calc_feature_oris( features, gauss_pyr );
+	
 
 
 
@@ -275,7 +293,6 @@ Builds Gaussian scale space pyramid from an image
  IplImage*** SIFTGPU::buildGaussPyr( IplImage* base, int octvs,
 									int intvls, double sigma )
 {
-	IplImage*** gauss_pyr;
 	double* sig = (double*)calloc( intvls + 3, sizeof(double));
 	double sig_total, sig_prev, k;
 	int i, o;
@@ -496,9 +513,9 @@ based on contrast and ratio of principal curvatures.
 				IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
 				cvZero(img);
 				num = 0;
-				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
+				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),4);
 				detectExt->CreateBuffersOut(img->width*img->height*sizeof(float),1);
-				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
+				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i] );
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				detectExt->ReceiveImageData(img);
 
@@ -520,30 +537,23 @@ based on contrast and ratio of principal curvatures.
 					featureGPU[iteratorFGPU].feature_data = ddata;
 					featureGPU[iteratorFGPU].type = FEATURE_LOWE;
 
-					//  float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
-					//	float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
-					//	float	x = (float)pozX /  2.0;
-					//	float	y = (float)pozY / 2.0;
-					//	float	subintvl = xi;
-					//	float	intvl = (float)intvl;
-					//	float	octv = (float)octv;
-					//	float	scl = scl / 2.0;
- 					//	float	scl_octv = scl_octv;
-					//	float	ori = 0;
+
 
 					feat = new_feature();
 					ddata = feat_detection_data( feat );
 
 					feat->img_pt.x = feat->x = keys[ik].scx;
 					feat->img_pt.y = feat->y = keys[ik].scy;
-
 					ddata->r = keys[ik].y;
 					ddata->c = keys[ik].x;
+					ddata->subintvl = keys[ik].subintvl;
 					ddata->octv = keys[ik].octv;
 					ddata->intvl = keys[ik].intvl;
-					ddata->subintvl = keys[ik].subintvl;
-					ddata->scl_octv = keys[ik].scl_octv;
 					feat->scl = keys[ik].scl;
+					ddata->scl_octv = keys[ik].scl_octv;
+					//ori
+
+
 
 					cvSeqPush( features, feat );
 					free( feat );

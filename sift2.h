@@ -139,6 +139,9 @@ class SIFTGPU
 		AssignOrientations* assignOrient;
 		ExtractKeypointDescriptors* extractKeys;
 
+		IplImage*** gauss_pyr;
+
+
 		SIFTGPU();
 
 		void DoSift();
