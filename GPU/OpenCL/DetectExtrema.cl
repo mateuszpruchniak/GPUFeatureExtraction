@@ -408,34 +408,43 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
-						float intvl2 = intvl + xi;
-
-						float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
-						float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
-						float	x = (float)pozX;
-						float	y = (float)pozY;
-						float	subintvl = xi;
-						float	intvl = (float)intvl;
-						float	octv = (float)octv;
-						float	scl = (SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) )) / 2.0;
-						float	scl_octv = SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
-						float	ori = 0;
+						keys[numberExt*10] = (float)( pozX + xc ) * pown( 2.0, (float)octv );
+						keys[numberExt*10 + 1] = (float)( pozY + xr ) * pow( 2.0, (float)octv );
+						keys[numberExt*10 + 2] = (float)pozX;
+						keys[numberExt*10 + 3] = (float)pozY;
+						keys[numberExt*10 + 4] = (float)xi;
+						keys[numberExt*10 + 5] = (float)intvl;
+						keys[numberExt*10 + 6] = (float)octv;
 
 
-						keys[numberExt*10] = scx / 2.0;
-						keys[numberExt*10+1] = scy / 2.0;
-						keys[numberExt*10+2] = x;
-						keys[numberExt*10+3] = y;
-						keys[numberExt*10+4] = subintvl;
-						keys[numberExt*10+5] = intvl;
-						keys[numberExt*10+6] = octv;
-						keys[numberExt*10+7] = scl;
-						keys[numberExt*10+8] = scl_octv;
-						keys[numberExt*10+9] = ori;
+						//float intvl2 = intvl + xi;
 
-						
+						//float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
+						//float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
+						//float	x = (float)pozX;
+						//float	y = (float)pozY;
+						//float	subintvl = xi;
+						//float	intvl = (float)intvl;
+						//float	octv = (float)octv;
+						//float	scl = 0;//(SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) )) / 2.0;
+						//float	scl_octv = 0;//SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
+						//float	ori = 0;
 
-						
+
+						//keys[numberExt*10] = scx;
+						//keys[numberExt*10+1] = scy;
+						//keys[numberExt*10+2] = x;
+						//keys[numberExt*10+3] = y;
+						//keys[numberExt*10+4] = subintvl;
+						//keys[numberExt*10+5] = intvl;
+						//keys[numberExt*10+6] = octv;
+						//keys[numberExt*10+7] = scl;
+						//keys[numberExt*10+8] = scl_octv;
+						//keys[numberExt*10+9] = ori;
+
+						//
+
+						//
 						
 
 
