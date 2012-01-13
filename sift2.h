@@ -110,7 +110,7 @@ struct Feature;
 #define feat_detection_data(f) ( (struct detection_data*)(f->feature_data) )
 
 
-#define	SIFTCPU		1
+#define	SIFTCPU		0
 
 
 class SIFTGPU
@@ -129,6 +129,8 @@ class SIFTGPU
 		int descr_width;
 		int descr_hist_bins;
 
+		feature* featureGPU;
+		int iteratorFGPU;
 
 		MeanFilter* meanFilter;
 		Subtract* subtract;
@@ -153,7 +155,13 @@ class SIFTGPU
 
 		IplImage*** buildDogPyr( IplImage***, int, int );
 
-		CvSeq* scale_space_extrema( IplImage***, int, int, double, int, CvMemStorage*);
+		CvSeq* scaleSpaceExtrema( IplImage***, int, int, double, int, CvMemStorage*);
+
+		void calcFeatureScales( CvSeq*, double, int );
+
+		void adjustForImgDbl( CvSeq* );
+
+		void calc_feature_oris( CvSeq*, IplImage*** );
 };
 
 

@@ -44,9 +44,9 @@ that accompanied this distribution.
  double interp_contr( IplImage***, int, int, int, int, double, double, double );
  feature* new_feature( void );
  int is_too_edge_like( IplImage*, int, int, int );
- void calc_feature_scales( CvSeq*, double, int );
- void adjust_for_img_dbl( CvSeq* );
- void calc_feature_oris( CvSeq*, IplImage*** );
+
+
+
  double* ori_hist( IplImage*, int, int, int, int, double );
  int calc_grad_mag_ori( IplImage*, int, int, double*, double* );
  void smooth_ori_hist( double*, int );
@@ -135,15 +135,23 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	dog_pyr = buildDogPyr( gauss_pyr, octvs, intvls );
 	storage = cvCreateMemStorage( 0 );
 
-
-	features = scale_space_extrema( dog_pyr, octvs, intvls, contr_thr,
+	features = scaleSpaceExtrema( dog_pyr, octvs, intvls, contr_thr,
 		curv_thr, storage );
 
 
-	calc_feature_scales( features, sigma, intvls );
+	
+	calcFeatureScales( features, sigma, intvls );
+	
+	
 	if( img_dbl )
-		adjust_for_img_dbl( features );
+		adjustForImgDbl( features );
+
+
+
 	calc_feature_oris( features, gauss_pyr );
+
+
+
 	compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
 
 	/* sort features by decreasing scale and move from CvSeq to array */
@@ -427,7 +435,7 @@ based on contrast and ratio of principal curvatures.
 @return Returns an array of detected features whose scales, orientations,
 	and descriptors are yet to be determined.
 */
- CvSeq* SIFTGPU::scale_space_extrema( IplImage*** dog_pyr, int octvs, int intvls,
+ CvSeq* SIFTGPU::scaleSpaceExtrema( IplImage*** dog_pyr, int octvs, int intvls,
 								   double contr_thr, int curv_thr,
 								   CvMemStorage* storage )
 {
@@ -445,7 +453,7 @@ based on contrast and ratio of principal curvatures.
 	int number = 0;
 	int numberRej = 0;
 
-	
+	iteratorFGPU = 0;
 
 	features = cvCreateSeq( 0, sizeof(CvSeq), sizeof(feature), storage );
 	for( o = 0; o < octvs; o++ )
@@ -494,21 +502,53 @@ based on contrast and ratio of principal curvatures.
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				detectExt->ReceiveImageData(img);
 
+				struct detection_data* ddata;
+
 				for(int ik = 0; ik < num ; ik++)
 				{ 
 
-					feat = new_feature();
-					ddata = feat_detection_data( feat );
-					feat->img_pt.x = feat->x = keys[ik].scx;
-					feat->img_pt.y = feat->y = keys[ik].scy;
+					featureGPU[iteratorFGPU].img_pt.x = featureGPU[iteratorFGPU].x = keys[ik].scx;
+					featureGPU[iteratorFGPU].img_pt.y = featureGPU[iteratorFGPU].y = keys[ik].scy;
+					
+					ddata = (detection_data*)malloc( sizeof( struct detection_data ) );
+					memset( ddata, 0, sizeof( struct detection_data ) );
 					ddata->r = keys[ik].y;
 					ddata->c = keys[ik].x;
 					ddata->octv = keys[ik].octv;
 					ddata->intvl = keys[ik].intvl;
 					ddata->subintvl = keys[ik].subintvl;
+					featureGPU[iteratorFGPU].feature_data = ddata;
+					featureGPU[iteratorFGPU].type = FEATURE_LOWE;
+
+					//  float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
+					//	float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
+					//	float	x = (float)pozX /  2.0;
+					//	float	y = (float)pozY / 2.0;
+					//	float	subintvl = xi;
+					//	float	intvl = (float)intvl;
+					//	float	octv = (float)octv;
+					//	float	scl = scl / 2.0;
+ 					//	float	scl_octv = scl_octv;
+					//	float	ori = 0;
+
+					feat = new_feature();
+					ddata = feat_detection_data( feat );
+
+					feat->img_pt.x = feat->x = keys[ik].scx;
+					feat->img_pt.y = feat->y = keys[ik].scy;
+
+					ddata->r = keys[ik].y;
+					ddata->c = keys[ik].x;
+					ddata->octv = keys[ik].octv;
+					ddata->intvl = keys[ik].intvl;
+					ddata->subintvl = keys[ik].subintvl;
+					ddata->scl_octv = keys[ik].scl_octv;
+					feat->scl = keys[ik].scl;
 
 					cvSeqPush( features, feat );
 					free( feat );
+
+					iteratorFGPU++;
 				}
 				
 				int tot = features->total;
@@ -906,7 +946,7 @@ Calculates characteristic scale for each feature in an array.
 @param sigma amount of Gaussian smoothing per octave of scale space
 @param intvls intervals per octave of scale space
 */
- void calc_feature_scales( CvSeq* features, double sigma, int intvls )
+ void SIFTGPU::calcFeatureScales( CvSeq* features, double sigma, int intvls )
 {
 	feature* feat;
 	struct detection_data* ddata;
@@ -916,11 +956,15 @@ Calculates characteristic scale for each feature in an array.
 	n = features->total;
 	for( i = 0; i < n; i++ )
 	{
+		//feature* a = &featureGPU[i];
+		//struct detection_data* ddata2 = feat_detection_data( a );
+
+
 		feat = CV_GET_SEQ_ELEM( feature, features, i );
 		ddata = feat_detection_data( feat );
-		intvl = ddata->intvl + ddata->subintvl;
-		feat->scl = sigma * pow( 2.0, ddata->octv + intvl / intvls );
-		ddata->scl_octv = sigma * pow( 2.0, intvl / intvls );
+		intvl = ddata->intvl + ddata->subintvl;//
+		feat->scl = sigma * pow( 2.0, ddata->octv + intvl / intvls );//
+		ddata->scl_octv = sigma * pow( 2.0, intvl / intvls ); //
 	}
 }
 
@@ -932,7 +976,7 @@ prior to scale space construction.
 
 @param features array of features
 */
- void adjust_for_img_dbl( CvSeq* features )
+ void SIFTGPU::adjustForImgDbl( CvSeq* features )
 {
 	feature* feat;
 	int i, n;
@@ -959,7 +1003,7 @@ there is more than one dominant orientation at a given feature location.
 @param features an array of image features
 @param gauss_pyr Gaussian scale space pyramid
 */
- void calc_feature_oris( CvSeq* features, IplImage*** gauss_pyr )
+ void SIFTGPU::calc_feature_oris( CvSeq* features, IplImage*** gauss_pyr )
 {
 	feature* feat;
 	struct detection_data* ddata;
@@ -967,20 +1011,33 @@ there is more than one dominant orientation at a given feature location.
 	double omax;
 	int i, j, n = features->total;
 
+	int tmp = iteratorFGPU;
+
 	for( i = 0; i < n; i++ )
 	{
+
 		feat = (feature*)malloc( sizeof( feature ) );
+
 		cvSeqPopFront( features, feat );
+
 		ddata = feat_detection_data( feat );
+
+
 		hist = ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
 						ddata->r, ddata->c, SIFT_ORI_HIST_BINS,
 						cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ),
 						SIFT_ORI_SIG_FCTR * ddata->scl_octv );
+
+
 		for( j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
 			smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
+
+
 		omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
+
 		add_good_ori_features( features, hist, SIFT_ORI_HIST_BINS,
 								omax * SIFT_ORI_PEAK_RATIO, feat );
+
 		free( ddata );
 		free( feat );
 		free( hist );
@@ -1470,6 +1527,9 @@ De-allocates memory held by a scale space pyramid
 	descr_width = SIFT_DESCR_WIDTH;
 	descr_hist_bins = SIFT_DESCR_HIST_BINS;
 
+	iteratorFGPU = 0;
+	
+	featureGPU = (feature*)malloc( 2000 * sizeof( feature ) );
 
 	meanFilter = new MeanFilter();
 	subtract = new Subtract();
@@ -1484,24 +1544,6 @@ De-allocates memory held by a scale space pyramid
 
 void SIFTGPU::DoSift()
 {
-	clock_t start, finish;
-	double duration = 0;
 	
-	start = clock();
-
-
-
-	/*BuildScaleSpace();
-
-	DetectExtremaFunc();
-
-	AssignOrientationsFunc();
-
-	ExtractKeypointDescriptorsFunc();*/
-
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "ExtractKeypointDescriptors: " << endl;
-	cout << duration << endl;
 
 }

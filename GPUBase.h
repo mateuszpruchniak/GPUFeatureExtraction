@@ -21,11 +21,14 @@ typedef struct
 {
 	float	scx;
 	float	scy;
-	float	x;
-	float	y;	
+	float	x;			/**< x coord */
+	float	y;			/**< y coord */
 	float	subintvl;
 	float	intvl;	
-	float	octv;	
+	float	octv;
+	float	scl;
+	float	scl_octv;	/**< scale of a Lowe-style feature */
+	float	ori;		/**< orientation of a Lowe-style feature */
 } Keys;
 
 /*feat = new_feature();

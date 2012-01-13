@@ -14,8 +14,17 @@
 /** default threshold on keypoint ratio of principle curvatures */
 #define SIFT_CURV_THR 10
 
+/** default sigma for initial gaussian smoothing */
+#define SIFT_SIGMA		1.6
+
+/** default number of sampled intervals per octave */
+#define SIFT_INTVLS		3
+
 /* absolute value */
 #define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
+
+
+
 
 float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHeight )
 {
@@ -399,13 +408,45 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
-						keys[numberExt*7] = (float)( pozX + xc ) * pown( 2.0, (float)octv );
-						keys[numberExt*7 + 1] = (float)( pozY + xr ) * pow( 2.0, (float)octv );
-						keys[numberExt*7 + 2] = (float)pozX;
-						keys[numberExt*7 + 3] = (float)pozY;
-						keys[numberExt*7 + 4] = (float)xi;
-						keys[numberExt*7 + 5] = (float)intvl;
-						keys[numberExt*7 + 6] = (float)octv;
+						float intvl2 = intvl + xi;
+
+						float	scx = (float)( pozX + xc ) * pow( 2.0, (float)octv );
+						float	scy = (float)( pozY + xr ) * pow( 2.0, (float)octv );
+						float	x = (float)pozX;
+						float	y = (float)pozY;
+						float	subintvl = xi;
+						float	intvl = (float)intvl;
+						float	octv = (float)octv;
+						float	scl = (SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) )) / 2.0;
+						float	scl_octv = SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
+						float	ori = 0;
+
+
+						keys[numberExt*10] = scx / 2.0;
+						keys[numberExt*10+1] = scy / 2.0;
+						keys[numberExt*10+2] = x;
+						keys[numberExt*10+3] = y;
+						keys[numberExt*10+4] = subintvl;
+						keys[numberExt*10+5] = intvl;
+						keys[numberExt*10+6] = octv;
+						keys[numberExt*10+7] = scl;
+						keys[numberExt*10+8] = scl_octv;
+						keys[numberExt*10+9] = ori;
+
+						
+
+						
+						
+
+
+						// obliczamy mag i orient
+
+
+
+
+
+
+
 
 
 					}

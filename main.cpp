@@ -135,15 +135,26 @@ int main()
 
 	stacked = stack_imgs( img1, img2 );
 
-	fprintf( stderr, "Finding features in %s...\n", img1_file );
+	clock_t start, finish;
+	double duration = 0;
+	start = clock();
+	for(int i = 0; i < 1 ; i++)
+	{
+		fprintf( stderr, "Finding features in %s...\n", img1_file );
 
-	n1 = siftGPU->_sift_features( img1, &feat1, intvls, sigma, contr_thr, curv_thr,
-							img_dbl, descr_width, descr_hist_bins );
+		n1 = siftGPU->_sift_features( img1, &feat1, intvls, sigma, contr_thr, curv_thr,
+								img_dbl, descr_width, descr_hist_bins );
 
-	fprintf( stderr, "Finding features in %s...\n", img2_file );
+		fprintf( stderr, "Finding features in %s...\n", img2_file );
 
-	n2 = siftGPU->_sift_features( img2, &feat2, intvls, sigma, contr_thr, curv_thr,
-							img_dbl, descr_width, descr_hist_bins );
+		n2 = siftGPU->_sift_features( img2, &feat2, intvls, sigma, contr_thr, curv_thr,
+								img_dbl, descr_width, descr_hist_bins );
+	}
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "SIFT: " << endl;
+	cout << duration << endl;
+
 
 	kd_root = kdtree_build( feat2, n2 );
 
