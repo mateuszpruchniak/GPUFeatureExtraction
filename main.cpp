@@ -18,10 +18,15 @@
 #include "sift2.h"
 
 #include "utils.h"
-
+#include "kdtree.h"
 
 using namespace std;
 
+/* the maximum number of keypoint NN candidates to check during BBF search */
+#define KDTREE_BBF_MAX_NN_CHKS 200
+
+/* threshold on squared ratio of distances between NN and 2nd NN */
+#define NN_SQ_DIST_RATIO_THR 0.49
 
 
 // The main function!
@@ -113,8 +118,8 @@ int main()
 
 
 	IplImage* img1, * img2, * stacked;
-	struct feature* feat1, * feat2, * feat;
-	struct feature** nbrs;
+	feature* feat1, * feat2, * feat;
+	feature** nbrs;
 	struct kd_node* kd_root;
 	CvPoint pt1, pt2;
 	double d0, d1;
@@ -131,10 +136,17 @@ int main()
 	stacked = stack_imgs( img1, img2 );
 
 	fprintf( stderr, "Finding features in %s...\n", img1_file );
-	n1 = siftGPU->sift_features( img1, &feat1 );
+
+	n1 = siftGPU->_sift_features( img1, &feat1, intvls, sigma, contr_thr, curv_thr,
+							img_dbl, descr_width, descr_hist_bins );
+
 	fprintf( stderr, "Finding features in %s...\n", img2_file );
-	n2 = siftGPU->sift_features( img2, &feat2 );
+
+	n2 = siftGPU->_sift_features( img2, &feat2, intvls, sigma, contr_thr, curv_thr,
+							img_dbl, descr_width, descr_hist_bins );
+
 	kd_root = kdtree_build( feat2, n2 );
+
 	for( i = 0; i < n1; i++ )
 	{
 		feat = feat1 + i;
