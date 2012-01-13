@@ -306,7 +306,7 @@ float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global
 	{
 		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
 		
-		if( *xi < 0.5  && *xi > -0.5 && *xr < 0.5 && *xr > -0.55  && *xc < 0.5 && *xc > -0.5 )
+		if( ABS(*xi) <= 0.58 && ABS(*xr) <= 0.58 && ABS(*xc) <= 0.58 )
 			break;
 		
 		pozX += (int)*xc;

@@ -25,6 +25,8 @@
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="sift2.cpp" />
     <ClCompile Include="imgfeatures.cpp" />
+    <ClCompile Include="kdtree.cpp" />
+    <ClCompile Include="minpq.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Descriptor.h">
@@ -89,6 +91,8 @@
     <ClInclude Include="utils.h" />
     <ClInclude Include="sift2.h" />
     <ClInclude Include="imgfeatures.h" />
+    <ClInclude Include="kdtree.h" />
+    <ClInclude Include="minpq.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram11.cd" />
