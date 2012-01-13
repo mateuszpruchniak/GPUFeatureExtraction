@@ -175,6 +175,8 @@ bool GPUBase::ReceiveImageData( IplImage* img, ... )
 
 size_t GPUBase::shrRoundUp(int group_size, int global_size)
 {
+	if(global_size < 80)
+		global_size = 80;
 	int r = global_size % group_size;
 	if(r == 0)
 	{

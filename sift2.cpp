@@ -299,7 +299,11 @@ Builds Gaussian scale space pyramid from an image
 
 			/* base of new octvave is halved image from end of previous octave */
 			else if( i == 0 )
+			{
+				
 				gauss_pyr[o][i] = downsample( gauss_pyr[o-1][intvls] );
+
+			}
 
 			/* blur the current octave's last image to create the next one */
 			else
@@ -339,7 +343,15 @@ using nearest-neighbor interpolation
 */
  IplImage* downsample( IplImage* img )
 {
-	IplImage* smaller = cvCreateImage( cvSize(img->width / 2, img->height / 2),
+	int width = img->width / 2;
+	int height = img->height / 2;
+
+	if( width < 50 || height < 50 )
+	{
+		width = width*2;
+		height = height*2;
+	}
+	IplImage* smaller = cvCreateImage( cvSize( width, height),
 		img->depth, img->nChannels );
 	cvResize( img, smaller, CV_INTER_NN );
 
