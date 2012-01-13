@@ -20,7 +20,7 @@ Keys* AssignOrientations::Process( float sigma, int scale, int scale2, int* coun
 	int maskSize = GetKernelSize(sigma);
 	maxNumberKeys = 1500;
 	Keys keys[1500];
-
+/*
 	for (int i =0 ; i < maxNumberKeys ; i++)
 	{
 		keys[i].x = 0.0;
@@ -28,7 +28,7 @@ Keys* AssignOrientations::Process( float sigma, int scale, int scale2, int* coun
 		keys[i].mag = 0.0;
 		keys[i].orien = 0.0;
 		keys[i].scale = 0.0;
-	}
+	}*/
 
 	int count = 0;
 

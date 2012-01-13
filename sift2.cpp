@@ -427,41 +427,35 @@ based on contrast and ratio of principal curvatures.
 	int num=0;				// Number of keypoins detected
 	int numRemoved=0;		// The number of key points rejected because they failed a test
 
+	Keys keys[1000];
 	
 	int numberExtrema = 0;
 	int number = 0;
 	int numberRej = 0;
 
+	
+
 	features = cvCreateSeq( 0, sizeof(CvSeq), sizeof(feature), storage );
 	for( o = 0; o < octvs; o++ )
 		for( i = 1; i <= intvls; i++ )
 		{
-			IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
-			cvZero(img);
+			
 
 			/************************ GPU **************************/
-			if(0)
+			if(SIFTCPU)
 			{
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
 
 					
-
 					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
 					{
-						setpix32f(img,r,c, 0.1);
-
 						if( is_extremum( dog_pyr, o, i, r, c ) )
 						{
-							
-
 							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
 							if( feat )
 							{
-								setpix32f(img,r,c, 1.0);
-								++num;
-
 								ddata = feat_detection_data( feat );
 
 								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
@@ -479,31 +473,42 @@ based on contrast and ratio of principal curvatures.
 			}
 			else 
 			{
-
+				IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
+				cvZero(img);
+				num = 0;
 				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),3);
-				detectExt->CreateBuffersOut(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),1);
+				detectExt->CreateBuffersOut(img->width*img->height*sizeof(float),1);
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
-				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i);
+				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				detectExt->ReceiveImageData(img);
 
-				/*num = 0;
-				for(r = 0; r < dog_pyr[o][i]->height; r++)
-				for(c = 0; c < dog_pyr[o][i]->width; c++)
-				{
-					float tmp = pixval32f( img, r, c ); 
-					if( tmp != 0.0)
-						num++;
-				}*/
+				for(int ik = 0; ik < num ; ik++)
+				{ 
 
+					feat = new_feature();
+					ddata = feat_detection_data( feat );
+					feat->img_pt.x = feat->x = keys[ik].scx;
+					feat->img_pt.y = feat->y = keys[ik].scy;
+					ddata->r = keys[ik].y;
+					ddata->c = keys[ik].x;
+					ddata->octv = keys[ik].octv;
+					ddata->intvl = keys[ik].intvl;
+					ddata->subintvl = keys[ik].subintvl;
+
+					cvSeqPush( features, feat );
+					free( feat );
+				}
 				
+				int tot = features->total;
+
 			}
 			/************************ GPU **************************/
 
-			cvSaveImage( "C:\\Users\\Mati\\Pictures\\scene.jpg", img, NULL );
+			//cvSaveImage( "C:\\Users\\Mati\\Pictures\\scene.jpg", img, NULL );
 
-			cvNamedWindow( "detectExt", 1 );
-			cvShowImage( "detectExt", img );
-			cvWaitKey( 0 );
+			//cvNamedWindow( "detectExt", 1 );
+			//cvShowImage( "detectExt", img );
+			//cvWaitKey( 0 );
 			
 		}
 

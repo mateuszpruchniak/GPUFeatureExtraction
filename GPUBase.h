@@ -19,12 +19,24 @@ using namespace std;
 
 typedef struct
 {
+	float	scx;
+	float	scy;
 	float	x;
 	float	y;	
-	float	mag;	
-	float	orien;	
-	float	scale;	
+	float	subintvl;
+	float	intvl;	
+	float	octv;	
 } Keys;
+
+/*feat = new_feature();
+ddata = feat_detection_data( feat );
+feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
+feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
+ddata->r = r;
+ddata->c = c;
+ddata->octv = octv;
+ddata->intvl = intvl;
+ddata->subintvl = xi;*/
 
 class GPUBase
 {

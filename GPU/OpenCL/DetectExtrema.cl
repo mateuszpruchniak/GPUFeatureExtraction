@@ -227,6 +227,10 @@ void hessian_3D( __global float* dataIn1, __global float* dataIn2, __global floa
 	H[2][2] = dss;
 }
 
+
+
+
+
 /*
 Performs one step of extremum interpolation.  Based on Eqn. (3) in Lowe's
 paper.
@@ -272,6 +276,8 @@ void interp_step(__global float* dataIn1, __global float* dataIn2, __global floa
 	*xi = (-1)*( H_inv[0][2]*dD[0] + H_inv[1][2]*dD[1] + H_inv[2][2]*dD[2]);
 }
 
+
+
 /*
 Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 
@@ -286,24 +292,26 @@ float interp_contr(__global float* dataIn1, __global float* dataIn2, __global fl
 	return GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) + res * 0.5;
 }
 
-float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, int intvls, float contr_thr, int intvl )
+
+float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, 
+	int intvls, float contr_thr, int intvl, float* xi, float* xr, float* xc )
 {
 	
-	float xi, xr, xc, contr;
+	float contr;
 
 	int i = 0;
 	int siftMaxInterpSteps = 5;
 
 	while( i < siftMaxInterpSteps )
 	{
-		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, &xi, &xr, &xc );
+		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
 		
-		if( xi < 0.5  && xi > -0.5 && xr < 0.5 && xr > -0.5  && xc < 0.5 && xc > -0.5 )
+		if( *xi < 0.5  && *xi > -0.5 && *xr < 0.5 && *xr > -0.55  && *xc < 0.5 && *xc > -0.5 )
 			break;
 		
-		pozX += (int)xc;
-		pozY += (int)xr;
-		intvl += (int)xi;
+		pozX += (int)*xc;
+		pozY += (int)*xr;
+		intvl += (int)*xi;
 
 		if( intvl < 1  ||
 			intvl > intvls  ||
@@ -321,7 +329,7 @@ float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global
 	if( i >= siftMaxInterpSteps )
 		return 0;
 
-	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
+	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, *xi, *xr, *xc );
 	if( (float)ABS( contr ) < (float)contr_thr / (float)intvls )
 		return 0;
 
@@ -359,11 +367,15 @@ Lowe's paper.
 }
 
 __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest, __global int* numberExtrema, __global float* keys,
-                      int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, __global int* number, __global int* numberRej)
+                      int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberRej)
 {
 	int pozX = get_global_id(0);
 	int pozY = get_global_id(1);
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
+
+	float xc;
+	float xr;
+	float xi;
 
 	int numberExt = 0;
 
@@ -378,29 +390,23 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
 			{
-				float feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl);
+
+				float feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl, &xi, &xr, &xc);
 				if( feat )
 				{
-					if( !is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) )
+					if( is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) != 1 )
 					{
 						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
-						keys[numberExt*5] = pozX;
-						keys[numberExt*5 + 1] = pozY;
-						keys[numberExt*5 + 2] = 1;
-						keys[numberExt*5 + 3] = 1;
-						keys[numberExt*5 + 4] = 1;
+						keys[numberExt*7] = (float)( pozX + xc ) * pown( 2.0, (float)octv );
+						keys[numberExt*7 + 1] = (float)( pozY + xr ) * pow( 2.0, (float)octv );
+						keys[numberExt*7 + 2] = (float)pozX;
+						keys[numberExt*7 + 3] = (float)pozY;
+						keys[numberExt*7 + 4] = (float)xi;
+						keys[numberExt*7 + 5] = (float)intvl;
+						keys[numberExt*7 + 6] = (float)octv;
 
-						/*feat = new_feature();
-						ddata = feat_detection_data( feat );
-						feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
-						feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
-						ddata->r = r;
-						ddata->H[0][2] = H[0][2];
-						ddata->octv = octv;
-						ddata->intvl = intvl;
-						ddata->subintvl = xi;*/
 
 					}
 				}

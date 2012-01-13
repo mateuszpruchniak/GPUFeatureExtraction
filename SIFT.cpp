@@ -473,13 +473,13 @@ void SIFT::DetectExtremaFunc()
 			}
 			else 
 			{
-				m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
+				/*m_extrema[i][j-1] = cvCreateImage(cvGetSize(m_dogList[i][0]), 32, 1);
 
 				detectExt->CreateBuffersIn(down->width*down->height*sizeof(float),3);
 				detectExt->CreateBuffersOut(m_extrema[i][j-1]->width*m_extrema[i][j-1]->height*sizeof(float),1);
 				detectExt->SendImageToBuffers(down,middle,up);
-				detectExt->Process(&num, &numRemoved,0,0);
-				detectExt->ReceiveImageData(m_extrema[i][j-1]);
+				detectExt->Process(&num, &numRemoved,0,0,0);
+				detectExt->ReceiveImageData(m_extrema[i][j-1]);*/
 			}
 			
 			printf("Found keypoints : %d \n", num);
@@ -809,30 +809,30 @@ void SIFT::AssignOrientationsFunc()
 				Keys* keys = assignOrient->Process(1.5*abs_sigma,scale,i*m_numIntervals+j-1, &countKeys, m_numKeypoints);
 				assignOrient->ReceiveImageData(imgMask);
 
-				
+				//
 
-				for (int i =0 ; i < countKeys ; i++)
-				{
-					if( keys[i].mag != 0 ) 
-					{
-						vector<double> orien;
-						vector<double> mag;
-						orien.push_back(keys[i].orien);
-						mag.push_back(keys[i].mag);
-						m_keyPoints.push_back(Keypoint(keys[i].x, keys[i].y, mag, orien, keys[i].scale));
+				//for (int i =0 ; i < countKeys ; i++)
+				//{
+				//	if( keys[i].mag != 0 ) 
+				//	{
+				//		vector<double> orien;
+				//		vector<double> mag;
+				//		orien.push_back(keys[i].orien);
+				//		mag.push_back(keys[i].mag);
+				//		m_keyPoints.push_back(Keypoint(keys[i].x, keys[i].y, mag, orien, keys[i].scale));
 
-						//++m_numKeypoints;
+				//		//++m_numKeypoints;
 
-						/*cout << "i: " << i << endl;
-						cout << " x: " << keys[i].x;
-						cout << " y: " << keys[i].y;
-						cout << " mag: " << keys[i].mag;
-						cout << " orie: " << keys[i].orien;
-						cout << " scale: " << keys[i].scale << endl;*/
-					}
-				}
-				
-				
+				//		/*cout << "i: " << i << endl;
+				//		cout << " x: " << keys[i].x;
+				//		cout << " y: " << keys[i].y;
+				//		cout << " mag: " << keys[i].mag;
+				//		cout << " orie: " << keys[i].orien;
+				//		cout << " scale: " << keys[i].scale << endl;*/
+				//	}
+				//}
+				//
+				//
 
 				//m_keyPoints.push_back(Keypoint(xi*scale/2, yi*scale/2, mag, orien, i*m_numIntervals+j-1));
 				
