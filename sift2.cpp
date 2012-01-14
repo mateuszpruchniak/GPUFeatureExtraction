@@ -161,9 +161,9 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	{
 	}
 
-	feature* feat2 = CV_GET_SEQ_ELEM(feature, features, 0 );
+	//feature* feat2 = CV_GET_SEQ_ELEM(feature, features, 0 );
 
-	struct detection_data* ddata = feat_detection_data( feat2 );
+	//struct detection_data* ddata = feat_detection_data( feat2 );
 
 	cout << "CPU total: " <<  features->total << endl;
 
@@ -548,20 +548,7 @@ based on contrast and ratio of principal curvatures.
 						for(int ik = 0; ik < number ; ik++)
 						{ 
 
-							featureGPU[iteratorFGPU].img_pt.x = featureGPU[iteratorFGPU].x = keys[ik].scx;
-							featureGPU[iteratorFGPU].img_pt.y = featureGPU[iteratorFGPU].y = keys[ik].scy;
-					
-							ddata = (detection_data*)malloc( sizeof( struct detection_data ) );
-							memset( ddata, 0, sizeof( struct detection_data ) );
-							ddata->r = keys[ik].y;
-							ddata->c = keys[ik].x;
-							ddata->octv = keys[ik].octv;
-							ddata->intvl = keys[ik].intvl;
-							ddata->subintvl = keys[ik].subintvl;
-							featureGPU[iteratorFGPU].feature_data = ddata;
-							featureGPU[iteratorFGPU].type = FEATURE_LOWE;
-
-
+							
 
 							feat = new_feature();
 							ddata = feat_detection_data( feat );
@@ -588,7 +575,6 @@ based on contrast and ratio of principal curvatures.
 							cvSeqPush( features, feat );
 							free( feat );
 
-							iteratorFGPU++;
 						}
 
 				cout << "ckdetect number: " << number << endl;
@@ -609,26 +595,13 @@ based on contrast and ratio of principal curvatures.
 				//cvNamedWindow( "detectExt", 1 );
 				//cvShowImage( "detectExt", img );
 				//cvWaitKey( 0 );
-			
+				
+				number = num;
 
 				struct detection_data* ddata;
 
-				for(int ik = 0; ik < num ; ik++)
+				for(int ik = 0; ik < number ; ik++)
 				{ 
-
-					featureGPU[iteratorFGPU].img_pt.x = featureGPU[iteratorFGPU].x = keys[ik].scx;
-					featureGPU[iteratorFGPU].img_pt.y = featureGPU[iteratorFGPU].y = keys[ik].scy;
-					
-					ddata = (detection_data*)malloc( sizeof( struct detection_data ) );
-					memset( ddata, 0, sizeof( struct detection_data ) );
-					ddata->r = keys[ik].y;
-					ddata->c = keys[ik].x;
-					ddata->octv = keys[ik].octv;
-					ddata->intvl = keys[ik].intvl;
-					ddata->subintvl = keys[ik].subintvl;
-					featureGPU[iteratorFGPU].feature_data = ddata;
-					featureGPU[iteratorFGPU].type = FEATURE_LOWE;
-
 
 
 					feat = new_feature();
@@ -645,14 +618,17 @@ based on contrast and ratio of principal curvatures.
 					feat->scl = keys[ik].scl;
 					ddata->scl_octv = keys[ik].scl_octv;
 					feat->ori = keys[ik].ori;
-					
-					
+					feat->d = 128;
+
+					for(int i = 0; i < 128 ; i++ )
+					{
+						feat->descr[i] = keys[ik].desc[i];
+					}
 
 
 					cvSeqPush( features, feat );
 					free( feat );
 
-					iteratorFGPU++;
 				}
 				
 				int tot = features->total;

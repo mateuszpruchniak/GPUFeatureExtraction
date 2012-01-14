@@ -1,24 +1,38 @@
 
-
-/* width of border in which to ignore keypoints */
-#define SIFT_IMG_BORDER 5
-
-
+/******************************* Defs and macros *****************************/
 
 /** default number of sampled intervals per octave */
-#define SIFT_INTVLS 3
-
-/** default threshold on keypoint contrast |D(x)| */
-#define SIFT_CONTR_THR 0.04
-
-/** default threshold on keypoint ratio of principle curvatures */
-#define SIFT_CURV_THR 10
+#define SIFT_INTVLS		3
 
 /** default sigma for initial gaussian smoothing */
 #define SIFT_SIGMA		1.6
 
-/** default number of sampled intervals per octave */
-#define SIFT_INTVLS		3
+/** default threshold on keypoint contrast |D(x)| */
+#define SIFT_CONTR_THR	0.04
+
+/** default threshold on keypoint ratio of principle curvatures */
+#define SIFT_CURV_THR	10
+
+/** float image size before pyramid construction? */
+#define SIFT_IMG_DBL	1
+
+/** default width of descriptor histogram array */
+#define SIFT_DESCR_WIDTH 4
+
+/** default number of bins per histogram in descriptor array */
+#define SIFT_DESCR_HIST_BINS 8
+
+/* assumed gaussian blur for input image */
+#define SIFT_INIT_SIGMA 0.5
+
+/* width of border in which to ignore keypoints */
+#define SIFT_IMG_BORDER 5
+
+/* maximum steps of keypoint interpolation before failure */
+#define SIFT_MAX_INTERP_STEPS 5
+
+/* default number of bins in histogram for orientation assignment */
+#define SIFT_ORI_HIST_BINS 36
 
 /* determines gaussian sigma for orientation assignment */
 #define SIFT_ORI_SIG_FCTR 1.5
@@ -26,14 +40,23 @@
 /* determines the radius of the region used in orientation assignment */
 #define SIFT_ORI_RADIUS 3.0 * SIFT_ORI_SIG_FCTR
 
-/* default number of bins in histogram for orientation assignment */
-#define SIFT_ORI_HIST_BINS 36
-
 /* number of passes of orientation histogram smoothing */
 #define SIFT_ORI_SMOOTH_PASSES 2
 
 /* orientation magnitude relative to max that results in new feature */
 #define SIFT_ORI_PEAK_RATIO 0.8
+
+/* determines the size of a single descriptor orientation histogram */
+#define SIFT_DESCR_SCL_FCTR 3.0
+
+/* threshold on magnitude of elements of descriptor vector */
+#define SIFT_DESCR_MAG_THR 0.2
+
+/* factor used to convert floating-point descriptor to unsigned char */
+#define SIFT_INT_DESCR_FCTR 512.0
+
+/* returns a feature's detection data */
+#define feat_detection_data(f) ( (struct detection_data*)(f->feature_data) )
 
 #define CV_PI   3.1415926535897932384626433832795
 
@@ -534,6 +557,135 @@ void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, in
 	}
 }
 
+/*
+Interpolates an entry into the array of orientation histograms that form
+the feature descriptor.
+
+*/
+ void interp_hist_entryGPU( float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS] , float rbin, float cbin,
+							   float obin, float mag, int d, int n )
+{
+	float d_r, d_c, d_o, v_r, v_c, v_o;
+	float** row, * h;
+	int r0, c0, o0, rb, cb, ob, r, c, o;
+
+	r0 = floor( rbin );  // floor()
+	c0 = floor( cbin );
+	o0 = floor( obin );
+	d_r = rbin - r0;
+	d_c = cbin - c0;
+	d_o = obin - o0;
+
+	/*
+	The entry is distributed into up to 8 bins.  Each entry into a bin
+	is multiplied by a weight of 1 - d for each dimension, where d is the
+	distance from the center value of the bin measured in bin units.
+	*/
+	for( r = 0; r <= 1; r++ )
+	{
+		rb = r0 + r;
+
+		if( rb >= 0  &&  rb < d )
+		{
+			v_r = mag * ( ( r == 0 )? 1.0 - d_r : d_r );
+			
+			for( c = 0; c <= 1; c++ )
+			{
+
+				cb = c0 + c;
+				if( cb >= 0  &&  cb < d )
+				{
+
+					v_c = v_r * ( ( c == 0 )? 1.0 - d_c : d_c );
+					
+					for( o = 0; o <= 1; o++ )
+					{
+						ob = ( o0 + o ) % n;
+						v_o = v_c * ( ( o == 0 )? 1.0 - d_o : d_o );
+						hist[rb][cb][ob] += v_o;
+					}
+				}
+			}
+		}
+	}
+}
+
+
+/*
+Computes the 2D array of orientation histograms that form the feature
+descriptor.  Based on Section 6.1 of Lowe's paper.
+
+*/
+void descr_hist(__global float* gauss_pyr,  int pozX, int pozY, int ImageWidth, int ImageHeight, float ori, float scl, float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS], int d, int n )
+{
+	
+	float cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
+		grad_ori, w, rbin, cbin, obin, bins_per_rad, PI2 = 2.0 * CV_PI;
+	int radius, i, j;
+
+	
+	cos_t = cos( ori );
+	sin_t = sin( ori );
+	bins_per_rad = n / PI2;
+	exp_denom = d * d * 0.5;
+	hist_width = SIFT_DESCR_SCL_FCTR * scl;
+	radius = hist_width * sqrt(2.0) * ( d + 1.0 ) * 0.5 + 0.5;
+
+
+
+	for( i = -radius; i <= radius; i++ )
+		for( j = -radius; j <= radius; j++ )
+		{
+			/*
+			Calculate sample's histogram array coords rotated relative to ori.
+			Subtract 0.5 so samples that fall e.g. in the center of row 1 (i.e.
+			r_rot = 1.5) have full weight placed in row 1 after interpolation.
+			*/
+			c_rot = ( j * cos_t - i * sin_t ) / hist_width;
+			r_rot = ( j * sin_t + i * cos_t ) / hist_width;
+			rbin = r_rot + d / 2 - 0.5;
+			cbin = c_rot + d / 2 - 0.5;
+
+			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
+				if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
+				{
+					grad_ori -= ori;
+					while( grad_ori < 0.0 )
+						grad_ori += PI2;
+					while( grad_ori >= PI2 )
+						grad_ori -= PI2;
+
+					obin = grad_ori * bins_per_rad;
+					w = exp( -(c_rot * c_rot + r_rot * r_rot) / exp_denom );
+
+					interp_hist_entryGPU( hist, rbin, cbin, obin, grad_mag * w, d, n );
+				}
+		}
+
+
+}
+
+/*
+Normalizes a feature's descriptor vector to unitl length
+
+@param feat feature
+*/
+ void normalize_descr( float* desc )
+{
+	float cur, len_inv, len_sq = 0.0;
+	int i;
+
+	for( i = 0; i < 128; i++ )
+	{
+		cur = desc[i];
+		len_sq += cur*cur;
+	}
+	len_inv = 1.0 / sqrt( len_sq );
+	for( i = 0; i < 128; i++ )
+		desc[i] *= len_inv;
+}
+
+
 
 __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3,  __global float* gauss_pyr, __global float* ucDest,
 						__global int* numberExtrema, __global float* keys,
@@ -589,7 +741,6 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 										ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
 
 
-
 						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
 							smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
 
@@ -605,31 +756,66 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
 
-
-						int j = 0;
-						for(j = 0; j < numberOrient; j++ )
+						int iteratorOrient = 0;
+						for(iteratorOrient = 0; iteratorOrient < numberOrient; iteratorOrient++ )
 						{
 
+							float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
+
+							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+										hist2[ii][iii][iiii] = 0.0;
+
+							descr_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, orients[iteratorOrient], scl_octv, hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
 
 
+							int k = 0;
+							float desc[128];
+							
+							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+										desc[k++] = hist2[ii][iii][iiii];
+							
+							normalize_descr( desc );
 
+
+							for(int i = 0; i < k; i++ )
+							{
+								if( desc[i] > SIFT_DESCR_MAG_THR )
+									desc[i] = SIFT_DESCR_MAG_THR;
+							}
+
+							normalize_descr( desc );
+
+
+							/* convert floating-point descriptor to integer valued descriptor */
+							for(int i = 0; i < k; i++ )
+							{
+								desc[i] = min( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
+							}
+
+							int offset = 139;
 
 							numberExt = (*number)++;
-							keys[numberExt*11] = scx;
-							keys[numberExt*11 + 1] = scy;
-							keys[numberExt*11 + 2] = x;
-							keys[numberExt*11 + 3] = y;
-							keys[numberExt*11 + 4] = subintvl;
-							keys[numberExt*11 + 5] = intvlRes;
-							keys[numberExt*11 + 6] = octvRes;
-							keys[numberExt*11 + 7] = scl;
-							keys[numberExt*11 + 8] = scl_octv;
-							keys[numberExt*11 + 9] = orients[j];
-							keys[numberExt*11 + 10] = omax;
+
+							keys[numberExt*offset] = scx;
+							keys[numberExt*offset + 1] = scy;
+							keys[numberExt*offset + 2] = x;
+							keys[numberExt*offset + 3] = y;
+							keys[numberExt*offset + 4] = subintvl;
+							keys[numberExt*offset + 5] = intvlRes;
+							keys[numberExt*offset + 6] = octvRes;
+							keys[numberExt*offset + 7] = scl;
+							keys[numberExt*offset + 8] = scl_octv;
+							keys[numberExt*offset + 9] = orients[iteratorOrient];
+							keys[numberExt*offset + 10] = omax;
+
+							for(int i = 0; i < k; i++ )
+								keys[numberExt*offset + 11 + i] = desc[i];
 
 						}
-
-
 					}
 				}
 				
