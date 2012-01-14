@@ -605,12 +605,16 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
 
+
 						int j = 0;
 						for(j = 0; j < numberOrient; j++ )
 						{
 
-							numberExt = (*number)++;
 
+
+
+
+							numberExt = (*number)++;
 							keys[numberExt*11] = scx;
 							keys[numberExt*11 + 1] = scy;
 							keys[numberExt*11 + 2] = x;

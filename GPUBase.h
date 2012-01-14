@@ -30,6 +30,7 @@ typedef struct
 	float	scl_octv;	/**< scale of a Lowe-style feature */
 	float	ori;		/**< orientation of a Lowe-style feature */
 	float	mag;
+	float	desc[128];
 } Keys;
 
 /*feat = new_feature();

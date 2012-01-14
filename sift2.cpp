@@ -1355,10 +1355,15 @@ of Lowe's paper.
 	{
 		feat = CV_GET_SEQ_ELEM(feature, features, i );
 		ddata = feat_detection_data( feat );
+
+
+
 		hist = descr_hist( gauss_pyr[ddata->octv][ddata->intvl], ddata->r,
 			ddata->c, feat->ori, ddata->scl_octv, d, n );
 		hist_to_descr( hist, d, n, feat );
 		release_descr_hist( &hist, d );
+
+
 	}
 }
 
@@ -1414,7 +1419,7 @@ descriptor.  Based on Section 6.1 of Lowe's paper.
 			cbin = c_rot + d / 2 - 0.5;
 
 			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
-				if( calc_grad_mag_ori( img, r + i, c + j, &grad_mag, &grad_ori ))
+				if( calc_grad_mag_ori( img, r + j, c + i, &grad_mag, &grad_ori ))
 				{
 					grad_ori -= ori;
 					while( grad_ori < 0.0 )
@@ -2196,6 +2201,135 @@ void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, in
 }
 
 
+/*
+Interpolates an entry into the array of orientation histograms that form
+the feature descriptor.
+
+*/
+ void interp_hist_entryGPU( float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS] , float rbin, float cbin,
+							   float obin, float mag, int d, int n )
+{
+	float d_r, d_c, d_o, v_r, v_c, v_o;
+	float** row, * h;
+	int r0, c0, o0, rb, cb, ob, r, c, o;
+
+	r0 = cvFloor( rbin );  // floor()
+	c0 = cvFloor( cbin );
+	o0 = cvFloor( obin );
+	d_r = rbin - r0;
+	d_c = cbin - c0;
+	d_o = obin - o0;
+
+	/*
+	The entry is distributed into up to 8 bins.  Each entry into a bin
+	is multiplied by a weight of 1 - d for each dimension, where d is the
+	distance from the center value of the bin measured in bin units.
+	*/
+	for( r = 0; r <= 1; r++ )
+	{
+		rb = r0 + r;
+
+		if( rb >= 0  &&  rb < d )
+		{
+			v_r = mag * ( ( r == 0 )? 1.0 - d_r : d_r );
+			
+			for( c = 0; c <= 1; c++ )
+			{
+
+				cb = c0 + c;
+				if( cb >= 0  &&  cb < d )
+				{
+
+					v_c = v_r * ( ( c == 0 )? 1.0 - d_c : d_c );
+					
+					for( o = 0; o <= 1; o++ )
+					{
+						ob = ( o0 + o ) % n;
+						v_o = v_c * ( ( o == 0 )? 1.0 - d_o : d_o );
+						hist[rb][cb][ob] += v_o;
+					}
+				}
+			}
+		}
+	}
+}
+
+
+/*
+Computes the 2D array of orientation histograms that form the feature
+descriptor.  Based on Section 6.1 of Lowe's paper.
+
+*/
+void descr_hist(float* gauss_pyr,  int pozX, int pozY, int ImageWidth, int ImageHeight, float ori, float scl, float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS], int d, int n )
+{
+	
+	float cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
+		grad_ori, w, rbin, cbin, obin, bins_per_rad, PI2 = 2.0 * CV_PI;
+	int radius, i, j;
+
+	
+	cos_t = cos( ori );
+	sin_t = sin( ori );
+	bins_per_rad = n / PI2;
+	exp_denom = d * d * 0.5;
+	hist_width = SIFT_DESCR_SCL_FCTR * scl;
+	radius = hist_width * sqrt(2.0) * ( d + 1.0 ) * 0.5 + 0.5;
+
+
+
+	for( i = -radius; i <= radius; i++ )
+		for( j = -radius; j <= radius; j++ )
+		{
+			/*
+			Calculate sample's histogram array coords rotated relative to ori.
+			Subtract 0.5 so samples that fall e.g. in the center of row 1 (i.e.
+			r_rot = 1.5) have full weight placed in row 1 after interpolation.
+			*/
+			c_rot = ( j * cos_t - i * sin_t ) / hist_width;
+			r_rot = ( j * sin_t + i * cos_t ) / hist_width;
+			rbin = r_rot + d / 2 - 0.5;
+			cbin = c_rot + d / 2 - 0.5;
+
+			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
+				if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
+				{
+					grad_ori -= ori;
+					while( grad_ori < 0.0 )
+						grad_ori += PI2;
+					while( grad_ori >= PI2 )
+						grad_ori -= PI2;
+
+					obin = grad_ori * bins_per_rad;
+					w = exp( -(c_rot * c_rot + r_rot * r_rot) / exp_denom );
+
+					interp_hist_entryGPU( hist, rbin, cbin, obin, grad_mag * w, d, n );
+				}
+		}
+
+
+}
+
+/*
+Normalizes a feature's descriptor vector to unitl length
+
+@param feat feature
+*/
+ void normalize_descr( float* desc )
+{
+	float cur, len_inv, len_sq = 0.0;
+	int i;
+
+	for( i = 0; i < 128; i++ )
+	{
+		cur = desc[i];
+		len_sq += cur*cur;
+	}
+	len_inv = 1.0 / sqrt( len_sq );
+	for( i = 0; i < 128; i++ )
+		desc[i] *= len_inv;
+}
+
+
 void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_pyr,  float* ucDest,
 						 int* numberExtrema,  float* keys,
 						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv,  int* number,  int* numberRej, int pozX, int pozY)
@@ -2270,19 +2404,58 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 						for(j = 0; j < numberOrient; j++ )
 						{
 
-							numberExt = (*number)++;
+							float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
 
-							keys[numberExt*11] = scx;
-							keys[numberExt*11 + 1] = scy;
-							keys[numberExt*11 + 2] = x;
-							keys[numberExt*11 + 3] = y;
-							keys[numberExt*11 + 4] = subintvl;
-							keys[numberExt*11 + 5] = intvlRes;
-							keys[numberExt*11 + 6] = octvRes;
-							keys[numberExt*11 + 7] = scl;
-							keys[numberExt*11 + 8] = scl_octv;
-							keys[numberExt*11 + 9] = orients[j];
-							keys[numberExt*11 + 10] = omax;
+							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+										hist2[ii][iii][iiii] = 0.0;
+
+							descr_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, orients[j], scl_octv, hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
+
+
+							int k = 0;
+							float desc[128];
+							
+							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+										desc[k++] = hist2[ii][iii][iiii];
+							
+							normalize_descr( desc );
+
+
+							for(int i = 0; i < k; i++ )
+								if( desc[i] > SIFT_DESCR_MAG_THR )
+									desc[i] = SIFT_DESCR_MAG_THR;
+
+							normalize_descr( desc );
+
+
+
+							/* convert floating-point descriptor to integer valued descriptor */
+							for(int i = 0; i < k; i++ )
+							{
+								desc[i] = MIN( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
+							}
+
+							int offset = 556;
+
+							numberExt = (*number)++;
+							keys[numberExt*offset] = scx;
+							keys[numberExt*offset + 1] = scy;
+							keys[numberExt*offset + 2] = x;
+							keys[numberExt*offset + 3] = y;
+							keys[numberExt*offset + 4] = subintvl;
+							keys[numberExt*offset + 5] = intvlRes;
+							keys[numberExt*offset + 6] = octvRes;
+							keys[numberExt*offset + 7] = scl;
+							keys[numberExt*offset + 8] = scl_octv;
+							keys[numberExt*offset + 9] = orients[j];
+							keys[numberExt*offset + 10] = omax;
+
+							for(int i = 0; i < k; i++ )
+								keys[numberExt*offset + 11 + i] = desc[i];
 
 						}
 
