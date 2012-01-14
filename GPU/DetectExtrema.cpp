@@ -88,12 +88,13 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, maxNumberKeys*sizeof(Keys), (void*)keys, 0, NULL, NULL);
 	CheckError(GPUError);
-/*
-	for(int i = 0; i < *num; i++)
-	{
-		cout << "ori GPU: " << keys[i].ori << endl;
-		cout << "mag GPU: " << keys[i].mag << endl;
-	}*/
+
+	//for(int i = 0; i < *num; i++)
+	//{
+	//	cout << "ori GPU: " << keys[i].ori << endl;
+	//	cout << "mag GPU: " << keys[i].mag << endl;
+	//	cout << endl;
+	//}
 	cout << "Number GPU: " << *num << endl;
 
 	return true;

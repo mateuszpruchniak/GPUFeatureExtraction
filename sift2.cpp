@@ -139,30 +139,22 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 		curv_thr, storage );
 
 
+	
 	if(SIFTCPU)
 	{
-		calcFeatureScales( features, sigma, intvls );
-	}
-	else
-	{
-	}
 
-	if(SIFTCPU)
-	{
+		calcFeatureScales( features, sigma, intvls );
 		if( img_dbl )
 			adjustForImgDbl( features );
+
+		calc_feature_oris( features, gauss_pyr );
+			
+		cout << "CPU total: " <<  features->total << endl;
+		
 	}
 	else
 	{
 	}
-	
-	//if(SIFTCPU)
-	//{
-		calc_feature_oris( features, gauss_pyr );
-	//}
-	//else
-	//{
-	//}
 
 
 
@@ -171,6 +163,9 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 
 	compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
+	
+
+
 
 	/* sort features by decreasing scale and move from CvSeq to array */
 	cvSeqSort( features, (CvCmpFunc)feature_cmp, NULL );
@@ -519,6 +514,11 @@ based on contrast and ratio of principal curvatures.
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				detectExt->ReceiveImageData(img);
 
+				//cvNamedWindow( "detectExt", 1 );
+				//cvShowImage( "detectExt", img );
+				//cvWaitKey( 0 );
+			
+
 				struct detection_data* ddata;
 
 				for(int ik = 0; ik < num ; ik++)
@@ -549,10 +549,12 @@ based on contrast and ratio of principal curvatures.
 					ddata->subintvl = keys[ik].subintvl;
 					ddata->octv = keys[ik].octv;
 					ddata->intvl = keys[ik].intvl;
+					
 					feat->scl = keys[ik].scl;
 					ddata->scl_octv = keys[ik].scl_octv;
-					//ori
-
+					feat->ori = keys[ik].ori;
+					
+					
 
 
 					cvSeqPush( features, feat );
@@ -568,9 +570,6 @@ based on contrast and ratio of principal curvatures.
 
 			//cvSaveImage( "C:\\Users\\Mati\\Pictures\\scene.jpg", img, NULL );
 
-			//cvNamedWindow( "detectExt", 1 );
-			//cvShowImage( "detectExt", img );
-			//cvWaitKey( 0 );
 			
 		}
 
