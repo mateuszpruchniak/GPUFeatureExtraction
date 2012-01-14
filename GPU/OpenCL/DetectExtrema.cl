@@ -29,10 +29,23 @@
 /* default number of bins in histogram for orientation assignment */
 #define SIFT_ORI_HIST_BINS 36
 
+/* number of passes of orientation histogram smoothing */
+#define SIFT_ORI_SMOOTH_PASSES 2
 
+/* orientation magnitude relative to max that results in new feature */
+#define SIFT_ORI_PEAK_RATIO 0.8
+
+#define CV_PI   3.1415926535897932384626433832795
 
 /* absolute value */
 #define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
+
+#define ROUND(x) ( ( x - (int)x ) <= 0.5 ? (int)x :  (int)x + 1 )
+
+/*
+Interpolates a histogram peak from left, center, and right values
+*/
+#define interp_hist_peak( l, c, r ) ( 0.5 * ((l)-(r)) / ((l) - 2.0*(c) + (r)) )
 
 
 
@@ -329,9 +342,9 @@ float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global
 		if( ABS(*xi) <= 0.58 && ABS(*xr) <= 0.58 && ABS(*xc) <= 0.58 )
 			break;
 		
-		pozX += (int)*xc;
-		pozY += (int)*xr;
-		intvl += (int)*xi;
+		pozX += ROUND( *xc);
+		pozY += ROUND( *xr );
+		intvl += ROUND( *xc );
 
 		if( intvl < 1  ||
 			intvl > intvls  ||
@@ -387,40 +400,133 @@ Lowe's paper.
 }
 
 
+///*
+//Calculates the gradient magnitude and orientation at a given pixel.
+//
+//@return Returns 1 if the specified pixel is a valid one and sets mag and
+//	ori accordingly; otherwise returns 0
+//*/
+//int calc_grad_mag_ori( __global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* mag, float* ori )
+//{
+//	float dx, dy;
+//
+//	if( pozX > 0  &&  pozX < ImageHeight - 1  &&  pozY > 0  && pozY < ImageWidth - 1 )
+//	{
+//		dx = GetPixel(gauss_pyr, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX-1, pozY, ImageWidth, ImageHeight);
+//		dy = GetPixel(gauss_pyr, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX, pozY-1, ImageWidth, ImageHeight);
+//		*mag = sqrt( dx*dx + dy*dy );
+//		*ori = atan2( dy, dx );
+//		return 1;
+//	}
+//	else
+//		return 0;
+//}
+//
+//
+//
+///*
+//Computes a gradient orientation histogram at a specified pixel.
+//
+//@return Returns an n-element array containing an orientation histogram
+//	representing orientations between 0 and 2 PI.
+//*/
+//
+//float* ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, int n, int rad, float sigma)
+//{
+//	
+//	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
+//	int bin, i, j;
+//
+//	float hist[SIFT_ORI_HIST_BINS];
+//
+//	exp_denom = 2.0 * sigma * sigma;
+//
+//	for( i = -rad; i <= rad; i++ )
+//		for( j = -rad; j <= rad; j++ )
+//			if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
+//			{
+//				w = exp( -( i*i + j*j ) / exp_denom );
+//				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
+//				bin = ( bin < n )? bin : 0;
+//				hist[bin] += w * mag;
+//			}
+//
+//	return hist;
+//}
+//
+///*
+//Gaussian smooths an orientation histogram.
+//
+//@param hist an orientation histogram
+//@param n number of bins
+//*/
+//void smooth_ori_hist( float* hist, int n )
+//{
+//	float prev, tmp, h0 = hist[0];
+//	int i;
+//
+//	prev = hist[n-1];
+//	for( i = 0; i < n; i++ )
+//	{
+//		tmp = hist[i];
+//		hist[i] = 0.25 * prev + 0.5 * hist[i] + 
+//			0.25 * ( ( i+1 == n )? h0 : hist[i+1] );
+//		prev = tmp;
+//	}
+//}
+//
+///*
+//Finds the magnitude of the dominant orientation in a histogram
+//
+//@return Returns the value of the largest bin in hist
+//*/
+//float dominant_ori(float* hist, int n )
+//{
+//	float omax;
+//	int maxbin, i;
+//
+//	omax = hist[0];
+//	maxbin = 0;
+//	for( i = 1; i < n; i++ )
+//		if( hist[i] > omax )
+//		{
+//			omax = hist[i];
+//			maxbin = i;
+//		}
+//	return omax;
+//}
+//
+///*
+//Adds features to an array for every orientation in a histogram greater than
+//a specified threshold.
+//
+//*/
+//void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, int* numberOrient )
+//{
+//	
+//	float bin, PI2 = CV_PI * 2.0;
+//	int l, r, i;
+//
+//	for( i = 0; i < n; i++ )
+//	{
+//		l = ( i == 0 )? n - 1 : i-1;
+//		r = ( i + 1 ) % n;
+//
+//		if( hist[i] > hist[l]  &&  hist[i] > hist[r]  &&  hist[i] >= mag_thr )
+//		{
+//			
+//			bin = i + interp_hist_peak( hist[l], hist[i], hist[r] );
+//			bin = ( bin < 0 )? n + bin : ( bin >= n )? bin - n : bin;
+//			
+//			orients[*numberOrient] = ( ( PI2 * bin ) / n ) - CV_PI;
+//
+//			(*numberOrient)++;
+//		}
+//	}
+//}
 
-/*
-Computes a gradient orientation histogram at a specified pixel.
 
-@return Returns an n-element array containing an orientation histogram
-	representing orientations between 0 and 2 PI.
-*/
-
-float* ori_hist(__gloabal float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, int n, int rad, float sigma)
-{
-	double* hist;
-	double mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
-	int bin, i, j;
-
-	hist = (double*)calloc( n, sizeof( double ) );
-	exp_denom = 2.0 * sigma * sigma;
-	for( i = -rad; i <= rad; i++ )
-		for( j = -rad; j <= rad; j++ )
-			if( calc_grad_mag_ori( img, r + i, c + j, &mag, &ori ) )
-			{
-				w = exp( -( i*i + j*j ) / exp_denom );
-				bin = cvRound( n * ( ori + CV_PI ) / PI2 );
-				bin = ( bin < n )? bin : 0;
-				hist[bin] += w * mag;
-			}
-
-	return hist;
-}
-
-
-
-
-
-__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3,  __gloabal float* gauss_pyr, __global float* ucDest,
+__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3,  __global float* gauss_pyr, __global float* ucDest,
 						__global int* numberExtrema, __global float* keys,
 						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberRej)
 {
@@ -451,6 +557,7 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 				{
 					if( is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) != 1 )
 					{
+
 						numberExt = atomic_add(number, (int)1);
 						ucDest[GMEMOffset] = 1.0;
 
@@ -482,52 +589,33 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						keys[numberExt*10 + 10] = mag;
 
 
+						/*float* hist = ori_hist( gauss_pyr,	pozX, pozY, ImageWidth, ImageHeight, SIFT_ORI_HIST_BINS, 
+							ROUND(SIFT_ORI_RADIUS * scl_octv), SIFT_ORI_SIG_FCTR * scl_octv );
 
 
-						hist = ori_hist( gauss_pyr,	pozX, pozY, ImageWidth, ImageHeight, SIFT_ORI_HIST_BINS, 
-							cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ), SIFT_ORI_SIG_FCTR * ddata->scl_octv );
+						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
+								smooth_ori_hist(hist, SIFT_ORI_HIST_BINS );
 
+						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
 
+						float orients[SIFT_ORI_HIST_BINS];
+						int numberOrient = 0;
 
+						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);*/
 
-						/*
+						//for(int j = 0; j < numberOrient; j++ )
+						//{
 							
 
-							hist = ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
-											ddata->r, ddata->c, SIFT_ORI_HIST_BINS,
-											cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ),
-											SIFT_ORI_SIG_FCTR * ddata->scl_octv );
 
-
-							for( j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
-								smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
-
-
-							omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
-
-							add_good_ori_features( features, hist, SIFT_ORI_HIST_BINS,
-													omax * SIFT_ORI_PEAK_RATIO, feat );
-
-						}*/
-
-
-
-						// obliczamy mag i orient
-
-
-
-
-
-
-
+						//}
 
 
 					}
 				}
 				
 			} else {
-				//ucDest[GMEMOffset] = 0.5;
-				//atomic_add(numberRej, (int)1);
+
 			}
 		}
 	} else {

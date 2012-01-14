@@ -156,13 +156,13 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	{
 	}
 	
-	if(SIFTCPU)
-	{
+	//if(SIFTCPU)
+	//{
 		calc_feature_oris( features, gauss_pyr );
-	}
-	else
-	{
-	}
+	//}
+	//else
+	//{
+	//}
 
 
 

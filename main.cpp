@@ -115,7 +115,7 @@ int main()
 
 	SIFTGPU* siftGPU = new SIFTGPU();
 
-
+	int tmp = cvRound( 0.5 );
 
 	IplImage* img1, * img2, * stacked;
 	feature* feat1, * feat2, * feat;
