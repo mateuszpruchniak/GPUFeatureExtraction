@@ -789,7 +789,6 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 
 							normalize_descr( desc );
 
-
 							/* convert floating-point descriptor to integer valued descriptor */
 							for(int i = 0; i < k; i++ )
 							{
