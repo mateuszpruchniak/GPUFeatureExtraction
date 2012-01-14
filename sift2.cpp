@@ -154,19 +154,22 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 		//calc_feature_oris( features, gauss_pyr );
 		
-
+		compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
 
 	}
 	else
 	{
 	}
 
+	feature* feat2 = CV_GET_SEQ_ELEM(feature, features, 0 );
+
+	struct detection_data* ddata = feat_detection_data( feat2 );
 
 	cout << "CPU total: " <<  features->total << endl;
 
 
 
-	compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
+	
 	
 
 
@@ -574,8 +577,12 @@ based on contrast and ratio of principal curvatures.
 							feat->scl = keys[ik].scl;
 							ddata->scl_octv = keys[ik].scl_octv;
 							feat->ori = keys[ik].ori;
-					
-					
+							feat->d = 128;
+
+							for(int i = 0; i < 128 ; i++ )
+							{
+								feat->descr[i] = keys[ik].desc[i];
+							}
 
 
 							cvSeqPush( features, feat );
@@ -2400,8 +2407,8 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 
 						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
 
-						int j = 0;
-						for(j = 0; j < numberOrient; j++ )
+						int iteratorOrient = 0;
+						for(iteratorOrient = 0; iteratorOrient < numberOrient; iteratorOrient++ )
 						{
 
 							float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
@@ -2411,7 +2418,7 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
 										hist2[ii][iii][iiii] = 0.0;
 
-							descr_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, orients[j], scl_octv, hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
+							descr_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, orients[iteratorOrient], scl_octv, hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
 
 
 							int k = 0;
@@ -2426,8 +2433,10 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 
 
 							for(int i = 0; i < k; i++ )
+							{
 								if( desc[i] > SIFT_DESCR_MAG_THR )
 									desc[i] = SIFT_DESCR_MAG_THR;
+							}
 
 							normalize_descr( desc );
 
@@ -2439,9 +2448,10 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 								desc[i] = MIN( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
 							}
 
-							int offset = 556;
+							int offset = 139;
 
 							numberExt = (*number)++;
+
 							keys[numberExt*offset] = scx;
 							keys[numberExt*offset + 1] = scy;
 							keys[numberExt*offset + 2] = x;
@@ -2451,7 +2461,7 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 							keys[numberExt*offset + 6] = octvRes;
 							keys[numberExt*offset + 7] = scl;
 							keys[numberExt*offset + 8] = scl_octv;
-							keys[numberExt*offset + 9] = orients[j];
+							keys[numberExt*offset + 9] = orients[iteratorOrient];
 							keys[numberExt*offset + 10] = omax;
 
 							for(int i = 0; i < k; i++ )
