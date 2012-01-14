@@ -33,7 +33,7 @@
 #define SIFT_ORI_SMOOTH_PASSES 2
 
 /* orientation magnitude relative to max that results in new feature */
-#define SIFT_ORI_PEAK_RATIO 1.0
+#define SIFT_ORI_PEAK_RATIO 0.8
 
 #define CV_PI   3.1415926535897932384626433832795
 
@@ -329,17 +329,19 @@ float interp_contr(__global float* dataIn1, __global float* dataIn2, __global fl
 float interp_extremum(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, 
 	int intvls, float contr_thr, int intvl, float* xi, float* xr, float* xc )
 {
-	
 	float contr;
 
 	int i = 0;
 	int siftMaxInterpSteps = 5;
 
+	if( pozX == 668 )
+		i = 0;
+
 	while( i < siftMaxInterpSteps )
 	{
 		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
 		
-		if( ABS(*xi) <= 0.58 && ABS(*xr) <= 0.58 && ABS(*xc) <= 0.58 )
+		if( ABS(*xi) <= 0.5 && ABS(*xr) <= 0.5 && ABS(*xc) <= 0.5 )
 			break;
 		
 		pozX += ROUND( *xc);
@@ -400,67 +402,59 @@ Lowe's paper.
 }
 
 
-/*
+ /*
 Calculates the gradient magnitude and orientation at a given pixel.
+
 
 @return Returns 1 if the specified pixel is a valid one and sets mag and
 	ori accordingly; otherwise returns 0
 */
-int calc_grad_mag_ori( __global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* mag, float* ori )
+ int calc_grad_mag_ori(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* mag, float* ori )
 {
 	float dx, dy;
 
-	if( pozX > 0  &&  pozX < ImageHeight - 1  &&  pozY > 0  && pozY < ImageWidth - 1 )
+	if( pozX > 0  &&  pozX < ImageWidth - 1  &&  pozY > 0  &&  pozY < ImageHeight - 1 )
 	{
 		dx = GetPixel(gauss_pyr, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX-1, pozY, ImageWidth, ImageHeight);
-		dy = GetPixel(gauss_pyr, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX, pozY-1, ImageWidth, ImageHeight);
+		dy =  GetPixel(gauss_pyr, pozX, pozY-1, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX, pozY+1, ImageWidth, ImageHeight);
 		*mag = sqrt( dx*dx + dy*dy );
 		*ori = atan2( dy, dx );
 		return 1;
 	}
+
 	else
 		return 0;
 }
 
 
-
-/*
+ /*
 Computes a gradient orientation histogram at a specified pixel.
+
 
 @return Returns an n-element array containing an orientation histogram
 	representing orientations between 0 and 2 PI.
 */
-
-float* ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, int n, int rad, float sigma, __global float* ucDest)
+void ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* hist, int n, int rad, float sigma)
 {
-	
 	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
 	int bin, i, j;
-	i = j = 0;
-
-	float hist[SIFT_ORI_HIST_BINS];
 
 	exp_denom = 2.0 * sigma * sigma;
 
 	for( i = -rad; i <= rad; i++ )
-	{
 		for( j = -rad; j <= rad; j++ )
-		{
 			if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
-			{
-				//int GMEMOffset = mul24(pozY, ImageWidth) + pozX + i + j;
-				//ucDest[GMEMOffset] = 1.0;
-
+			{	
 				w = exp( -(float)( i*i + j*j ) / exp_denom );
 				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
 				bin = ( bin < n )? bin : 0;
 				hist[bin] += w * mag;
 			}
-		}
-	}
 
-	return hist;
+
 }
+
+
 
 /*
 Gaussian smooths an orientation histogram.
@@ -468,7 +462,7 @@ Gaussian smooths an orientation histogram.
 @param hist an orientation histogram
 @param n number of bins
 */
-void smooth_ori_hist( float* hist, int n )
+ void smooth_ori_hist( float* hist, int n )
 {
 	float prev, tmp, h0 = hist[0];
 	int i;
@@ -483,12 +477,16 @@ void smooth_ori_hist( float* hist, int n )
 	}
 }
 
+
 /*
 Finds the magnitude of the dominant orientation in a histogram
 
+@param hist an orientation histogram
+@param n number of bins
+
 @return Returns the value of the largest bin in hist
 */
-float dominant_ori(float* hist, int n )
+float dominant_ori( float* hist, int n, int* maxBin )
 {
 	float omax;
 	int maxbin, i;
@@ -501,6 +499,9 @@ float dominant_ori(float* hist, int n )
 			omax = hist[i];
 			maxbin = i;
 		}
+
+	*maxBin = maxbin;
+
 	return omax;
 }
 
@@ -511,7 +512,7 @@ a specified threshold.
 */
 void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, int* numberOrient )
 {
-	
+
 	float bin, PI2 = CV_PI * 2.0;
 	int l, r, i;
 
@@ -522,10 +523,10 @@ void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, in
 
 		if( hist[i] > hist[l]  &&  hist[i] > hist[r]  &&  hist[i] >= mag_thr )
 		{
-			
+
 			bin = i + interp_hist_peak( hist[l], hist[i], hist[r] );
 			bin = ( bin < 0 )? n + bin : ( bin >= n )? bin - n : bin;
-			
+
 			orients[*numberOrient] = ( ( PI2 * bin ) / n ) - CV_PI;
 
 			++(*numberOrient);
@@ -560,54 +561,55 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
 			{
 
-				float feat = interp_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl, &xi, &xr, &xc);
+				float feat = interp_extremum( dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl, &xi, &xr, &xc);
 				if( feat )
 				{
 					if( is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) != 1 )
 					{
 
+						float intvl2 = intvl + xi;  //intvl = ddata->intvl + ddata->subintvl;//
 
-						
-						
-
-
-						float intvl2 = intvl + xi;
-
-						float	scx = (float)(( pozX + xc ) * pow( 2.0, (float)octv ) / 2.0);
-						float	scy = (float)(( pozY + xr ) * pow( 2.0, (float)octv ) / 2.0);
+						float	scx = (float)(( pozX + xc ) * pow( (float)2.0, (float)octv ) / 2.0);
+						float	scy = (float)(( pozY + xr ) * pow( (float)2.0, (float)octv ) / 2.0);
 						float	x = pozX;
 						float	y = pozY;
 						float	subintvl = xi;
 						float	intvlRes = intvl;
 						float	octvRes = octv;
-						float	scl = (SIFT_SIGMA * pow( 2.0, (float)(octv + intvl2 / SIFT_INTVLS) ));
-						float	scl_octv = SIFT_SIGMA * pow( 2.0, (float)(intvl2 / SIFT_INTVLS) );
+						float	scl = (SIFT_SIGMA * pow( (float)2.0, (octv + intvl2 / (float)SIFT_INTVLS) )) / 2.0;  //sigma * pow( (float)2.0, ddata->octv + intvl / intvls );//
+						float	scl_octv = SIFT_SIGMA * pow( (float)2.0, (float)(intvl2 / SIFT_INTVLS) );
 						float	ori = 0;
 						float	mag = 0;
 
-						
+						float hist[SIFT_ORI_HIST_BINS];
+						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+							hist[j] = 0;
 
+						ori_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
+										ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
 
-
-						float* hist = ori_hist( gauss_pyr,	pozX, pozY, ImageWidth, ImageHeight, SIFT_ORI_HIST_BINS, 
-							ROUND(SIFT_ORI_RADIUS * scl_octv), SIFT_ORI_SIG_FCTR * scl_octv, ucDest );
 
 
 						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
-								smooth_ori_hist(hist, SIFT_ORI_HIST_BINS );
+							smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
 
-						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
+						int maxBin = 0;
+
+						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
 
 						float orients[SIFT_ORI_HIST_BINS];
+						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+							orients[j] = 0;
 
 						int numberOrient = 0;
 
 						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
 
-						for(int j = 0; j < numberOrient+1; j++ )
+						int j = 0;
+						for(j = 0; j < numberOrient; j++ )
 						{
-						
-							numberExt = atomic_add(number, (int)1);
+
+							numberExt = (*number)++;
 
 							keys[numberExt*11] = scx;
 							keys[numberExt*11 + 1] = scy;
@@ -622,8 +624,6 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 							keys[numberExt*11 + 10] = omax;
 
 						}
-
-						
 
 
 					}

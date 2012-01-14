@@ -37,31 +37,35 @@ that accompanied this distribution.
 
 
  int is_extremum( IplImage***, int, int, int, int );
- feature* interp_extremum( IplImage***, int, int, int, int, int, double);
- void interp_step( IplImage***, int, int, int, int, double*, double*, double* );
+ feature* interp_extremum( IplImage***, int, int, int, int, int, float);
+ void interp_step( IplImage***, int, int, int, int, float*, float*, float* );
  CvMat* deriv_3D( IplImage***, int, int, int, int );
  void hessian_3D( IplImage***, int, int, int, int, float H[][3] );
- double interp_contr( IplImage***, int, int, int, int, double, double, double );
+ float interp_contr( IplImage***, int, int, int, int, float, float, float );
  feature* new_feature( void );
  int is_too_edge_like( IplImage*, int, int, int );
 
 
 
- double* ori_hist( IplImage*, int, int, int, int, double );
- int calc_grad_mag_ori( IplImage*, int, int, double*, double* );
- void smooth_ori_hist( double*, int );
- double dominant_ori( double*, int );
- void add_good_ori_features( CvSeq*, double*, int, double, feature* );
+ void ori_hist( IplImage*, int, int, int, int, float, float * );
+ int calc_grad_mag_ori( IplImage*, int, int, float*, float* );
+ void smooth_ori_hist( float*, int );
+ float dominant_ori( float*, int , int*);
+ void add_good_ori_features( CvSeq*, float*, int, float, feature*, int );
  feature* clone_feature( feature* );
  void compute_descriptors( CvSeq*, IplImage***, int, int );
- double*** descr_hist( IplImage*, int, int, double, double, int, int );
- void interp_hist_entry( double***, double, double, double, double, int, int);
- void hist_to_descr( double***, int, int, feature* );
+ float*** descr_hist( IplImage*, int, int, float, float, int, int );
+ void interp_hist_entry( float***, float, float, float, float, int, int);
+ void hist_to_descr( float***, int, int, feature* );
  void normalize_descr( feature* );
  int feature_cmp( void*, void*, void* );
- void release_descr_hist( double****, int );
+ void release_descr_hist( float****, int );
  void release_pyr( IplImage****, int, int );
 
+
+ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_pyr,  float* ucDest,
+						 int* numberExtrema,  float* keys,
+						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv,  int* number,  int* numberRej, int pozX, int pozY);
 
 /*********************** Functions prototyped in sift.h **********************/
 
@@ -111,7 +115,7 @@ detected features are stored in the array pointed to by \a feat.
 @see sift_keypoints()
 */
 int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
-				   double sigma, double contr_thr, int curv_thr,
+				   float sigma, float contr_thr, int curv_thr,
 				   int img_dbl, int descr_width, int descr_hist_bins )
 {
 	IplImage* init_img;
@@ -130,7 +134,7 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	/* build scale space pyramid; smallest dimension of top level is ~4 pixels */
 
 	init_img = createInitImg( img, img_dbl, sigma );
-	octvs = log( (double)MIN( init_img->width, init_img->height ) ) / log((double)2) - 2;
+	octvs = log( (float)MIN( init_img->width, init_img->height ) ) / log((float)2) - 2;
 	gauss_pyr = buildGaussPyr( init_img, octvs, intvls, sigma );
 	dog_pyr = buildDogPyr( gauss_pyr, octvs, intvls );
 	storage = cvCreateMemStorage( 0 );
@@ -138,27 +142,27 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	features = scaleSpaceExtrema( dog_pyr, octvs, intvls, contr_thr,
 		curv_thr, storage );
 
-
+	cout << "CPU total ext: " <<  features->total << endl;
 	
 	if(SIFTCPU)
 	{
 
-		calcFeatureScales( features, sigma, intvls );
-		if( img_dbl )
-			adjustForImgDbl( features );
+		//calcFeatureScales( features, sigma, intvls );
 
-		calc_feature_oris( features, gauss_pyr );
-			
-		cout << "CPU total: " <<  features->total << endl;
+		//if( img_dbl )
+		//	adjustForImgDbl( features );
+
+		//calc_feature_oris( features, gauss_pyr );
 		
+
+
 	}
 	else
 	{
 	}
 
 
-
-	
+	cout << "CPU total: " <<  features->total << endl;
 
 
 
@@ -196,7 +200,7 @@ optionally doubled in size prior to smoothing.
 @param img_dbl if true, image is doubled in size prior to smoothing
 @param sigma total std of Gaussian smoothing
 */
- IplImage* SIFTGPU::createInitImg( IplImage* img, int img_dbl, double sigma )
+ IplImage* SIFTGPU::createInitImg( IplImage* img, int img_dbl, float sigma )
 {
 	IplImage* gray, * dbl;
 	float sig_diff;
@@ -286,10 +290,10 @@ Builds Gaussian scale space pyramid from an image
 @return Returns a Gaussian scale space pyramid as an octvs x (intvls + 3) array
 */
  IplImage*** SIFTGPU::buildGaussPyr( IplImage* base, int octvs,
-									int intvls, double sigma )
+									int intvls, float sigma )
 {
-	double* sig = (double*)calloc( intvls + 3, sizeof(double));
-	double sig_total, sig_prev, k;
+	float* sig = (float*)calloc( intvls + 3, sizeof(float));
+	float sig_total, sig_prev, k;
 	int i, o;
 
 	gauss_pyr = (IplImage***)calloc( octvs, sizeof( IplImage** ) );
@@ -448,7 +452,7 @@ based on contrast and ratio of principal curvatures.
 	and descriptors are yet to be determined.
 */
  CvSeq* SIFTGPU::scaleSpaceExtrema( IplImage*** dog_pyr, int octvs, int intvls,
-								   double contr_thr, int curv_thr,
+								   float contr_thr, int curv_thr,
 								   CvMemStorage* storage )
 {
 	CvSeq* features;
@@ -476,32 +480,113 @@ based on contrast and ratio of principal curvatures.
 			/************************ GPU **************************/
 			if(SIFTCPU)
 			{
+
+				int maxNumberKeys = 1000;
+				for (int i =0 ; i < maxNumberKeys ; i++)
+				{
+					keys[i].x = 0.0;
+					keys[i].y = 0.0;
+					keys[i].intvl = 0.0;
+					keys[i].octv = 0.0;
+					keys[i].subintvl = 0.0;
+					keys[i].scx = 0.0;
+					keys[i].scy = 0.0;
+					keys[i].mag = 0.0;
+					keys[i].ori = 0.0;
+				}
+
+				IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
+				cvZero(img);
+				
+				int numberExtrema = 0;
+				int number = 0;
+				int numberRej = 0;
+
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
+				{
+					
+						/*if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
+						{
+							if( is_extremum( dog_pyr, o, i, r, c ) )
+							{
+
+								feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
+								if( feat )
+								{
+									ddata = feat_detection_data( feat );
+
+									if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
+										ddata->r, ddata->c, curv_thr ) )
+									{
+										num++;
+										cvSeqPush( features, feat );
+									}
+									else
+										free( ddata );
+									free( feat );
+								}
+							}
+						}*/
+
+						
+
+						ckDetect( (float*)dog_pyr[o][i-1]->imageData, (float*)dog_pyr[o][i]->imageData, (float*)dog_pyr[o][i+1]->imageData, (float*)gauss_pyr[o][i]->imageData ,  (float*)img->imageData,
+									&numberExtrema, (float*)keys, dog_pyr[o][i]->width, dog_pyr[o][i]->height, prelim_contr_thr, i, o,  &number,  &numberRej, c, r);
+
+						
+						int tot = features->total;
 
 					
-					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
-					{
-						if( is_extremum( dog_pyr, o, i, r, c ) )
-						{
-							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
-							if( feat )
-							{
-								ddata = feat_detection_data( feat );
+				}
+						struct detection_data* ddata;
 
-								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
-									ddata->r, ddata->c, curv_thr ) )
-								{
-									
-									cvSeqPush( features, feat );
-								}
-								else
-									free( ddata );
-								free( feat );
-							}
+						for(int ik = 0; ik < number ; ik++)
+						{ 
+
+							featureGPU[iteratorFGPU].img_pt.x = featureGPU[iteratorFGPU].x = keys[ik].scx;
+							featureGPU[iteratorFGPU].img_pt.y = featureGPU[iteratorFGPU].y = keys[ik].scy;
+					
+							ddata = (detection_data*)malloc( sizeof( struct detection_data ) );
+							memset( ddata, 0, sizeof( struct detection_data ) );
+							ddata->r = keys[ik].y;
+							ddata->c = keys[ik].x;
+							ddata->octv = keys[ik].octv;
+							ddata->intvl = keys[ik].intvl;
+							ddata->subintvl = keys[ik].subintvl;
+							featureGPU[iteratorFGPU].feature_data = ddata;
+							featureGPU[iteratorFGPU].type = FEATURE_LOWE;
+
+
+
+							feat = new_feature();
+							ddata = feat_detection_data( feat );
+
+							feat->img_pt.x = feat->x = keys[ik].scx;
+							feat->img_pt.y = feat->y = keys[ik].scy;
+							ddata->r = keys[ik].y;
+							ddata->c = keys[ik].x;
+							ddata->subintvl = keys[ik].subintvl;
+							ddata->octv = keys[ik].octv;
+							ddata->intvl = keys[ik].intvl;
+					
+							feat->scl = keys[ik].scl;
+							ddata->scl_octv = keys[ik].scl_octv;
+							feat->ori = keys[ik].ori;
+					
+					
+
+
+							cvSeqPush( features, feat );
+							free( feat );
+
+							iteratorFGPU++;
 						}
-					}
+
+				cout << "ckdetect number: " << number << endl;
+
+
 			}
 			else 
 			{
@@ -645,12 +730,15 @@ Based on Section 4 of Lowe's paper.
 	returned, its scale, orientation, and descriptor are yet to be determined.
 */
  feature* interp_extremum( IplImage*** dog_pyr, int octv, int intvl,
-										int r, int c, int intvls, double contr_thr )
+										int r, int c, int intvls, float contr_thr )
 {
 	feature* feat;
 	struct detection_data* ddata;
-	double xi, xr, xc, contr;
+	float xi, xr, xc, contr;
 	int i = 0;
+
+	if( c == 668 )
+		i = 0;
 
 	while( i < SIFT_MAX_INTERP_STEPS )
 	{
@@ -713,11 +801,11 @@ paper.
 */
 
  void interp_step( IplImage*** dog_pyr, int octv, int intvl, int rr, int cc,
-						 double* xi, double* xr, double* xc )
+						 float* xi, float* xr, float* xc )
 {
 	CvMat* dD, X;
-	double x[3] = { 0, 0 , 0 };
-	double xx[3] = { 0, 0 , 0 };
+	float x[3] = { 0, 0 , 0 };
+	float xx[3] = { 0, 0 , 0 };
 
 	float H[3][3];
 	float H_inv[3][3];
@@ -778,7 +866,7 @@ scale space pyramid.
  CvMat* deriv_3D( IplImage*** dog_pyr, int octv, int intvl, int r, int c )
 {
 	CvMat* dI;
-	double dx, dy, ds;
+	float dx, dy, ds;
 
 	dx = ( pixval32f( dog_pyr[octv][intvl], r, c+1 ) -
 		pixval32f( dog_pyr[octv][intvl], r, c-1 ) ) / 2.0;
@@ -814,7 +902,7 @@ Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
 */
 void hessian_3D( IplImage*** dog_pyr, int octv, int intvl, int r, int c, float H[][3] )
 {
-	double v, dxx, dyy, dss, dxy, dxs, dys;
+	float v, dxx, dyy, dss, dxy, dxs, dys;
 
 	v = pixval32f( dog_pyr[octv][intvl], r, c );
 	dxx = ( pixval32f( dog_pyr[octv][intvl], r, c+1 ) + 
@@ -869,11 +957,11 @@ Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 
 @param Returns interpolated contrast.
 */
- double interp_contr( IplImage*** dog_pyr, int octv, int intvl, int r,
-							int c, double xi, double xr, double xc )
+ float interp_contr( IplImage*** dog_pyr, int octv, int intvl, int r,
+							int c, float xi, float xr, float xc )
 {
 	CvMat* dD, X, T;
-	double t[1], x[3] = { xc, xr, xi };
+	float t[1], x[3] = { xc, xr, xi };
 
 	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
 	cvInitMatHeader( &T, 1, 1, CV_64FC1, t, CV_AUTOSTEP );
@@ -926,7 +1014,7 @@ Lowe's paper.
 */
  int is_too_edge_like( IplImage* dog_img, int r, int c, int curv_thr )
 {
-	double d, dxx, dyy, dxy, tr, det;
+	float d, dxx, dyy, dxy, tr, det;
 
 	/* principal curvatures are computed using the trace and det of Hessian */
 	d = pixval32f(dog_img, r, c);
@@ -955,11 +1043,11 @@ Calculates characteristic scale for each feature in an array.
 @param sigma amount of Gaussian smoothing per octave of scale space
 @param intvls intervals per octave of scale space
 */
- void SIFTGPU::calcFeatureScales( CvSeq* features, double sigma, int intvls )
+ void SIFTGPU::calcFeatureScales( CvSeq* features, float sigma, int intvls )
 {
 	feature* feat;
 	struct detection_data* ddata;
-	double intvl;
+	float intvl;
 	int i, n;
 
 	n = features->total;
@@ -972,8 +1060,8 @@ Calculates characteristic scale for each feature in an array.
 		feat = CV_GET_SEQ_ELEM( feature, features, i );
 		ddata = feat_detection_data( feat );
 		intvl = ddata->intvl + ddata->subintvl;//
-		feat->scl = sigma * pow( 2.0, ddata->octv + intvl / intvls );//
-		ddata->scl_octv = sigma * pow( 2.0, intvl / intvls ); //
+		feat->scl = sigma * pow( (float)2.0, ddata->octv + intvl / intvls );//
+		ddata->scl_octv = sigma * pow((float) 2.0, intvl / intvls ); //
 	}
 }
 
@@ -1016,8 +1104,8 @@ there is more than one dominant orientation at a given feature location.
 {
 	feature* feat;
 	struct detection_data* ddata;
-	double* hist;
-	double omax;
+	float* hist;
+	float omax;
 	int i, j, n = features->total;
 
 	int tmp = iteratorFGPU;
@@ -1031,25 +1119,29 @@ there is more than one dominant orientation at a given feature location.
 
 		ddata = feat_detection_data( feat );
 
+		float hist[SIFT_ORI_HIST_BINS];
+		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+							hist[j] = 0;
 
-		hist = ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
+		ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
 						ddata->r, ddata->c, SIFT_ORI_HIST_BINS,
-						cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ),
-						SIFT_ORI_SIG_FCTR * ddata->scl_octv );
+						ROUND( SIFT_ORI_RADIUS * ddata->scl_octv ),
+						SIFT_ORI_SIG_FCTR * ddata->scl_octv, hist );
 
-
+		
 		for( j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
 			smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
 
+		int maxBin = 0;
 
-		omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
+		omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
 
 		add_good_ori_features( features, hist, SIFT_ORI_HIST_BINS,
-								omax * SIFT_ORI_PEAK_RATIO, feat );
+								omax * SIFT_ORI_PEAK_RATIO, feat, maxBin );
 
 		free( ddata );
 		free( feat );
-		free( hist );
+		//free( hist );
 	}
 }
 
@@ -1068,25 +1160,30 @@ Computes a gradient orientation histogram at a specified pixel.
 @return Returns an n-element array containing an orientation histogram
 	representing orientations between 0 and 2 PI.
 */
- double* ori_hist( IplImage* img, int r, int c, int n, int rad, double sigma)
+void ori_hist( IplImage* img, int r, int c, int n, int rad, float sigma, float* hist)
 {
-	double* hist;
-	double mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
+	//float* hist;
+	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
 	int bin, i, j;
 
-	hist = (double*)calloc( n, sizeof( double ) );
+	//hist = (float*)calloc( n, sizeof( float ) );
 	exp_denom = 2.0 * sigma * sigma;
+
 	for( i = -rad; i <= rad; i++ )
 		for( j = -rad; j <= rad; j++ )
 			if( calc_grad_mag_ori( img, r + i, c + j, &mag, &ori ) )
-			{
-				w = exp( -( i*i + j*j ) / exp_denom );
-				bin = cvRound( n * ( ori + CV_PI ) / PI2 );
+			{	
+				w = exp( -(float)( i*i + j*j ) / exp_denom );
+				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
 				bin = ( bin < n )? bin : 0;
 				hist[bin] += w * mag;
+				
+				//w = exp( -( i*i + j*j ) / exp_denom );
+				//bin = cvRound( n * ( ori + CV_PI ) / PI2 );
+				//bin = ( bin < n )? bin : 0;
+				//hist[bin] += w * mag;
 			}
 
-	return hist;
 }
 
 
@@ -1103,9 +1200,9 @@ Calculates the gradient magnitude and orientation at a given pixel.
 @return Returns 1 if the specified pixel is a valid one and sets mag and
 	ori accordingly; otherwise returns 0
 */
- int calc_grad_mag_ori( IplImage* img, int r, int c, double* mag, double* ori )
+ int calc_grad_mag_ori( IplImage* img, int r, int c, float* mag, float* ori )
 {
-	double dx, dy;
+	float dx, dy;
 
 	if( r > 0  &&  r < img->height - 1  &&  c > 0  &&  c < img->width - 1 )
 	{
@@ -1128,9 +1225,9 @@ Gaussian smooths an orientation histogram.
 @param hist an orientation histogram
 @param n number of bins
 */
- void smooth_ori_hist( double* hist, int n )
+ void smooth_ori_hist( float* hist, int n )
 {
-	double prev, tmp, h0 = hist[0];
+	float prev, tmp, h0 = hist[0];
 	int i;
 
 	prev = hist[n-1];
@@ -1153,9 +1250,9 @@ Finds the magnitude of the dominant orientation in a histogram
 
 @return Returns the value of the largest bin in hist
 */
- double dominant_ori( double* hist, int n )
+ float dominant_ori( float* hist, int n, int* maxBin )
 {
-	double omax;
+	float omax;
 	int maxbin, i;
 
 	omax = hist[0];
@@ -1166,6 +1263,7 @@ Finds the magnitude of the dominant orientation in a histogram
 			omax = hist[i];
 			maxbin = i;
 		}
+	*maxBin = maxbin;
 	return omax;
 }
 
@@ -1188,11 +1286,11 @@ a specified threshold.
 @param mag_thr new features are added for entries in hist greater than this
 @param feat new features are clones of this with different orientations
 */
- void add_good_ori_features( CvSeq* features, double* hist, int n,
-								   double mag_thr, feature* feat )
+ void add_good_ori_features( CvSeq* features, float* hist, int n,
+								   float mag_thr, feature* feat, int maxBin )
 {
 	feature* new_feat;
-	double bin, PI2 = CV_PI * 2.0;
+	float bin, PI2 = CV_PI * 2.0;
 	int l, r, i;
 
 	for( i = 0; i < n; i++ )
@@ -1250,7 +1348,7 @@ of Lowe's paper.
 {
 	feature* feat;
 	struct detection_data* ddata;
-	double*** hist;
+	float*** hist;
 	int i, k = features->total;
 
 	for( i = 0; i < k; i++ )
@@ -1280,20 +1378,20 @@ descriptor.  Based on Section 6.1 of Lowe's paper.
 
 @return Returns a d x d array of n-bin orientation histograms.
 */
- double*** descr_hist( IplImage* img, int r, int c, double ori,
-							 double scl, int d, int n )
+ float*** descr_hist( IplImage* img, int r, int c, float ori,
+							 float scl, int d, int n )
 {
-	double*** hist;
-	double cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
+	float*** hist;
+	float cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
 		grad_ori, w, rbin, cbin, obin, bins_per_rad, PI2 = 2.0 * CV_PI;
 	int radius, i, j;
 
-	hist = (double***)calloc( d, sizeof( double** ) );
+	hist = (float***)calloc( d, sizeof( float** ) );
 	for( i = 0; i < d; i++ )
 	{
-		hist[i] = (double**)calloc( d, sizeof( double* ) );
+		hist[i] = (float**)calloc( d, sizeof( float* ) );
 		for( j = 0; j < d; j++ )
-			hist[i][j] = (double*)calloc( n, sizeof( double ) );
+			hist[i][j] = (float*)calloc( n, sizeof( float ) );
 	}
 
 	cos_t = cos( ori );
@@ -1347,11 +1445,11 @@ the feature descriptor.
 @param d width of 2D array of orientation histograms
 @param n number of bins per orientation histogram
 */
- void interp_hist_entry( double*** hist, double rbin, double cbin,
-							   double obin, double mag, int d, int n )
+ void interp_hist_entry( float*** hist, float rbin, float cbin,
+							   float obin, float mag, int d, int n )
 {
-	double d_r, d_c, d_o, v_r, v_c, v_o;
-	double** row, * h;
+	float d_r, d_c, d_o, v_r, v_c, v_o;
+	float** row, * h;
 	int r0, c0, o0, rb, cb, ob, r, c, o;
 
 	r0 = cvFloor( rbin );
@@ -1403,7 +1501,7 @@ vector.
 @param n bins per histogram
 @param feat feature into which to store descriptor
 */
- void hist_to_descr( double*** hist, int d, int n, feature* feat )
+ void hist_to_descr( float*** hist, int d, int n, feature* feat )
 {
 	int int_val, i, r, c, o, k = 0;
 
@@ -1436,7 +1534,7 @@ Normalizes a feature's descriptor vector to unitl length
 */
  void normalize_descr( feature* feat )
 {
-	double cur, len_inv, len_sq = 0.0;
+	float cur, len_inv, len_sq = 0.0;
 	int i, d = feat->d;
 
 	for( i = 0; i < d; i++ )
@@ -1482,7 +1580,7 @@ De-allocates memory held by a descriptor histogram
 @param hist pointer to a 2D array of orientation histograms
 @param d width of hist
 */
- void release_descr_hist( double**** hist, int d )
+ void release_descr_hist( float**** hist, int d )
 {
 	int i, j;
 
@@ -1554,5 +1652,651 @@ De-allocates memory held by a scale space pyramid
 void SIFTGPU::DoSift()
 {
 	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* width of border in which to ignore keypoints */
+#define SIFT_IMG_BORDER 5
+
+
+
+/** default number of sampled intervals per octave */
+#define SIFT_INTVLS 3
+
+/** default threshold on keypoint contrast |D(x)| */
+#define SIFT_CONTR_THR 0.04
+
+/** default threshold on keypoint ratio of principle curvatures */
+#define SIFT_CURV_THR 10
+
+/** default sigma for initial gaussian smoothing */
+#define SIFT_SIGMA		1.6
+
+/** default number of sampled intervals per octave */
+#define SIFT_INTVLS		3
+
+/* determines gaussian sigma for orientation assignment */
+#define SIFT_ORI_SIG_FCTR 1.5
+
+/* determines the radius of the region used in orientation assignment */
+#define SIFT_ORI_RADIUS 3.0 * SIFT_ORI_SIG_FCTR
+
+/* default number of bins in histogram for orientation assignment */
+#define SIFT_ORI_HIST_BINS 36
+
+/* number of passes of orientation histogram smoothing */
+#define SIFT_ORI_SMOOTH_PASSES 2
+
+/* orientation magnitude relative to max that results in new feature */
+#define SIFT_ORI_PEAK_RATIO 0.8
+
+#define CV_PI   3.1415926535897932384626433832795
+
+/* absolute value */
+#define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
+
+#define ROUND(x) ( ( x - (int)x ) <= 0.5 ? (int)x :  (int)x + 1 )
+
+/*
+Interpolates a histogram peak from left, center, and right values
+*/
+#define interp_hist_peak( l, c, r ) ( 0.5 * ((l)-(r)) / ((l) - 2.0*(c) + (r)) )
+
+
+
+
+float GetPixel( float* dataIn, int x, int y, int ImageWidth, int ImageHeight )
+{
+	int X = x > ImageWidth  ? ImageWidth  : x;
+	int Y = y > ImageHeight ? ImageHeight : y;
+	int GMEMOffset = Y * ImageWidth + X;
+
+	return dataIn[GMEMOffset];
+}
+
+
+/*
+Determines whether a pixel is a scale-space extremum by comparing it to it's
+3x3x3 pixel neighborhood.
+
+@return Returns 1 if the specified pixel is an extremum (max or min) among
+	it's 3x3x3 pixel neighborhood.
+*/
+int is_extremum( float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight )
+{
+	float val = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+
+	int i, j, k;
+
+	/* check for maximum */
+	if( val > 0 )
+	{
+			for( j = -1; j <= 1; j++ )
+				for( k = -1; k <= 1; k++ )
+				{
+					if( val < GetPixel(dataIn1, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val < GetPixel(dataIn2, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val < GetPixel(dataIn3, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+				}
+	}
+
+	/* check for minimum */
+	else
+	{
+			for( j = -1; j <= 1; j++ )
+				for( k = -1; k <= 1; k++ )
+				{
+					if( val > GetPixel(dataIn1, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val > GetPixel(dataIn2, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+					if( val > GetPixel(dataIn3, pozX+j, pozY+k, ImageWidth, ImageHeight) )
+						return 0;
+				}
+	}
+
+
+
+	return 1;
+	
+	/*if( val > 0.0 )
+	{
+		
+				if( val < GetPixel(dataIn1, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val < GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val < GetPixel(dataIn1, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn1, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val < GetPixel(dataIn3, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+	}
+	else 
+	{
+				if( val > GetPixel(dataIn1, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX-1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX-1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val > GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+
+				if( val > GetPixel(dataIn1, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY-1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn1, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+				if( val > GetPixel(dataIn3, pozX+1, pozY+1, ImageWidth, ImageHeight) )
+					return 0;
+	}
+
+	
+	
+	return 1;*/
+}
+
+/*
+Computes the partial derivatives in x, y, and scale of a pixel in the DoG
+scale space pyramid
+*/
+void deriv_3D(  float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float* dI )
+{
+	float dx, dy, ds;
+	dx = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) ) / 2.0;
+	dy = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) ) / 2.0;
+	ds = ( GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) - GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) ) / 2.0;
+	dI[0] = dx;
+	dI[1] = dy;
+	dI[2] = ds;
+}
+
+/*
+Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
+	/ Ixx  Ixy  Ixs \ <BR>
+	| Ixy  Iyy  Iys | <BR>
+	\ Ixs  Iys  Iss /
+*/
+void hessian_3D(  float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float H[][3] )
+{
+	float v, dxx, dyy, dss, dxy, dxs, dys;
+
+	v = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+
+	dxx = ( GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight) + 
+			GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) - 2 * v );
+
+	dyy = ( GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) - 2 * v );
+
+	dss = ( GetPixel(dataIn3, pozX, pozY, ImageWidth, ImageHeight) +
+			GetPixel(dataIn1, pozX, pozY, ImageWidth, ImageHeight) - 2 * v );
+
+	dxy = ( GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
+
+	dxs = ( GetPixel(dataIn3, pozX+1, pozY, ImageWidth, ImageHeight) -
+			GetPixel(dataIn3, pozX-1, pozY, ImageWidth, ImageHeight) -
+			GetPixel(dataIn1, pozX+1, pozY, ImageWidth, ImageHeight) +
+			GetPixel(dataIn1, pozX-1, pozY, ImageWidth, ImageHeight) ) / 4.0;
+
+	dys = ( GetPixel(dataIn3, pozX, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn3, pozX, pozY-1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn1, pozX, pozY+1, ImageWidth, ImageHeight) +
+			GetPixel(dataIn1, pozX, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
+
+
+
+	H[0][0] = dxx;
+	H[0][1] = dxy;
+	H[0][2] = dxs;
+	H[1][0] = dxy;
+	H[1][1] = dyy;
+	H[1][2] = dys;
+	H[2][0] = dxs;
+	H[2][1] = dys;
+	H[2][2] = dss;
+}
+
+
+
+
+
+/*
+Performs one step of extremum interpolation.  Based on Eqn. (3) in Lowe's
+paper.
+*/
+void interp_step( float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight,
+						 float* xi, float* xr, float* xc )
+{
+	
+	float dD[3] = { 0, 0 , 0 };
+	float H[3][3];
+	float H_inv[3][3];
+
+	deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, dD);
+	hessian_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, H);
+
+	float a = H[0][0];
+	float b = H[0][1];
+	float c = H[0][2];
+	float d = H[1][0];
+	float e = H[1][1];
+	float f = H[1][2];
+	float g = H[2][0];
+	float h = H[2][1];
+	float k = H[2][2];
+
+	float det = a*(e*k - f*h) + b*(f*g - k*d) + c*(d*h - e*g);
+	float det_inv = 1.0 / det;
+
+	H_inv[0][0] = (e*k - f*h)*det_inv;
+	H_inv[0][1] = (c*h - b*k)*det_inv;
+	H_inv[0][2] = (b*f - c*e)*det_inv;
+
+	H_inv[1][0] = (f*g - d*k)*det_inv;
+	H_inv[1][1] = (a*k - c*g)*det_inv;
+	H_inv[1][2] = (c*d - a*f)*det_inv;
+
+	H_inv[2][0] = (d*h - e*g)*det_inv;
+	H_inv[2][1] = (g*b - a*h)*det_inv;
+	H_inv[2][2] = (a*e - b*d)*det_inv;
+
+	*xc = (-1)*( H_inv[0][0]*dD[0] + H_inv[1][0]*dD[1] + H_inv[2][0]*dD[2]);
+	*xr = (-1)*( H_inv[0][1]*dD[0] + H_inv[1][1]*dD[1] + H_inv[2][1]*dD[2]);
+	*xi = (-1)*( H_inv[0][2]*dD[0] + H_inv[1][2]*dD[1] + H_inv[2][2]*dD[2]);
+}
+
+
+
+/*
+Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
+
+@param Returns interpolated contrast.
+*/
+float interp_contr( float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, float xi, float xr, float xc )
+{
+	float dD[3] = { 0, 0, 0 };
+	deriv_3D(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, dD);
+	float res = xc*dD[0] + xr*dD[1] + xi*dD[2];
+
+	return GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight) + res * 0.5;
+}
+
+
+float interp_extremum( float* dataIn1,  float* dataIn2,  float* dataIn3, int pozX, int pozY, int ImageWidth, int ImageHeight, 
+	int intvls, float contr_thr, int intvl, float* xi, float* xr, float* xc )
+{
+	
+	float contr;
+
+	int i = 0;
+	int siftMaxInterpSteps = 5;
+
+	if( pozX == 668 )
+		i = 0;
+
+	while( i < siftMaxInterpSteps )
+	{
+		interp_step(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, xi, xr, xc );
+		
+		if( ABS(*xi) <= 0.5 && ABS(*xr) <= 0.5 && ABS(*xc) <= 0.5 )
+			break;
+		
+		pozX += ROUND( *xc);
+		pozY += ROUND( *xr );
+		intvl += ROUND( *xc );
+
+		if( intvl < 1  ||
+			intvl > intvls  ||
+			pozX < SIFT_IMG_BORDER  ||
+			pozY < SIFT_IMG_BORDER  ||
+			pozX >= ImageWidth - SIFT_IMG_BORDER  ||
+			pozY >= ImageHeight - SIFT_IMG_BORDER )
+		{
+			return 0;
+		}
+		i++;
+	}
+
+	/* ensure convergence of interpolation */
+	if( i >= siftMaxInterpSteps )
+		return 0;
+
+	contr = interp_contr(dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, *xi, *xr, *xc );
+	if( (float)ABS( contr ) < (float)contr_thr / (float)intvls )
+		return 0;
+
+	return 1;
+}
+
+/*
+Determines whether a feature is too edge like to be stable by computing the
+ratio of principal curvatures at that feature.  Based on Section 4.1 of
+Lowe's paper.
+
+@return Returns 0 if the feature at (r,H[0][2]) in dog_img is sufficiently
+	corner-like or 1 otherwise.
+*/
+ int is_too_edge_like( float* dataIn2, int pozX, int pozY, int ImageWidth, int ImageHeight, int curv_thr )
+{
+	float d, dxx, dyy, dxy, tr, det;
+
+	/* principal curvatures are computed using the trace and det of Hessian */
+	d = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+	dxx = GetPixel(dataIn2, pozX+1, pozY, ImageWidth, ImageHeight)  + GetPixel(dataIn2, pozX-1, pozY, ImageWidth, ImageHeight) - 2 * d;
+	dyy = GetPixel(dataIn2, pozX, pozY+1, ImageWidth, ImageHeight) + GetPixel(dataIn2, pozX, pozY-1, ImageWidth, ImageHeight) - 2 * d;
+	dxy = ( GetPixel(dataIn2, pozX+1, pozY+1, ImageWidth, ImageHeight) - GetPixel(dataIn2, pozX-1, pozY+1, ImageWidth, ImageHeight) -
+			GetPixel(dataIn2, pozX+1, pozY-1, ImageWidth, ImageHeight) + GetPixel(dataIn2, pozX-1, pozY-1, ImageWidth, ImageHeight) ) / 4.0;
+	tr = dxx + dyy;
+	det = dxx * dyy - dxy * dxy;
+
+	/* negative determinant -> curvatures have different signs; reject feature */
+	if( det <= 0 )
+		return 1;
+
+	if( tr * tr / det < ( curv_thr + 1.0 )*( curv_thr + 1.0 ) / curv_thr )
+		return 0;
+	return 1;
+}
+
+
+ /*
+Calculates the gradient magnitude and orientation at a given pixel.
+
+
+@return Returns 1 if the specified pixel is a valid one and sets mag and
+	ori accordingly; otherwise returns 0
+*/
+ int calc_grad_mag_ori( float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* mag, float* ori )
+{
+	float dx, dy;
+
+	if( pozX > 0  &&  pozX < ImageWidth - 1  &&  pozY > 0  &&  pozY < ImageHeight - 1 )
+	{
+		dx = GetPixel(gauss_pyr, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX-1, pozY, ImageWidth, ImageHeight);
+		dy =  GetPixel(gauss_pyr, pozX, pozY-1, ImageWidth, ImageHeight) - GetPixel(gauss_pyr, pozX, pozY+1, ImageWidth, ImageHeight);
+		*mag = sqrt( dx*dx + dy*dy );
+		*ori = atan2( dy, dx );
+		return 1;
+	}
+
+	else
+		return 0;
+}
+
+
+ /*
+Computes a gradient orientation histogram at a specified pixel.
+
+
+@return Returns an n-element array containing an orientation histogram
+	representing orientations between 0 and 2 PI.
+*/
+void ori_hist( float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* hist, int n, int rad, float sigma)
+{
+	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
+	int bin, i, j;
+
+	exp_denom = 2.0 * sigma * sigma;
+
+	for( i = -rad; i <= rad; i++ )
+		for( j = -rad; j <= rad; j++ )
+			if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
+			{	
+				w = exp( -(float)( i*i + j*j ) / exp_denom );
+				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
+				bin = ( bin < n )? bin : 0;
+				hist[bin] += w * mag;
+			}
+
+
+}
+
+
+
+/*
+Adds features to an array for every orientation in a histogram greater than
+a specified threshold.
+
+*/
+void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, int* numberOrient )
+{
+
+	float bin, PI2 = CV_PI * 2.0;
+	int l, r, i;
+
+	for( i = 0; i < n; i++ )
+	{
+		l = ( i == 0 )? n - 1 : i-1;
+		r = ( i + 1 ) % n;
+
+		if( hist[i] > hist[l]  &&  hist[i] > hist[r]  &&  hist[i] >= mag_thr )
+		{
+
+			bin = i + interp_hist_peak( hist[l], hist[i], hist[r] );
+			bin = ( bin < 0 )? n + bin : ( bin >= n )? bin - n : bin;
+
+			orients[*numberOrient] = ( ( PI2 * bin ) / n ) - CV_PI;
+
+			++(*numberOrient);
+		}
+	}
+}
+
+
+void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_pyr,  float* ucDest,
+						 int* numberExtrema,  float* keys,
+						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv,  int* number,  int* numberRej, int pozX, int pozY)
+{
+	//int pozX = get_global_id(0);
+	//int pozY = get_global_id(1);
+	int GMEMOffset = pozY *ImageWidth + pozX;
+	
+	float xc;
+	float xr;
+	float xi;
+
+	int numberExt = 0;
+
+	if( pozX < ImageWidth-SIFT_IMG_BORDER && pozY < ImageHeight-SIFT_IMG_BORDER && pozX > SIFT_IMG_BORDER && pozY > SIFT_IMG_BORDER )
+	{
+		
+		float pixel = GetPixel(dataIn2, pozX, pozY, ImageWidth, ImageHeight);
+		
+		if( ABS(pixel) > prelim_contr_thr )
+		{
+			
+
+			if( is_extremum( dataIn1, dataIn2, dataIn2, pozX, pozY, ImageWidth, ImageHeight) == 1 )
+			{
+
+				float feat = interp_extremum( dataIn1, dataIn2, dataIn3, pozX, pozY, ImageWidth, ImageHeight, SIFT_INTVLS, SIFT_CONTR_THR, intvl, &xi, &xr, &xc);
+				if( feat )
+				{
+					if( is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) != 1 )
+					{
+
+						float intvl2 = intvl + xi;  //intvl = ddata->intvl + ddata->subintvl;//
+
+						float	scx = (float)(( pozX + xc ) * pow( (float)2.0, (float)octv ) / 2.0);
+						float	scy = (float)(( pozY + xr ) * pow( (float)2.0, (float)octv ) / 2.0);
+						float	x = pozX;
+						float	y = pozY;
+						float	subintvl = xi;
+						float	intvlRes = intvl;
+						float	octvRes = octv;
+						float	scl = (SIFT_SIGMA * pow( (float)2.0, (octv + intvl2 / (float)SIFT_INTVLS) )) / 2.0;  //sigma * pow( (float)2.0, ddata->octv + intvl / intvls );//
+						float	scl_octv = SIFT_SIGMA * pow( (float)2.0, (float)(intvl2 / SIFT_INTVLS) );
+						float	ori = 0;
+						float	mag = 0;
+
+						float hist[SIFT_ORI_HIST_BINS];
+						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+							hist[j] = 0;
+
+						ori_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
+										ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
+
+
+
+						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
+							smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
+
+						int maxBin = 0;
+
+						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
+
+						float orients[SIFT_ORI_HIST_BINS];
+						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+							orients[j] = 0;
+
+						int numberOrient = 0;
+
+						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
+
+						int j = 0;
+						for(j = 0; j < numberOrient; j++ )
+						{
+
+							numberExt = (*number)++;
+
+							keys[numberExt*11] = scx;
+							keys[numberExt*11 + 1] = scy;
+							keys[numberExt*11 + 2] = x;
+							keys[numberExt*11 + 3] = y;
+							keys[numberExt*11 + 4] = subintvl;
+							keys[numberExt*11 + 5] = intvlRes;
+							keys[numberExt*11 + 6] = octvRes;
+							keys[numberExt*11 + 7] = scl;
+							keys[numberExt*11 + 8] = scl_octv;
+							keys[numberExt*11 + 9] = orients[j];
+							keys[numberExt*11 + 10] = omax;
+
+						}
+
+
+					}
+				}
+				
+			} else {
+				//ucDest[GMEMOffset] = 0.5;
+				//atomic_add(numberRej, (int)1);
+			}
+		}
+	} else {
+		
+	}
 
 }

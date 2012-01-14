@@ -42,8 +42,8 @@ struct detection_data
 	int c;
 	int octv;
 	int intvl;
-	double subintvl;
-	double scl_octv;
+	float subintvl;
+	float scl_octv;
 };
 
 struct Feature;
@@ -64,7 +64,7 @@ struct Feature;
 /** default threshold on keypoint ratio of principle curvatures */
 #define SIFT_CURV_THR	10
 
-/** double image size before pyramid construction? */
+/** float image size before pyramid construction? */
 #define SIFT_IMG_DBL	1
 
 /** default width of descriptor histogram array */
@@ -109,8 +109,9 @@ struct Feature;
 /* returns a feature's detection data */
 #define feat_detection_data(f) ( (struct detection_data*)(f->feature_data) )
 
+#define ROUND(x) ( ( x - (int)x ) <= 0.5 ? (int)x :  (int)x + 1 )
 
-#define	SIFTCPU		0
+#define	SIFTCPU		1
 
 
 class SIFTGPU
@@ -122,8 +123,8 @@ class SIFTGPU
 		char* out_img_name;
 		int display;
 		int intvls;
-		double sigma;
-		double contr_thr;
+		float sigma;
+		float contr_thr;
 		int curv_thr;
 		int img_dbl;
 		int descr_width;
@@ -147,20 +148,20 @@ class SIFTGPU
 		void DoSift();
 
 		int _sift_features( IplImage* img, feature** feat, int intvls,
-						  double sigma, double contr_thr, int curv_thr,
+						  float sigma, float contr_thr, int curv_thr,
 						  int img_dbl, int descr_width, int descr_hist_bins );
 
 		int sift_features( IplImage* img, feature** feat );
 
-		IplImage* createInitImg( IplImage*, int, double );
+		IplImage* createInitImg( IplImage*, int, float );
 
-		IplImage*** buildGaussPyr( IplImage*, int, int, double );
+		IplImage*** buildGaussPyr( IplImage*, int, int, float );
 
 		IplImage*** buildDogPyr( IplImage***, int, int );
 
-		CvSeq* scaleSpaceExtrema( IplImage***, int, int, double, int, CvMemStorage*);
+		CvSeq* scaleSpaceExtrema( IplImage***, int, int, float, int, CvMemStorage*);
 
-		void calcFeatureScales( CvSeq*, double, int );
+		void calcFeatureScales( CvSeq*, float, int );
 
 		void adjustForImgDbl( CvSeq* );
 
