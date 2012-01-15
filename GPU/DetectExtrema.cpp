@@ -75,8 +75,10 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	GPUError |= clSetKernelArg(GPUKernel, 13, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
-	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
 
+	
+	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
+	
 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
 	CheckError(GPUError);

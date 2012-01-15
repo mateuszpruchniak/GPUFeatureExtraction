@@ -147,12 +147,12 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	if(SIFTCPU)
 	{
 
-		//calcFeatureScales( features, sigma, intvls );
+		calcFeatureScales( features, sigma, intvls );
 
-		//if( img_dbl )
-		//	adjustForImgDbl( features );
+		if( img_dbl )
+			adjustForImgDbl( features );
 
-		//calc_feature_oris( features, gauss_pyr );
+		calc_feature_oris( features, gauss_pyr );
 		
 		compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
 
@@ -471,10 +471,26 @@ based on contrast and ratio of principal curvatures.
 	int numberExtrema = 0;
 	int number = 0;
 	int numberRej = 0;
+	
+	IplImage* img = cvCreateImage( cvGetSize(dog_pyr[0][0]), 32, 1 );
 
+	cvZero(img);
 	iteratorFGPU = 0;
 
 	features = cvCreateSeq( 0, sizeof(CvSeq), sizeof(feature), storage );
+
+
+	/************************ GPU **************************/
+	detectExt->CreateBuffersIn(dog_pyr[0][0]->width*dog_pyr[0][0]->height*sizeof(float),4);
+	detectExt->CreateBuffersOut(img->width*img->height*sizeof(float),1);
+	/************************ GPU **************************/
+
+
+
+	clock_t start, finish;
+	double duration = 0;
+	start = clock();
+
 	for( o = 0; o < octvs; o++ )
 		for( i = 1; i <= intvls; i++ )
 		{
@@ -510,7 +526,7 @@ based on contrast and ratio of principal curvatures.
 					/* perform preliminary check on contrast */
 				{
 					
-						/*if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
+						if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
 						{
 							if( is_extremum( dog_pyr, o, i, r, c ) )
 							{
@@ -531,70 +547,18 @@ based on contrast and ratio of principal curvatures.
 									free( feat );
 								}
 							}
-						}*/
-
-						
-
-						ckDetect( (float*)dog_pyr[o][i-1]->imageData, (float*)dog_pyr[o][i]->imageData, (float*)dog_pyr[o][i+1]->imageData, (float*)gauss_pyr[o][i]->imageData ,  (float*)img->imageData,
-									&numberExtrema, (float*)keys, dog_pyr[o][i]->width, dog_pyr[o][i]->height, prelim_contr_thr, i, o,  &number,  &numberRej, c, r);
-
-						
-						int tot = features->total;
-
+						}
 					
 				}
-						struct detection_data* ddata;
-
-						for(int ik = 0; ik < number ; ik++)
-						{ 
-
-							
-
-							feat = new_feature();
-							ddata = feat_detection_data( feat );
-
-							feat->img_pt.x = feat->x = keys[ik].scx;
-							feat->img_pt.y = feat->y = keys[ik].scy;
-							ddata->r = keys[ik].y;
-							ddata->c = keys[ik].x;
-							ddata->subintvl = keys[ik].subintvl;
-							ddata->octv = keys[ik].octv;
-							ddata->intvl = keys[ik].intvl;
-					
-							feat->scl = keys[ik].scl;
-							ddata->scl_octv = keys[ik].scl_octv;
-							feat->ori = keys[ik].ori;
-							feat->d = 128;
-
-							for(int i = 0; i < 128 ; i++ )
-							{
-								feat->descr[i] = keys[ik].desc[i];
-							}
-
-
-							cvSeqPush( features, feat );
-							free( feat );
-
-						}
-
-				cout << "ckdetect number: " << number << endl;
-
-
 			}
 			else 
 			{
-				IplImage* img = cvCreateImage( cvGetSize(dog_pyr[o][i]), 32, 1 );
-				cvZero(img);
 				num = 0;
-				detectExt->CreateBuffersIn(dog_pyr[o][i]->width*dog_pyr[o][i]->height*sizeof(float),4);
-				detectExt->CreateBuffersOut(img->width*img->height*sizeof(float),1);
+
+				
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i] );
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
-				detectExt->ReceiveImageData(img);
-
-				//cvNamedWindow( "detectExt", 1 );
-				//cvShowImage( "detectExt", img );
-				//cvWaitKey( 0 );
+				//detectExt->ReceiveImageData(img);
 				
 				number = num;
 
@@ -602,11 +566,8 @@ based on contrast and ratio of principal curvatures.
 
 				for(int ik = 0; ik < number ; ik++)
 				{ 
-
-
 					feat = new_feature();
 					ddata = feat_detection_data( feat );
-
 					feat->img_pt.x = feat->x = keys[ik].scx;
 					feat->img_pt.y = feat->y = keys[ik].scy;
 					ddata->r = keys[ik].y;
@@ -614,7 +575,6 @@ based on contrast and ratio of principal curvatures.
 					ddata->subintvl = keys[ik].subintvl;
 					ddata->octv = keys[ik].octv;
 					ddata->intvl = keys[ik].intvl;
-					
 					feat->scl = keys[ik].scl;
 					ddata->scl_octv = keys[ik].scl_octv;
 					feat->ori = keys[ik].ori;
@@ -625,21 +585,19 @@ based on contrast and ratio of principal curvatures.
 						feat->descr[i] = keys[ik].desc[i];
 					}
 
-
 					cvSeqPush( features, feat );
 					free( feat );
-
 				}
 				
-				int tot = features->total;
 
 			}
 			/************************ GPU **************************/
-
-			//cvSaveImage( "C:\\Users\\Mati\\Pictures\\scene.jpg", img, NULL );
-
-			
 		}
+
+		finish = clock();
+		duration = (double)(finish - start) / CLOCKS_PER_SEC;
+		cout << "SIFT netto: " << endl;
+		cout << duration << endl;
 
 	return features;
 }

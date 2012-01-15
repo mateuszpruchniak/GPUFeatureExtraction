@@ -70,49 +70,49 @@ int main()
 	int n = 0;
 
 
-	//SIFTGPU* siftGPU = new SIFTGPU();
+	SIFTGPU* siftGPU = new SIFTGPU();
 
-	//fprintf( stderr, "Finding SIFT features...\n" );
-	//img = cvLoadImage( img_file_name, 1 );
-	//if( ! img )
-	//{
-	//	fprintf( stderr, "unable to load image from %s", img_file_name );
-	//	exit( 1 );
-	//}
+	fprintf( stderr, "Finding SIFT features...\n" );
+	img = cvLoadImage( img_file_name, 1 );
+	if( ! img )
+	{
+		fprintf( stderr, "unable to load image from %s", img_file_name );
+		exit( 1 );
+	}
 
-	//clock_t start, finish;
-	//double duration = 0;
-	//start = clock();
+	clock_t start, finish;
+	double duration = 0;
+	start = clock();
 
-	//for(int i = 0 ; i < 1 ; i++ )
-	//{
-	//	n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
-	//						img_dbl, descr_width, descr_hist_bins );
-	//}
-	//finish = clock();
-	//duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	//cout << "ExtractKeypointDescriptors: " << endl;
-	//cout << duration << endl;
+	for(int i = 0 ; i < 1 ; i++ )
+	{
+		n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
+							img_dbl, descr_width, descr_hist_bins );
+	}
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << "ExtractKeypointDescriptors: " << endl;
+	cout << duration << endl;
 
-	//fprintf( stderr, "Found %d features.\n", n );
-
-
-
-	//if( display )
-	//{
-	//	draw_features( img, features, n );
-	//	cvNamedWindow( img_file_name, 1 );
-	//	cvShowImage( img_file_name, img );
-	//	cvWaitKey( 0 );
-	//}
-
-	//if( out_file_name != NULL )
-	//	export_features( out_file_name, features, n );
-
-	//if( out_img_name != NULL )
-	//	cvSaveImage( out_img_name, img, NULL );
+	fprintf( stderr, "Found %d features.\n", n );
 
 
+
+	if( display )
+	{
+		draw_features( img, features, n );
+		cvNamedWindow( img_file_name, 1 );
+		cvShowImage( img_file_name, img );
+		cvWaitKey( 0 );
+	}
+
+	if( out_file_name != NULL )
+		export_features( out_file_name, features, n );
+
+	if( out_img_name != NULL )
+		cvSaveImage( out_img_name, img, NULL );
+
+/*
 	SIFTGPU* siftGPU = new SIFTGPU();
 
 	int tmp = cvRound( 0.5 );
@@ -183,7 +183,7 @@ int main()
 	cvNamedWindow( "Matches", 1 );
 	cvShowImage( "Matches", stacked );
 	cvWaitKey( 0 );
-
+*/
 
 	/* 
 	UNCOMMENT BELOW TO SEE HOW RANSAC FUNCTION WORKS

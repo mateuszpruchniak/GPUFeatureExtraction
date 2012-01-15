@@ -129,24 +129,33 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 	if(buffersListIn == NULL)
 		return false;
 
-	imageHeight = img->height;
-	imageWidth = img->width;
+	//clock_t start, finish;
+	//double duration = 0;
+	//start = clock();
 
-	sizeBuffersIn[0] = img->width*img->height*sizeof(float);
-	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->width*img->height*sizeof(float) , (void*)img->imageData, 0, NULL, NULL);
-	CheckError(GPUError);
+		imageHeight = img->height;
+		imageWidth = img->width;
 
-	va_list arg_ptr;
-	va_start(arg_ptr, img);
-	
-	for(int i = 1 ; i<numberOfBuffersIn ; i++)
-	{
-		IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
-		sizeBuffersIn[i] = tmpImg->width*tmpImg->height*sizeof(float);
-		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*sizeof(float) , (void*)tmpImg->imageData, 0, NULL, NULL);
+		sizeBuffersIn[0] = img->width*img->height*sizeof(float);
+		GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[0], CL_TRUE, 0, img->width*img->height*sizeof(float) , (void*)img->imageData, 0, NULL, NULL);
 		CheckError(GPUError);
-	}
-	va_end(arg_ptr);
+
+		va_list arg_ptr;
+		va_start(arg_ptr, img);
+	
+		for(int i = 1 ; i<numberOfBuffersIn ; i++)
+		{
+			IplImage* tmpImg = va_arg(arg_ptr, IplImage*);
+			sizeBuffersIn[i] = tmpImg->width*tmpImg->height*sizeof(float);
+			GPUError = clEnqueueWriteBuffer(GPUCommandQueue, buffersListIn[i], CL_TRUE, 0, tmpImg->width*tmpImg->height*sizeof(float) , (void*)tmpImg->imageData, 0, NULL, NULL);
+			CheckError(GPUError);
+		}
+		va_end(arg_ptr);
+
+	//finish = clock();
+	//duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	//cout << "SEND IMG TO GPU: " << endl;
+	//cout << duration << endl;
 }
 
 
