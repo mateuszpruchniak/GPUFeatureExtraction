@@ -55,7 +55,7 @@ int main()
 	char* img2_file = "D:\\scene.jpg";
 
 	char* img_file_name = "D:\\scene.jpg";
-	char* out_file_name  = "C:\\Users\\Mati\\Pictures\\scene.sift";;
+	char* out_file_name  = "D:\\h1.sift";;
 	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut.jpg";
 	int display = 1;
 	int intvls = SIFT_INTVLS;
@@ -83,17 +83,17 @@ int main()
 	clock_t start, finish;
 	double duration = 0;
 	start = clock();
-
-	for(int i = 0 ; i < 1 ; i++ )
-	{
-		n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
-							img_dbl, descr_width, descr_hist_bins );
-	}
+		for(int i = 0 ; i < 1 ; i++ )
+		{
+			n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
+								img_dbl, descr_width, descr_hist_bins );
+		}
 	finish = clock();
 	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << "ExtractKeypointDescriptors: " << endl;
+	cout << endl;
+	cout << "SIFT " << SIFTCPU << ": ";;
 	cout << duration << endl;
-
+	cout << endl;
 	fprintf( stderr, "Found %d features.\n", n );
 
 
@@ -112,7 +112,8 @@ int main()
 	if( out_img_name != NULL )
 		cvSaveImage( out_img_name, img, NULL );
 
-/*
+
+	/*
 	SIFTGPU* siftGPU = new SIFTGPU();
 
 	int tmp = cvRound( 0.5 );
@@ -144,6 +145,10 @@ int main()
 
 		n1 = siftGPU->_sift_features( img1, &feat1, intvls, sigma, contr_thr, curv_thr,
 								img_dbl, descr_width, descr_hist_bins );
+
+		if( out_file_name != NULL )
+			export_features( out_file_name, feat1, n1 );
+
 
 		fprintf( stderr, "Finding features in %s...\n", img2_file );
 
@@ -183,7 +188,7 @@ int main()
 	cvNamedWindow( "Matches", 1 );
 	cvShowImage( "Matches", stacked );
 	cvWaitKey( 0 );
-*/
+
 
 	/* 
 	UNCOMMENT BELOW TO SEE HOW RANSAC FUNCTION WORKS

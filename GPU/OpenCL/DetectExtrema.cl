@@ -464,6 +464,7 @@ void ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int
 
 	exp_denom = 2.0 * sigma * sigma;
 
+	
 	for( i = -rad; i <= rad; i++ )
 		for( j = -rad; j <= rad; j++ )
 			if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
@@ -491,6 +492,7 @@ Gaussian smooths an orientation histogram.
 	int i;
 
 	prev = hist[n-1];
+	
 	for( i = 0; i < n; i++ )
 	{
 		tmp = hist[i];
@@ -516,6 +518,8 @@ float dominant_ori( float* hist, int n, int* maxBin )
 
 	omax = hist[0];
 	maxbin = 0;
+
+	
 	for( i = 1; i < n; i++ )
 		if( hist[i] > omax )
 		{
@@ -539,6 +543,7 @@ void add_good_ori_features(float* hist, int n, float mag_thr, float* orients, in
 	float bin, PI2 = CV_PI * 2.0;
 	int l, r, i;
 
+	
 	for( i = 0; i < n; i++ )
 	{
 		l = ( i == 0 )? n - 1 : i-1;
@@ -581,6 +586,8 @@ the feature descriptor.
 	is multiplied by a weight of 1 - d for each dimension, where d is the
 	distance from the center value of the bin measured in bin units.
 	*/
+
+	
 	for( r = 0; r <= 1; r++ )
 	{
 		rb = r0 + r;
@@ -632,7 +639,7 @@ void descr_hist(__global float* gauss_pyr,  int pozX, int pozY, int ImageWidth, 
 	radius = hist_width * sqrt(2.0) * ( d + 1.0 ) * 0.5 + 0.5;
 
 
-
+	
 	for( i = -radius; i <= radius; i++ )
 		for( j = -radius; j <= radius; j++ )
 		{
@@ -681,6 +688,7 @@ Normalizes a feature's descriptor vector to unitl length
 		len_sq += cur*cur;
 	}
 	len_inv = 1.0 / sqrt( len_sq );
+
 	for( i = 0; i < 128; i++ )
 		desc[i] *= len_inv;
 }
@@ -719,7 +727,7 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 					if( is_too_edge_like( dataIn2, pozX, pozY, ImageWidth, ImageHeight, SIFT_CURV_THR ) != 1 )
 					{
 
-						float intvl2 = intvl + xi;  //intvl = ddata->intvl + ddata->subintvl;//
+						float intvl2 = intvl + xi; 
 
 						float	scx = (float)(( pozX + xc ) * pow( (float)2.0, (float)octv ) / 2.0);
 						float	scy = (float)(( pozY + xr ) * pow( (float)2.0, (float)octv ) / 2.0);
@@ -728,19 +736,20 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						float	subintvl = xi;
 						float	intvlRes = intvl;
 						float	octvRes = octv;
-						float	scl = (SIFT_SIGMA * pow( (float)2.0, (octv + intvl2 / (float)SIFT_INTVLS) )) / 2.0;  //sigma * pow( (float)2.0, ddata->octv + intvl / intvls );//
+						float	scl = (SIFT_SIGMA * pow( (float)2.0, (octv + intvl2 / (float)SIFT_INTVLS) )) / 2.0;  
 						float	scl_octv = SIFT_SIGMA * pow( (float)2.0, (float)(intvl2 / SIFT_INTVLS) );
 						float	ori = 0;
 						float	mag = 0;
 
 						float hist[SIFT_ORI_HIST_BINS];
+						
 						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
 							hist[j] = 0;
 
 						ori_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
 										ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
 
-
+						
 						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
 							smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
 
@@ -757,47 +766,12 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
 
 						int iteratorOrient = 0;
+
 						for(iteratorOrient = 0; iteratorOrient < numberOrient; iteratorOrient++ )
 						{
 
-							float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
-
-							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
-								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
-									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
-										hist2[ii][iii][iiii] = 0.0;
-
-							descr_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, orients[iteratorOrient], scl_octv, hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
-
-
-							int k = 0;
-							float desc[128];
-							
-							for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
-								for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
-									for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
-										desc[k++] = hist2[ii][iii][iiii];
-							
-							normalize_descr( desc );
-
-
-							for(int i = 0; i < k; i++ )
-							{
-								if( desc[i] > SIFT_DESCR_MAG_THR )
-									desc[i] = SIFT_DESCR_MAG_THR;
-							}
-
-							normalize_descr( desc );
-
-							/* convert floating-point descriptor to integer valued descriptor */
-							for(int i = 0; i < k; i++ )
-							{
-								desc[i] = min( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
-							}
-
 							int offset = 139;
-
-							numberExt = (*number)++;
+							numberExt = atomic_add(number, (int)1);
 
 							keys[numberExt*offset] = scx;
 							keys[numberExt*offset + 1] = scy;
@@ -811,20 +785,70 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 							keys[numberExt*offset + 9] = orients[iteratorOrient];
 							keys[numberExt*offset + 10] = omax;
 
-							for(int i = 0; i < k; i++ )
-								keys[numberExt*offset + 11 + i] = desc[i];
-
 						}
 					}
 				}
-				
-			} else {
-				//ucDest[GMEMOffset] = 0.5;
-				//atomic_add(numberRej, (int)1);
-			}
+			} 
 		}
-	} else {
-		
-	}
-
+	} 
 }
+
+
+
+__kernel void ckDesc(__global float* gauss_pyr, __global float* ucDest,
+						__global int* numberExtrema, __global float* keys,
+						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberAct)
+ {
+
+	
+	int numberExt = atomic_add(numberAct, (int)1);
+	int offset = 139;
+	
+
+
+	if( numberExt < *number)
+	{
+
+		float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
+
+		
+		for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+			for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+				for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+					hist2[ii][iii][iiii] = 0.0;
+
+
+		descr_hist( gauss_pyr, keys[numberExt*offset + 2], keys[numberExt*offset + 3], ImageWidth, ImageHeight, keys[numberExt*offset + 9], keys[numberExt*offset + 8], hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
+		
+
+		int k = 0;
+		float desc[128];
+							
+		for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+			for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+				for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+					desc[k++] = hist2[ii][iii][iiii];
+							
+		normalize_descr( desc );
+
+
+		for(int i = 0; i < k; i++ )
+		{
+			if( desc[i] > SIFT_DESCR_MAG_THR )
+				desc[i] = SIFT_DESCR_MAG_THR;
+		}
+
+		normalize_descr( desc );
+
+		// convert floating-point descriptor to integer valued descriptor */
+		for(int i = 0; i < k; i++ )
+		{
+			desc[i] = min( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
+		}
+
+
+		for(int i = 0; i < k; i++ )
+			keys[numberExt*offset + 11 + i] = desc[i];
+
+	}
+ }

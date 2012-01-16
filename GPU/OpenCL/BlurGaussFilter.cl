@@ -1,4 +1,10 @@
 
+int Offset(int x, int y, int ImageWidth)
+{
+	int offset = mul24( (int)y, ImageWidth ) + x;
+	return offset;
+}
+
 
 __kernel void ckConv(__global float* ucSource,__global float* ucDest,
                       int ImageWidth, int ImageHeight, float sigma, int sizeMask)

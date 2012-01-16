@@ -142,7 +142,6 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 	features = scaleSpaceExtrema( dog_pyr, octvs, intvls, contr_thr,
 		curv_thr, storage );
 
-	cout << "CPU total ext: " <<  features->total << endl;
 	
 	if(SIFTCPU)
 	{
@@ -154,8 +153,17 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 		calc_feature_oris( features, gauss_pyr );
 		
-		compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
 
+		clock_t start, finish;
+		double duration = 0;
+		start = clock();
+			compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
+		finish = clock();
+		duration = (double)(finish - start) / CLOCKS_PER_SEC;
+		cout << endl;
+		cout << "compute_descriptors " << SIFTCPU << ": ";;
+		cout << duration << endl;
+		cout << endl;
 	}
 	else
 	{
@@ -165,12 +173,21 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 
 	//struct detection_data* ddata = feat_detection_data( feat2 );
 
-	cout << "CPU total: " <<  features->total << endl;
+	/*cout << "CPU total: " <<  features->total << endl;
 
 
-
+	clock_t start, finish;
+	double duration = 0;
+	start = clock();
+		compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
+	finish = clock();
+	duration = (double)(finish - start) / CLOCKS_PER_SEC;
+	cout << endl;
+	cout << "compute_descriptors " << SIFTCPU << ": ";;
+	cout << duration << endl;
+	cout << endl;
 	
-	
+	*/
 
 
 
@@ -467,7 +484,7 @@ based on contrast and ratio of principal curvatures.
 	int numRemoved=0;		// The number of key points rejected because they failed a test
 
 	Keys keys[1000];
-	
+
 	int numberExtrema = 0;
 	int number = 0;
 	int numberRej = 0;
@@ -559,7 +576,9 @@ based on contrast and ratio of principal curvatures.
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i] );
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				//detectExt->ReceiveImageData(img);
-				
+				//cvNamedWindow( "Matches", 1 );
+				//cvShowImage( "Matches", gauss_pyr[o][i] );
+				//cvWaitKey( 2 );
 				number = num;
 
 				struct detection_data* ddata;
@@ -596,9 +615,10 @@ based on contrast and ratio of principal curvatures.
 
 		finish = clock();
 		duration = (double)(finish - start) / CLOCKS_PER_SEC;
+		cout << endl;
 		cout << "SIFT netto: " << endl;
 		cout << duration << endl;
-
+		cout << endl;
 	return features;
 }
 

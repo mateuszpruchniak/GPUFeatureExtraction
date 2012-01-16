@@ -52,7 +52,7 @@ GPUBase::GPUBase(char* source, char* KernelName)
 	CheckError(GPUError);
 
 	// Build the program with 'mad' Optimization option
-	char *flags = "";
+	char *flags = "-cl-unsafe-math-optimizations -cl-fast-relaxed-math -cl-mad-enable";
 
 	GPUError = clBuildProgram(GPUProgram, 0, NULL, flags, NULL, NULL);
 	cout << GPUError << endl;
@@ -60,8 +60,10 @@ GPUBase::GPUBase(char* source, char* KernelName)
 	cout << kernelFuncName << endl;
 
 	GPUKernel = clCreateKernel(GPUProgram, kernelFuncName, &GPUError);
+	CheckError(GPUError);
 
-
+	GPUKernel2 = clCreateKernel(GPUProgram, "ckDesc", &GPUError);
+	CheckError(GPUError);
 
 }
 
@@ -82,6 +84,13 @@ bool GPUBase::CreateBuffersIn(int maxBufferSize, int numbOfBuffers)
 		buffersListIn[i] = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, maxBufferSize, NULL, &GPUError);
 		CheckError(GPUError);
 	}
+
+	
+	
+
+
+
+
 	return true;
 }
 

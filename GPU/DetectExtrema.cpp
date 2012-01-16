@@ -19,6 +19,7 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	int maxNumberKeys = 1000;
 	
 
+
 	for (int i =0 ; i < maxNumberKeys ; i++)
 	{
 		keys[i].x = 0.0;
@@ -30,7 +31,7 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 		keys[i].scy = 0.0;
 	}
 
-
+	
 	cl_mem cmDevBufNumber = clCreateBuffer(GPUContext, CL_MEM_READ_WRITE, sizeof(int), NULL, &GPUError);
 	CheckError(GPUError);
 	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
@@ -75,9 +76,57 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	GPUError |= clSetKernelArg(GPUKernel, 13, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
-
 	
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) return false;
+
+
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	//GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)numRej, 0, NULL, NULL);
+	//CheckError(GPUError);
+
+	//GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, maxNumberKeys*sizeof(Keys), (void*)keys, 0, NULL, NULL);
+	//CheckError(GPUError);
+
+
+	*numRej = 0;
+
+
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufNumberReject, CL_TRUE, 0, sizeof(int), (void*)numRej, 0, NULL, NULL);
+	CheckError(GPUError);
+
+
+	//GPUError = clEnqueueWriteBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0,maxNumberKeys*sizeof(Keys), (void*)keys, 0, NULL, NULL);
+	//CheckError(GPUError);
+
+
+	GPULocalWorkSize[0] = iBlockDimX;
+	GPULocalWorkSize[1] = iBlockDimY;
+	GPUGlobalWorkSize[0] = shrRoundUp((int)GPULocalWorkSize[0], (int)*num);
+	GPUGlobalWorkSize[1] = shrRoundUp((int)GPULocalWorkSize[1], (int)1);
+	
+
+
+	iLocalPixPitch = iBlockDimX + 2;
+	GPUError |= clSetKernelArg(GPUKernel2, 0, sizeof(cl_mem), (void*)&buffersListIn[3]);
+	GPUError |= clSetKernelArg(GPUKernel2, 1, sizeof(cl_mem), (void*)&buffersListOut[0]);
+	GPUError |= clSetKernelArg(GPUKernel2, 2, sizeof(cl_mem), (void*)&cmDevBufCount);
+	GPUError |= clSetKernelArg(GPUKernel2, 3, sizeof(cl_mem), (void*)&cmDevBufKeys);
+	GPUError |= clSetKernelArg(GPUKernel2, 4, sizeof(cl_uint), (void*)&imageWidth);
+	GPUError |= clSetKernelArg(GPUKernel2, 5, sizeof(cl_uint), (void*)&imageHeight);
+	GPUError |= clSetKernelArg(GPUKernel2, 6, sizeof(cl_float), (void*)&prelim_contr_thr);
+	GPUError |= clSetKernelArg(GPUKernel2, 7, sizeof(cl_uint), (void*)&intvl);
+	GPUError |= clSetKernelArg(GPUKernel2, 8, sizeof(cl_uint), (void*)&octv);
+	GPUError |= clSetKernelArg(GPUKernel2, 9, sizeof(cl_mem), (void*)&cmDevBufNumber);
+	GPUError |= clSetKernelArg(GPUKernel2, 10, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
+	if(GPUError) return false;
+	
+	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel2, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) 
+		cout << "Error clEnqueueNDRangeKernel" << endl;
 	
 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
@@ -91,12 +140,19 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufKeys, CL_TRUE, 0, maxNumberKeys*sizeof(Keys), (void*)keys, 0, NULL, NULL);
 	CheckError(GPUError);
 
-	/*for(int i = 0; i < *num; i++)
-	{
-		cout << "ori GPU: " << keys[i].x << endl;
-		cout << "mag GPU: " << keys[i].y << endl;
-		cout << endl;
-	}*/
+	//for(int i = 0; i < *num; i++)
+	//{
+	//	for(int j = 0; j < 128 ; j++)
+	//	{
+	//		if( keys[i].desc[j] != keys2[i].desc[j] )
+	//		{
+	//			cout << "dofferent" << endl;
+	//		}
+	//	}
+	//	//cout << "ori GPU: " << keys[i].x << endl;
+	//	//cout << "mag GPU: " << keys[i].y << endl;
+	//	//cout << endl;
+	//}
 	//cout << "Number GPU: " << *num << endl;
 
 	return true;
