@@ -54,7 +54,7 @@ int main()
 	char* img1_file = "D:\\box.jpg";
 	char* img2_file = "D:\\scene.jpg";
 
-	char* img_file_name = "D:\\scene.jpg";
+	char* img_file_name = "D:\\105.jpg";
 	char* out_file_name  = "D:\\h1.sift";;
 	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut.jpg";
 	int display = 1;
@@ -80,31 +80,48 @@ int main()
 		exit( 1 );
 	}
 
-	clock_t start, finish;
-	double duration = 0;
-	start = clock();
-		for(int i = 0 ; i < 1 ; i++ )
+	//CvCapture* capture = cvCaptureFromAVI("D:\\intro.avi");
+
+	//for(int k = 0; k < 10 ; k++)
+	//{
+
+	//	if(!cvGrabFrame(capture)){              // capture a frame 
+	//	  printf("Could not grab a frame\n\7");
+	//	  exit(0);
+	//	}
+
+
+	//	img=cvRetrieveFrame(capture);  
+
+
+		clock_t start, finish;
+		double duration = 0;
+		start = clock();
+			for(int i = 0 ; i < 1 ; i++ )
+			{
+				n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
+									img_dbl, descr_width, descr_hist_bins );
+			}
+		finish = clock();
+		duration = (double)(finish - start) / CLOCKS_PER_SEC;
+		cout << endl;
+		cout << "SIFT " << SIFTCPU << ": ";;
+		cout << duration << endl;
+		cout << endl;
+		fprintf( stderr, "Found %d features.\n", n );
+
+
+
+		if( display )
 		{
-			n = siftGPU->_sift_features( img, &features, intvls, sigma, contr_thr, curv_thr,
-								img_dbl, descr_width, descr_hist_bins );
+			draw_features( img, features, n );
+			cvNamedWindow( img_file_name, 1 );
+			cvShowImage( img_file_name, img );
+			cvWaitKey(0);
 		}
-	finish = clock();
-	duration = (double)(finish - start) / CLOCKS_PER_SEC;
-	cout << endl;
-	cout << "SIFT " << SIFTCPU << ": ";;
-	cout << duration << endl;
-	cout << endl;
-	fprintf( stderr, "Found %d features.\n", n );
 
+	//}
 
-
-	if( display )
-	{
-		draw_features( img, features, n );
-		cvNamedWindow( img_file_name, 1 );
-		cvShowImage( img_file_name, img );
-		cvWaitKey( 0 );
-	}
 
 	if( out_file_name != NULL )
 		export_features( out_file_name, features, n );

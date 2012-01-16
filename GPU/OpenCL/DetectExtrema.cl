@@ -44,7 +44,7 @@
 #define SIFT_ORI_SMOOTH_PASSES 2
 
 /* orientation magnitude relative to max that results in new feature */
-#define SIFT_ORI_PEAK_RATIO 0.8
+#define SIFT_ORI_PEAK_RATIO 0.98
 
 /* determines the size of a single descriptor orientation histogram */
 #define SIFT_DESCR_SCL_FCTR 3.0
@@ -741,34 +741,8 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 						float	ori = 0;
 						float	mag = 0;
 
-						float hist[SIFT_ORI_HIST_BINS];
 						
-						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
-							hist[j] = 0;
 
-						ori_hist( gauss_pyr, pozX, pozY, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
-										ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
-
-						
-						for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
-							smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
-
-						int maxBin = 0;
-
-						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
-
-						float orients[SIFT_ORI_HIST_BINS];
-						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
-							orients[j] = 0;
-
-						int numberOrient = 0;
-
-						add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
-
-						int iteratorOrient = 0;
-
-						for(iteratorOrient = 0; iteratorOrient < numberOrient; iteratorOrient++ )
-						{
 
 							int offset = 139;
 							numberExt = atomic_add(number, (int)1);
@@ -782,10 +756,8 @@ __kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __globa
 							keys[numberExt*offset + 6] = octvRes;
 							keys[numberExt*offset + 7] = scl;
 							keys[numberExt*offset + 8] = scl_octv;
-							keys[numberExt*offset + 9] = orients[iteratorOrient];
-							keys[numberExt*offset + 10] = omax;
-
-						}
+							keys[numberExt*offset + 9] = 0;//orients[iteratorOrient];
+							keys[numberExt*offset + 10] = 0;//omax;
 					}
 				}
 			} 
@@ -808,6 +780,46 @@ __kernel void ckDesc(__global float* gauss_pyr, __global float* ucDest,
 
 	if( numberExt < *number)
 	{
+		float	scx = keys[numberExt*offset];
+		float	scy = keys[numberExt*offset + 1];
+		float	x = keys[numberExt*offset + 2];
+		float	y = keys[numberExt*offset + 3];
+		float	subintvl = keys[numberExt*offset + 4];
+		float	intvlRes = keys[numberExt*offset + 5];
+		float	octvRes = keys[numberExt*offset + 6];
+		float	scl = keys[numberExt*offset + 7];  
+		float	scl_octv = keys[numberExt*offset + 8];
+		float	ori = keys[numberExt*offset + 9];
+		
+
+		float hist[SIFT_ORI_HIST_BINS];
+						
+		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+			hist[j] = 0;
+
+		ori_hist( gauss_pyr, x, y, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
+						ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
+
+						
+		for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
+			smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
+
+		int maxBin = 0;
+
+		float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
+
+		float orients[SIFT_ORI_HIST_BINS];
+		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+			orients[j] = 0;
+
+		int numberOrient = 0;
+
+		add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
+
+
+		ori = orients[0];
+		keys[numberExt*offset + 9] = ori;
+
 
 		float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
 
