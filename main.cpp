@@ -54,7 +54,7 @@ int main()
 	char* img1_file = "D:\\box.jpg";
 	char* img2_file = "D:\\scene.jpg";
 
-	char* img_file_name = "D:\\scene.jpg";
+	char* img_file_name = "D:\\105.jpg";
 	char* out_file_name  = "D:\\h1.sift";;
 	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut.jpg";
 	int display = 1;

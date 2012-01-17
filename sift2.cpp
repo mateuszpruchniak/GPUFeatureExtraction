@@ -571,10 +571,12 @@ based on contrast and ratio of principal curvatures.
 			else 
 			{
 				num = 0;
-
+				//cvNamedWindow( "WWW", 1 );
+				//cvShowImage( "WWW",  gauss_pyr[o][i] );
+				//cvWaitKey(0);
 				
-				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i] );
-				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
+				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i]);
+				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys, gauss_pyr[o][i]);
 				//detectExt->ReceiveImageData(img);
 				
 				number = num;

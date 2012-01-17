@@ -82,6 +82,14 @@ float GetPixel(__global float* dataIn, int x, int y, int ImageWidth, int ImageHe
 	return dataIn[GMEMOffset];
 }
 
+float GetPixelTEX( __read_only image2d_t dataIn, int x, int y, int ImageWidth, int ImageHeight )
+{
+	int2 pos = {x , y};
+	sampler_t mySampler = CLK_FILTER_NEAREST | CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE;
+
+	return read_imagef(dataIn, mySampler, pos).x;
+}
+
 
 /*
 Determines whether a pixel is a scale-space extremum by comparing it to it's
@@ -449,6 +457,22 @@ Calculates the gradient magnitude and orientation at a given pixel.
 		return 0;
 }
 
+int calc_grad_mag_oriTEX(__read_only image2d_t gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* mag, float* ori )
+{
+	float dx, dy;
+
+	if( pozX > 0  &&  pozX < ImageWidth - 1  &&  pozY > 0  &&  pozY < ImageHeight - 1 )
+	{
+		dx = GetPixelTEX(gauss_pyr, pozX+1, pozY, ImageWidth, ImageHeight) - GetPixelTEX(gauss_pyr, pozX-1, pozY, ImageWidth, ImageHeight);
+		dy =  GetPixelTEX(gauss_pyr, pozX, pozY-1, ImageWidth, ImageHeight) - GetPixelTEX(gauss_pyr, pozX, pozY+1, ImageWidth, ImageHeight);
+		*mag = sqrt( dx*dx + dy*dy );
+		*ori = atan2( dy, dx );
+		return 1;
+	}
+
+	else
+		return 0;
+}
 
  /*
 Computes a gradient orientation histogram at a specified pixel.
@@ -457,7 +481,7 @@ Computes a gradient orientation histogram at a specified pixel.
 @return Returns an n-element array containing an orientation histogram
 	representing orientations between 0 and 2 PI.
 */
-void ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* hist, int n, int rad, float sigma)
+void ori_hist( __read_only image2d_t gauss_pyr, int pozX, int pozY, int ImageWidth, int ImageHeight, float* hist, int n, int rad, float sigma)
 {
 	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
 	int bin, i, j;
@@ -467,7 +491,7 @@ void ori_hist(__global float* gauss_pyr, int pozX, int pozY, int ImageWidth, int
 	
 	for( i = -rad; i <= rad; i++ )
 		for( j = -rad; j <= rad; j++ )
-			if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
+			if( calc_grad_mag_oriTEX( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &mag, &ori ) )
 			{	
 				w = exp( -(float)( i*i + j*j ) / exp_denom );
 				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
@@ -623,7 +647,7 @@ Computes the 2D array of orientation histograms that form the feature
 descriptor.  Based on Section 6.1 of Lowe's paper.
 
 */
-void descr_hist(__global float* gauss_pyr,  int pozX, int pozY, int ImageWidth, int ImageHeight, float ori, float scl, float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS], int d, int n )
+void descr_hist( __read_only image2d_t gauss_pyr,  int pozX, int pozY, int ImageWidth, int ImageHeight, float ori, float scl, float hist[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS], int d, int n )
 {
 	
 	float cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
@@ -654,7 +678,7 @@ void descr_hist(__global float* gauss_pyr,  int pozX, int pozY, int ImageWidth, 
 			cbin = c_rot + d / 2 - 0.5;
 
 			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
-				if( calc_grad_mag_ori( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
+				if( calc_grad_mag_oriTEX( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
 				{
 					grad_ori -= ori;
 					while( grad_ori < 0.0 )
@@ -775,13 +799,92 @@ __kernel void ckDesc( __read_only image2d_t gauss_pyr, __global float* ucDest,
 	int pozY = get_global_id(1);
 	int GMEMOffset = mul24(pozY, ImageWidth) + pozX;
 
-	int2 pos = {pozX , pozY};
-
-
-	if( read_imagef(gauss_pyr, mySampler, pos).x == 0 )
+	
+	if( numberExt < *number)
 	{
-		ucDest[GMEMOffset] = 1.0;
+		float	scx = keys[numberExt*offset];
+		float	scy = keys[numberExt*offset + 1];
+		float	x = keys[numberExt*offset + 2];
+		float	y = keys[numberExt*offset + 3];
+		float	subintvl = keys[numberExt*offset + 4];
+		float	intvlRes = keys[numberExt*offset + 5];
+		float	octvRes = keys[numberExt*offset + 6];
+		float	scl = keys[numberExt*offset + 7];  
+		float	scl_octv = keys[numberExt*offset + 8];
+		float	ori = keys[numberExt*offset + 9];
+		
+
+		float hist[SIFT_ORI_HIST_BINS];
+						
+		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+			hist[j] = 0;
+
+		ori_hist( gauss_pyr, x, y, ImageWidth, ImageHeight, hist, SIFT_ORI_HIST_BINS,
+						ROUND( SIFT_ORI_RADIUS * scl_octv ),	SIFT_ORI_SIG_FCTR * scl_octv );
+						
+		for(int j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
+			smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
+
+		int maxBin = 0;
+
+		float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
+
+		float orients[SIFT_ORI_HIST_BINS];
+		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
+			orients[j] = 0;
+
+		int numberOrient = 0;
+
+		add_good_ori_features(hist, SIFT_ORI_HIST_BINS,	omax * SIFT_ORI_PEAK_RATIO, orients, &numberOrient);
+
+
+		ori = orients[0];
+		keys[numberExt*offset + 9] = ori;
+
+
+		float hist2[SIFT_DESCR_WIDTH][SIFT_DESCR_WIDTH][SIFT_DESCR_HIST_BINS];
+
+		
+		for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+			for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+				for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+					hist2[ii][iii][iiii] = 0.0;
+
+
+		descr_hist( gauss_pyr, keys[numberExt*offset + 2], keys[numberExt*offset + 3], ImageWidth, ImageHeight, keys[numberExt*offset + 9], keys[numberExt*offset + 8], hist2, SIFT_DESCR_WIDTH, SIFT_DESCR_HIST_BINS );
+		
+
+		int k = 0;
+		float desc[128];
+							
+		for(int ii = 0; ii < SIFT_DESCR_WIDTH; ii++)
+			for(int iii = 0; iii < SIFT_DESCR_WIDTH; iii++)
+				for(int iiii = 0; iiii < SIFT_DESCR_HIST_BINS; iiii++)
+					desc[k++] = hist2[ii][iii][iiii];
+							
+		normalize_descr( desc );
+
+
+		for(int i = 0; i < k; i++ )
+		{
+			if( desc[i] > SIFT_DESCR_MAG_THR )
+				desc[i] = SIFT_DESCR_MAG_THR;
+		}
+
+		normalize_descr( desc );
+
+		// convert floating-point descriptor to integer valued descriptor */
+		for(int i = 0; i < k; i++ )
+		{
+			desc[i] = min( 255, (int)(SIFT_INT_DESCR_FCTR * desc[i]) );
+		}
+
+
+		for(int i = 0; i < k; i++ )
+			keys[numberExt*offset + 11 + i] = desc[i];
+
 	}
+
 
 	//if( numberExt < *number)
 	//{
