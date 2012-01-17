@@ -15,6 +15,9 @@ DetectExtrema::DetectExtrema(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\
 
 bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int intvl, int octv, Keys* keys )
 {
+	GPUKernel2 = clCreateKernel(GPUProgram, "ckDesc", &GPUError);
+	CheckError(GPUError);
+
 
 	int maxNumberKeys = 1000;
 	
@@ -104,6 +107,20 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	//CheckError(GPUError);
 
 
+	IplImage* img = cvCreateImage( cvSize(imageWidth,imageHeight) , 32, 1 );
+	cvZero(img);
+
+
+	cl_image_format volume_format;
+	volume_format.image_channel_order = CL_R;
+	volume_format.image_channel_data_type = CL_FLOAT;
+
+	cl_mem d_volume = clCreateImage2D(GPUContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, &volume_format, imageWidth, imageHeight, imageWidth*sizeof(float), (float*)img->imageData, &GPUError);
+	CheckError(GPUError);
+
+
+
+
 	GPULocalWorkSize[0] = iBlockDimX;
 	GPULocalWorkSize[1] = iBlockDimY;
 	GPUGlobalWorkSize[0] = shrRoundUp((int)GPULocalWorkSize[0], (int)*num);
@@ -112,7 +129,7 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 
 
 	iLocalPixPitch = iBlockDimX + 2;
-	GPUError |= clSetKernelArg(GPUKernel2, 0, sizeof(cl_mem), (void*)&buffersListIn[3]);
+	GPUError |= clSetKernelArg(GPUKernel2, 0, sizeof(cl_mem), (void*)&d_volume);
 	GPUError |= clSetKernelArg(GPUKernel2, 1, sizeof(cl_mem), (void*)&buffersListOut[0]);
 	GPUError |= clSetKernelArg(GPUKernel2, 2, sizeof(cl_mem), (void*)&cmDevBufCount);
 	GPUError |= clSetKernelArg(GPUKernel2, 3, sizeof(cl_mem), (void*)&cmDevBufKeys);
@@ -128,6 +145,15 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	if(clEnqueueNDRangeKernel( GPUCommandQueue, GPUKernel2, 2, NULL, GPUGlobalWorkSize, GPULocalWorkSize, 0, NULL, NULL)) 
 		cout << "Error clEnqueueNDRangeKernel" << endl;
 	
+	
+	GPUError = clEnqueueReadBuffer(GPUCommandQueue, buffersListOut[0], CL_TRUE, 0, img->width*img->height*sizeof(float) , (void*)img->imageData, 0, NULL, NULL);
+	CheckError(GPUError);
+
+	cvNamedWindow( "ggg", 1 );
+	cvShowImage( "ggg", img );
+	cvWaitKey(0);
+
+
 
 	GPUError = clEnqueueReadBuffer(GPUCommandQueue, cmDevBufNumber, CL_TRUE, 0, sizeof(int), (void*)num, 0, NULL, NULL);
 	CheckError(GPUError);
@@ -154,6 +180,18 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	//	//cout << endl;
 	//}
 	//cout << "Number GPU: " << *num << endl;
+
+
+
+
+
+	
+
+
+
+
+
+
 
 	return true;
 }

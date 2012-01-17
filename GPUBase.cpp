@@ -55,15 +55,22 @@ GPUBase::GPUBase(char* source, char* KernelName)
 	char *flags = "-cl-unsafe-math-optimizations -cl-fast-relaxed-math -cl-mad-enable";
 
 	GPUError = clBuildProgram(GPUProgram, 0, NULL, flags, NULL, NULL);
-	cout << GPUError << endl;
-	CheckError(GPUError);
+	//error checking code
+	if(!GPUError)
+	{
+		//print kernel compilation error
+		char programLog[1024];
+		clGetProgramBuildInfo(GPUProgram, cdDevices[0], CL_PROGRAM_BUILD_LOG, 1024, programLog, 0);
+		cout<<programLog<<endl;
+	}
+
+
 	cout << kernelFuncName << endl;
 
 	GPUKernel = clCreateKernel(GPUProgram, kernelFuncName, &GPUError);
 	CheckError(GPUError);
 
-	GPUKernel2 = clCreateKernel(GPUProgram, "ckDesc", &GPUError);
-	CheckError(GPUError);
+	
 
 }
 
@@ -160,6 +167,8 @@ bool GPUBase::SendImageToBuffers(IplImage* img, ... )
 			CheckError(GPUError);
 		}
 		va_end(arg_ptr);
+
+
 
 	//finish = clock();
 	//duration = (double)(finish - start) / CLOCKS_PER_SEC;

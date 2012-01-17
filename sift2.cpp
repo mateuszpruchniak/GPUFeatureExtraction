@@ -576,9 +576,7 @@ based on contrast and ratio of principal curvatures.
 				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i] );
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys);
 				//detectExt->ReceiveImageData(img);
-				//cvNamedWindow( "Matches", 1 );
-				//cvShowImage( "Matches", gauss_pyr[o][i] );
-				//cvWaitKey( 2 );
+				
 				number = num;
 
 				struct detection_data* ddata;
@@ -1672,7 +1670,7 @@ void SIFTGPU::DoSift()
 #define SIFT_ORI_SMOOTH_PASSES 2
 
 /* orientation magnitude relative to max that results in new feature */
-#define SIFT_ORI_PEAK_RATIO 0.8
+#define SIFT_ORI_PEAK_RATIO 1.0
 
 #define CV_PI   3.1415926535897932384626433832795
 
