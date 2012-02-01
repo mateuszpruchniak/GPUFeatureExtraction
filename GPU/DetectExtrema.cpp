@@ -66,17 +66,16 @@ bool DetectExtrema::Process( int* num, int* numRej, float prelim_contr_thr, int 
 	GPUError = clSetKernelArg(GPUKernel, 0, sizeof(cl_mem), (void*)&buffersListIn[0]);
 	GPUError |= clSetKernelArg(GPUKernel, 1, sizeof(cl_mem), (void*)&buffersListIn[1]);
 	GPUError |= clSetKernelArg(GPUKernel, 2, sizeof(cl_mem), (void*)&buffersListIn[2]);
-	GPUError |= clSetKernelArg(GPUKernel, 3, sizeof(cl_mem), (void*)&buffersListIn[3]);
-	GPUError |= clSetKernelArg(GPUKernel, 4, sizeof(cl_mem), (void*)&buffersListOut[0]);
-	GPUError |= clSetKernelArg(GPUKernel, 5, sizeof(cl_mem), (void*)&cmDevBufCount);
-	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_mem), (void*)&cmDevBufKeys);
-	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_uint), (void*)&imageWidth);
-	GPUError |= clSetKernelArg(GPUKernel, 8, sizeof(cl_uint), (void*)&imageHeight);
-	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_float), (void*)&prelim_contr_thr);
-	GPUError |= clSetKernelArg(GPUKernel, 10, sizeof(cl_uint), (void*)&intvl);
-	GPUError |= clSetKernelArg(GPUKernel, 11, sizeof(cl_uint), (void*)&octv);
-	GPUError |= clSetKernelArg(GPUKernel, 12, sizeof(cl_mem), (void*)&cmDevBufNumber);
-	GPUError |= clSetKernelArg(GPUKernel, 13, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
+	GPUError |= clSetKernelArg(GPUKernel, 3, sizeof(cl_mem), (void*)&buffersListOut[0]);
+	GPUError |= clSetKernelArg(GPUKernel, 4, sizeof(cl_mem), (void*)&cmDevBufCount);
+	GPUError |= clSetKernelArg(GPUKernel, 5, sizeof(cl_mem), (void*)&cmDevBufKeys);
+	GPUError |= clSetKernelArg(GPUKernel, 6, sizeof(cl_uint), (void*)&imageWidth);
+	GPUError |= clSetKernelArg(GPUKernel, 7, sizeof(cl_uint), (void*)&imageHeight);
+	GPUError |= clSetKernelArg(GPUKernel, 8, sizeof(cl_float), (void*)&prelim_contr_thr);
+	GPUError |= clSetKernelArg(GPUKernel, 9, sizeof(cl_uint), (void*)&intvl);
+	GPUError |= clSetKernelArg(GPUKernel, 10, sizeof(cl_uint), (void*)&octv);
+	GPUError |= clSetKernelArg(GPUKernel, 11, sizeof(cl_mem), (void*)&cmDevBufNumber);
+	GPUError |= clSetKernelArg(GPUKernel, 12, sizeof(cl_mem), (void*)&cmDevBufNumberReject);
 	if(GPUError) return false;
 
 

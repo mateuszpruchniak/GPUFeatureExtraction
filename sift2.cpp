@@ -157,7 +157,8 @@ int SIFTGPU::_sift_features( IplImage* img, feature** feat, int intvls,
 		clock_t start, finish;
 		double duration = 0;
 		start = clock();
-			compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
+		
+		compute_descriptors( features, gauss_pyr, descr_width, descr_hist_bins );
 		finish = clock();
 		duration = (double)(finish - start) / CLOCKS_PER_SEC;
 		cout << endl;
@@ -498,7 +499,7 @@ based on contrast and ratio of principal curvatures.
 
 
 	/************************ GPU **************************/
-	detectExt->CreateBuffersIn(dog_pyr[0][0]->width*dog_pyr[0][0]->height*sizeof(float),4);
+	detectExt->CreateBuffersIn(dog_pyr[0][0]->width*dog_pyr[0][0]->height*sizeof(float),3);
 	detectExt->CreateBuffersOut(img->width*img->height*sizeof(float),1);
 	/************************ GPU **************************/
 
@@ -575,7 +576,7 @@ based on contrast and ratio of principal curvatures.
 				//cvShowImage( "WWW",  gauss_pyr[o][i] );
 				//cvWaitKey(0);
 				
-				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1], gauss_pyr[o][i]);
+				detectExt->SendImageToBuffers(dog_pyr[o][i-1],dog_pyr[o][i],dog_pyr[o][i+1]);
 				detectExt->Process(&num, &numRemoved, prelim_contr_thr, i, o, keys, gauss_pyr[o][i]);
 				//detectExt->ReceiveImageData(img);
 				
@@ -1102,10 +1103,9 @@ there is more than one dominant orientation at a given feature location.
 
 		free( ddata );
 		free( feat );
-		//free( hist );
+		free( hist );
 	}
 }
-
 
 
 /*
@@ -1588,7 +1588,7 @@ De-allocates memory held by a scale space pyramid
 
  SIFTGPU::SIFTGPU()
  {
-	img_file_name = "C:\\scene2.jpg";
+	img_file_name = "C:\\scene.jpg";
 	out_file_name  = "C:\\Users\\Mati\\Pictures\\scene2.sift";;
 	out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut2.jpg";
 	display = 1;
@@ -1672,7 +1672,7 @@ void SIFTGPU::DoSift()
 #define SIFT_ORI_SMOOTH_PASSES 2
 
 /* orientation magnitude relative to max that results in new feature */
-#define SIFT_ORI_PEAK_RATIO 1.0
+#define SIFT_ORI_PEAK_RATIO 0.8
 
 #define CV_PI   3.1415926535897932384626433832795
 

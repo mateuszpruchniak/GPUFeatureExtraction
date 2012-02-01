@@ -713,13 +713,14 @@ Normalizes a feature's descriptor vector to unitl length
 	}
 	len_inv = 1.0 / sqrt( len_sq );
 
+
 	for( i = 0; i < 128; i++ )
 		desc[i] *= len_inv;
 }
 
 
 
-__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3,  __global float* gauss_pyr, __global float* ucDest,
+__kernel void ckDetect(__global float* dataIn1, __global float* dataIn2, __global float* dataIn3, __global float* ucDest,
 						__global int* numberExtrema, __global float* keys,
 						int ImageWidth, int ImageHeight, float prelim_contr_thr, int intvl, int octv, __global int* number, __global int* numberRej)
 {

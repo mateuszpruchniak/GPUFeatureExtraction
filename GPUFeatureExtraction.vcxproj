@@ -73,8 +73,8 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\bin\Win64\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\opencv\build\lib\Debug;C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\lib\Win32;C:\NVIDIA GPU Computing SDK 4.0\shared\lib\Win32;$(LibraryPath)</LibraryPath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\inc;C:\NVIDIA GPU Computing SDK 4.0\shared\inc;C:\opencv\build\install\include\opencv;C:\opencv\build\install\include;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\opencv\build\lib\Debug;C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\lib\Win32;C:\NVIDIA GPU Computing SDK 4.0\shared\lib\Win32;C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 3.2\OpenCL\common\lib\Win32;C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 3.2\OpenCL\common\lib;C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 3.2\shared\lib;C:\opencv\release\lib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\NVIDIA GPU Computing SDK 4.0\OpenCL\common\inc;C:\NVIDIA GPU Computing SDK 4.0\shared\inc;C:\opencv\build\install\include\opencv;C:\opencv\build\install\include;C:\opencv\build\include\opencv;C:\opencv\build\include;C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 3.2\OpenCL\common\inc;C:\ProgramData\NVIDIA Corporation\NVIDIA GPU Computing SDK 3.2\shared\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -90,7 +90,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>oclUtils32D.lib;OpenCL.lib;shrUtils32D.lib;C:\opencv\build\install\lib\opencv_core231d.lib;C:\opencv\build\install\lib\opencv_highgui231d.lib;C:\opencv\build\install\lib\opencv_ml231d.lib;C:\opencv\build\install\lib\opencv_imgproc231d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>oclUtils32D.lib;OpenCL.lib;shrUtils32D.lib;opencv_core231d.lib;opencv_highgui231d.lib;opencv_ml231d.lib;opencv_imgproc231d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../common/lib/;../../../shared/lib;../../common/lib/$(Platform)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
