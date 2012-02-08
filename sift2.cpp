@@ -26,7 +26,10 @@ that accompanied this distribution.
 #include <cxcore.h>
 #include <cv.h>
 
-
+/*
+Interpolates a histogram peak from left, center, and right values
+*/
+#define interp_hist_peak( l, c, r ) ( 0.5 * ((l)-(r)) / ((l) - 2.0*(c) + (r)) )
 
 /************************* Local Function Prototypes *************************/
 
@@ -50,7 +53,7 @@ that accompanied this distribution.
  void ori_hist( IplImage*, int, int, int, int, float, float * );
  int calc_grad_mag_ori( IplImage*, int, int, float*, float* );
  void smooth_ori_hist( float*, int );
- float dominant_ori( float*, int , int*);
+ float dominant_ori( float*, int );
  void add_good_ori_features( CvSeq*, float*, int, float, feature*, int );
  feature* clone_feature( feature* );
  void compute_descriptors( CvSeq*, IplImage***, int, int );
@@ -386,24 +389,31 @@ using nearest-neighbor interpolation
 
 @return Returns an image whose dimensions are half those of img
 */
- IplImage* downsample( IplImage* img )
-{
-	int width = img->width / 2;
-	int height = img->height / 2;
+// IplImage* downsample( IplImage* img )
+//{
+//	int width = img->width / 2;
+//	int height = img->height / 2;
+//
+//	if( width < 50 || height < 50 )
+//	{
+//		width = width*2;
+//		height = height*2;
+//	}
+//	IplImage* smaller = cvCreateImage( cvSize( width, height),
+//		img->depth, img->nChannels );
+//	cvResize( img, smaller, CV_INTER_NN );
+//
+//	return smaller;
+//} ------------------------------------------------------------------------------------
 
-	if( width < 50 || height < 50 )
-	{
-		width = width*2;
-		height = height*2;
-	}
-	IplImage* smaller = cvCreateImage( cvSize( width, height),
+static IplImage* downsample( IplImage* img )
+{
+	IplImage* smaller = cvCreateImage( cvSize(img->width / 2, img->height / 2),
 		img->depth, img->nChannels );
 	cvResize( img, smaller, CV_INTER_NN );
 
 	return smaller;
 }
-
-
 
 /*
 Builds a difference of Gaussians scale space pyramid by subtracting adjacent
@@ -542,32 +552,23 @@ based on contrast and ratio of principal curvatures.
 				for(r = SIFT_IMG_BORDER; r < dog_pyr[o][0]->height-SIFT_IMG_BORDER; r++)
 				for(c = SIFT_IMG_BORDER; c < dog_pyr[o][0]->width-SIFT_IMG_BORDER; c++)
 					/* perform preliminary check on contrast */
-				{
-					
-						if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
+					if( ABS( pixval32f( dog_pyr[o][i], r, c ) ) > prelim_contr_thr )
+						if( is_extremum( dog_pyr, o, i, r, c ) )
 						{
-							if( is_extremum( dog_pyr, o, i, r, c ) )
+							feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
+							if( feat )
 							{
-
-								feat = interp_extremum(dog_pyr, o, i, r, c, intvls, contr_thr);
-								if( feat )
+								ddata = feat_detection_data( feat );
+								if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
+									ddata->r, ddata->c, curv_thr ) )
 								{
-									ddata = feat_detection_data( feat );
-
-									if( ! is_too_edge_like( dog_pyr[ddata->octv][ddata->intvl],
-										ddata->r, ddata->c, curv_thr ) )
-									{
-										num++;
-										cvSeqPush( features, feat );
-									}
-									else
-										free( ddata );
-									free( feat );
+									cvSeqPush( features, feat );
 								}
+								else
+									free( ddata );
+								free( feat );
 							}
 						}
-					
-				}
 			}
 			else 
 			{
@@ -694,13 +695,10 @@ Based on Section 4 of Lowe's paper.
  feature* interp_extremum( IplImage*** dog_pyr, int octv, int intvl,
 										int r, int c, int intvls, float contr_thr )
 {
-	feature* feat;
+	struct feature* feat;
 	struct detection_data* ddata;
 	float xi, xr, xc, contr;
 	int i = 0;
-
-	if( c == 668 )
-		i = 0;
 
 	while( i < SIFT_MAX_INTERP_STEPS )
 	{
@@ -837,7 +835,7 @@ scale space pyramid.
 	ds = ( pixval32f( dog_pyr[octv][intvl+1], r, c ) -
 		pixval32f( dog_pyr[octv][intvl-1], r, c ) ) / 2.0;
 
-	dI = cvCreateMat( 3, 1, CV_64FC1 );
+	dI = cvCreateMat( 3, 1, CV_32FC1 );
 	cvmSet( dI, 0, 0, dx );
 	cvmSet( dI, 1, 0, dy );
 	cvmSet( dI, 2, 0, ds );
@@ -919,19 +917,19 @@ Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's paper.
 
 @param Returns interpolated contrast.
 */
- float interp_contr( IplImage*** dog_pyr, int octv, int intvl, int r,
+float interp_contr( IplImage*** dog_pyr, int octv, int intvl, int r,
 							int c, float xi, float xr, float xc )
 {
 	CvMat* dD, X, T;
 	float t[1], x[3] = { xc, xr, xi };
 
-	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
-	cvInitMatHeader( &T, 1, 1, CV_64FC1, t, CV_AUTOSTEP );
+	cvInitMatHeader( &X, 3, 1, CV_32FC1, x, CV_AUTOSTEP );
+	cvInitMatHeader( &T, 1, 1, CV_32FC1, t, CV_AUTOSTEP );
 	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
 
-	//cvGEMM( dD, &X, 1, NULL, 0, &T,  CV_GEMM_A_T );
-	t[0] = cvGetReal2D(dD, 0, 0) * x[0] + cvGetReal2D(dD, 1, 0) * x[1] + cvGetReal2D(dD, 2, 0) * x[2];
-
+	//t[0] = cvGetReal2D(dD, 0, 0) * x[0] + cvGetReal2D(dD, 1, 0) * x[1] + cvGetReal2D(dD, 2, 0) * x[2];
+	
+	cvGEMM( dD, &X, 1, NULL, 0, &T,  CV_GEMM_A_T );
 	cvReleaseMat( &dD );
 
 	return pixval32f( dog_pyr[octv][intvl], r, c ) + t[0] * 0.5;
@@ -1007,7 +1005,7 @@ Calculates characteristic scale for each feature in an array.
 */
  void SIFTGPU::calcFeatureScales( CvSeq* features, float sigma, int intvls )
 {
-	feature* feat;
+	struct feature* feat;
 	struct detection_data* ddata;
 	float intvl;
 	int i, n;
@@ -1015,15 +1013,11 @@ Calculates characteristic scale for each feature in an array.
 	n = features->total;
 	for( i = 0; i < n; i++ )
 	{
-		//feature* a = &featureGPU[i];
-		//struct detection_data* ddata2 = feat_detection_data( a );
-
-
-		feat = CV_GET_SEQ_ELEM( feature, features, i );
+		feat = CV_GET_SEQ_ELEM( struct feature, features, i );
 		ddata = feat_detection_data( feat );
-		intvl = ddata->intvl + ddata->subintvl;//
-		feat->scl = sigma * pow( (float)2.0, ddata->octv + intvl / intvls );//
-		ddata->scl_octv = sigma * pow((float) 2.0, intvl / intvls ); //
+		intvl = ddata->intvl + ddata->subintvl;
+		feat->scl = sigma * pow( (float)2.0, ddata->octv + intvl / intvls );
+		ddata->scl_octv = sigma * pow( (float)2.0, intvl / intvls );
 	}
 }
 
@@ -1043,7 +1037,7 @@ prior to scale space construction.
 	n = features->total;
 	for( i = 0; i < n; i++ )
 	{
-		feat = CV_GET_SEQ_ELEM( feature, features, i );
+		feat = CV_GET_SEQ_ELEM( struct feature, features, i );
 		feat->x /= 2.0;
 		feat->y /= 2.0;
 		feat->scl /= 2.0;
@@ -1052,6 +1046,71 @@ prior to scale space construction.
 	}
 }
 
+
+
+static int calc_grad_mag_ori2( IplImage* img, int r, int c, float* mag, float* ori )
+{
+	float dx, dy;
+
+	if( r > 0  &&  r < img->height - 1  &&  c > 0  &&  c < img->width - 1 )
+	{
+		dx = pixval32f( img, r, c+1 ) - pixval32f( img, r, c-1 );
+		dy = pixval32f( img, r-1, c ) - pixval32f( img, r+1, c );
+		*mag = sqrt( dx*dx + dy*dy );
+		*ori = atan2( dy, dx );
+		return 1;
+	}
+
+	else
+		return 0;
+}
+
+static float* ori_hist2( IplImage* img, int r, int c, int n, int rad, float sigma)
+{
+	float* hist;
+	float mag, ori, w, exp_denom, PI2 = CV_PI * 2.0;
+	int bin, i, j;
+
+	hist = (float*)calloc( n, sizeof( float ) );
+	exp_denom = 2.0 * sigma * sigma;
+	for( i = -rad; i <= rad; i++ )
+		for( j = -rad; j <= rad; j++ )
+			if( calc_grad_mag_ori2( img, r + i, c + j, &mag, &ori ) )
+			{
+				w = exp( -( i*i + j*j ) / exp_denom );
+				bin = cvRound( n * ( ori + CV_PI ) / PI2 );
+				bin = ( bin < n )? bin : 0;
+				hist[bin] += w * mag;
+			}
+
+	return hist;
+}
+
+
+
+static void add_good_ori_features2( CvSeq* features, float* hist, int n,
+								   float mag_thr, struct feature* feat )
+{
+	struct feature* new_feat;
+	float bin, PI2 = CV_PI * 2.0;
+	int l, r, i;
+
+	for( i = 0; i < n; i++ )
+	{
+		l = ( i == 0 )? n - 1 : i-1;
+		r = ( i + 1 ) % n;
+
+		if( hist[i] > hist[l]  &&  hist[i] > hist[r]  &&  hist[i] >= mag_thr )
+		{
+			bin = i + interp_hist_peak( hist[l], hist[i], hist[r] );
+			bin = ( bin < 0 )? n + bin : ( bin >= n )? bin - n : bin;
+			new_feat = clone_feature( feat );
+			new_feat->ori = ( ( PI2 * bin ) / n ) - CV_PI;
+			cvSeqPush( features, new_feat );
+			free( new_feat );
+		}
+	}
+}
 
 
 /*
@@ -1081,31 +1140,27 @@ there is more than one dominant orientation at a given feature location.
 
 		ddata = feat_detection_data( feat );
 
-		float hist[SIFT_ORI_HIST_BINS];
-		for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
-							hist[j] = 0;
-
-		ori_hist( gauss_pyr[ddata->octv][ddata->intvl],
+		
+		hist = ori_hist2( gauss_pyr[ddata->octv][ddata->intvl],
 						ddata->r, ddata->c, SIFT_ORI_HIST_BINS,
-						ROUND( SIFT_ORI_RADIUS * ddata->scl_octv ),
-						SIFT_ORI_SIG_FCTR * ddata->scl_octv, hist );
+						cvRound( SIFT_ORI_RADIUS * ddata->scl_octv ),
+						SIFT_ORI_SIG_FCTR * ddata->scl_octv );
 
 		
 		for( j = 0; j < SIFT_ORI_SMOOTH_PASSES; j++ )
 			smooth_ori_hist( hist, SIFT_ORI_HIST_BINS );
 
-		int maxBin = 0;
-
-		omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
-
-		add_good_ori_features( features, hist, SIFT_ORI_HIST_BINS,
-								omax * SIFT_ORI_PEAK_RATIO, feat, maxBin );
-
+		omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
+		add_good_ori_features2( features, hist, SIFT_ORI_HIST_BINS,
+								omax * 1.0, feat );
 		free( ddata );
 		free( feat );
 		free( hist );
 	}
 }
+
+
+
 
 
 /*
@@ -1134,15 +1189,10 @@ void ori_hist( IplImage* img, int r, int c, int n, int rad, float sigma, float* 
 		for( j = -rad; j <= rad; j++ )
 			if( calc_grad_mag_ori( img, r + i, c + j, &mag, &ori ) )
 			{	
-				w = exp( -(float)( i*i + j*j ) / exp_denom );
-				bin = ROUND( n * ( ori + CV_PI ) / PI2 );
+				w = exp( -( i*i + j*j ) / exp_denom );
+				bin = cvRound( n * ( ori + CV_PI ) / PI2 );
 				bin = ( bin < n )? bin : 0;
 				hist[bin] += w * mag;
-				
-				//w = exp( -( i*i + j*j ) / exp_denom );
-				//bin = cvRound( n * ( ori + CV_PI ) / PI2 );
-				//bin = ( bin < n )? bin : 0;
-				//hist[bin] += w * mag;
 			}
 
 }
@@ -1211,7 +1261,7 @@ Finds the magnitude of the dominant orientation in a histogram
 
 @return Returns the value of the largest bin in hist
 */
- float dominant_ori( float* hist, int n, int* maxBin )
+float dominant_ori( float* hist, int n )
 {
 	float omax;
 	int maxbin, i;
@@ -1224,16 +1274,9 @@ Finds the magnitude of the dominant orientation in a histogram
 			omax = hist[i];
 			maxbin = i;
 		}
-	*maxBin = maxbin;
 	return omax;
 }
 
-
-
-/*
-Interpolates a histogram peak from left, center, and right values
-*/
-#define interp_hist_peak( l, c, r ) ( 0.5 * ((l)-(r)) / ((l) - 2.0*(c) + (r)) )
 
 
 
@@ -1269,6 +1312,7 @@ a specified threshold.
 			free( new_feat );
 		}
 	}
+
 }
 
 
@@ -1314,17 +1358,12 @@ of Lowe's paper.
 
 	for( i = 0; i < k; i++ )
 	{
-		feat = CV_GET_SEQ_ELEM(feature, features, i );
+		feat = CV_GET_SEQ_ELEM( struct feature, features, i );
 		ddata = feat_detection_data( feat );
-
-
-
 		hist = descr_hist( gauss_pyr[ddata->octv][ddata->intvl], ddata->r,
 			ddata->c, feat->ori, ddata->scl_octv, d, n );
 		hist_to_descr( hist, d, n, feat );
 		release_descr_hist( &hist, d );
-
-
 	}
 }
 
@@ -1344,6 +1383,59 @@ descriptor.  Based on Section 6.1 of Lowe's paper.
 
 @return Returns a d x d array of n-bin orientation histograms.
 */
+// float*** descr_hist( IplImage* img, int r, int c, float ori,
+//							 float scl, int d, int n )
+//{
+//	float*** hist;
+//	float cos_t, sin_t, hist_width, exp_denom, r_rot, c_rot, grad_mag,
+//		grad_ori, w, rbin, cbin, obin, bins_per_rad, PI2 = 2.0 * CV_PI;
+//	int radius, i, j;
+//
+//	hist = (float***)calloc( d, sizeof( float** ) );
+//	for( i = 0; i < d; i++ )
+//	{
+//		hist[i] = (float**)calloc( d, sizeof( float* ) );
+//		for( j = 0; j < d; j++ )
+//			hist[i][j] = (float*)calloc( n, sizeof( float ) );
+//	}
+//
+//	cos_t = cos( ori );
+//	sin_t = sin( ori );
+//	bins_per_rad = n / PI2;
+//	exp_denom = d * d * 0.5;
+//	hist_width = SIFT_DESCR_SCL_FCTR * scl;
+//	radius = hist_width * sqrt(2.0) * ( d + 1.0 ) * 0.5 + 0.5;
+//	for( i = -radius; i <= radius; i++ )
+//		for( j = -radius; j <= radius; j++ )
+//		{
+//			/*
+//			Calculate sample's histogram array coords rotated relative to ori.
+//			Subtract 0.5 so samples that fall e.g. in the center of row 1 (i.e.
+//			r_rot = 1.5) have full weight placed in row 1 after interpolation.
+//			*/
+//			c_rot = ( j * cos_t - i * sin_t ) / hist_width;
+//			r_rot = ( j * sin_t + i * cos_t ) / hist_width;
+//			rbin = r_rot + d / 2 - 0.5;
+//			cbin = c_rot + d / 2 - 0.5;
+//
+//			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
+//				if( calc_grad_mag_ori( img, r + j, c + i, &grad_mag, &grad_ori ))
+//				{
+//					grad_ori -= ori;
+//					while( grad_ori < 0.0 )
+//						grad_ori += PI2;
+//					while( grad_ori >= PI2 )
+//						grad_ori -= PI2;
+//
+//					obin = grad_ori * bins_per_rad;
+//					w = exp( -(c_rot * c_rot + r_rot * r_rot) / exp_denom );
+//					interp_hist_entry( hist, rbin, cbin, obin, grad_mag * w, d, n );
+//				}
+//		}
+//
+//	return hist;
+//}
+
  float*** descr_hist( IplImage* img, int r, int c, float ori,
 							 float scl, int d, int n )
 {
@@ -1380,7 +1472,7 @@ descriptor.  Based on Section 6.1 of Lowe's paper.
 			cbin = c_rot + d / 2 - 0.5;
 
 			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
-				if( calc_grad_mag_ori( img, r + j, c + i, &grad_mag, &grad_ori ))
+				if( calc_grad_mag_ori( img, r + i, c + j, &grad_mag, &grad_ori ))
 				{
 					grad_ori -= ori;
 					while( grad_ori < 0.0 )
@@ -1396,8 +1488,6 @@ descriptor.  Based on Section 6.1 of Lowe's paper.
 
 	return hist;
 }
-
-
 
 /*
 Interpolates an entry into the array of orientation histograms that form
@@ -2351,7 +2441,7 @@ void ckDetect( float* dataIn1,  float* dataIn2,  float* dataIn3,   float* gauss_
 
 						int maxBin = 0;
 
-						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS, &maxBin );
+						float omax = dominant_ori( hist, SIFT_ORI_HIST_BINS );
 
 						float orients[SIFT_ORI_HIST_BINS];
 						for(int j = 0; j < SIFT_ORI_HIST_BINS; j++ )
