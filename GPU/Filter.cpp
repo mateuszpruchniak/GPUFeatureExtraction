@@ -25,7 +25,7 @@ Filter::Filter(char* source, char* KernelName)
 
 
     // Load OpenCL kernel
-	SourceOpenCLShared = oclLoadProgSource("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\GPUCode.cl", "// My comment\n", &szKernelLength);
+	SourceOpenCLShared = oclLoadProgSource("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\GPUCode.cl", "// My comment\n", &szKernelLength);
 	
 
 	SourceOpenCL = oclLoadProgSource(source, "// My comment\n", &szKernelLengthFilter);

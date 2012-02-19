@@ -11,7 +11,7 @@ ExtractKeypointDescriptors::~ExtractKeypointDescriptors(void)
 
 
 
-ExtractKeypointDescriptors::ExtractKeypointDescriptors(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\ExtractKeypointDescriptors.cl","ckExtract")
+ExtractKeypointDescriptors::ExtractKeypointDescriptors(): GPUBase("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\ExtractKeypointDescriptors.cl","ckExtract")
 {
 
 }

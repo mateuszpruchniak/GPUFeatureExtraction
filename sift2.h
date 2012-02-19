@@ -111,7 +111,7 @@ struct Feature;
 
 #define ROUND(x) ( ( x - (int)x ) <= 0.5 ? (int)x :  (int)x + 1 )
 
-#define	SIFTCPU		1
+#define	SIFTCPU		0
 
 
 class SIFTGPU

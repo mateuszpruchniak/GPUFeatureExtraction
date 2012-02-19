@@ -9,7 +9,7 @@ MagnitudeOrientation::~MagnitudeOrientation(void)
 {
 }
 
-MagnitudeOrientation::MagnitudeOrientation(): GPUBase("C:\\Users\\Mati\\Desktop\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","ckMagnOrien")
+MagnitudeOrientation::MagnitudeOrientation(): GPUBase("C:\\Dropbox\\MGR\\GPUFeatureExtraction\\GPU\\OpenCL\\AssignOrientations.cl","ckMagnOrien")
 {
 
 }

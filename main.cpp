@@ -52,9 +52,9 @@ int main()
 	//delete sift2;
 
 	char* img1_file = "c:\\box.jpg";
-	char* img2_file = "c:\\scene.jpg";
+	char* img2_file = "c:\\scene2.jpg";
 
-	char* img_file_name = "c:\\scene.jpg";
+	char* img_file_name = "c:\\scene2.jpg";
 	char* out_file_name  = "c:\\h1.sift";;
 	char* out_img_name = "C:\\Users\\Mati\\Pictures\\sceneOut.jpg";
 	int display = 1;

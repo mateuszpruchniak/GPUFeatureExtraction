@@ -678,7 +678,7 @@ void descr_hist( __read_only image2d_t gauss_pyr,  int pozX, int pozY, int Image
 			cbin = c_rot + d / 2 - 0.5;
 
 			if( rbin > -1.0  &&  rbin < d  &&  cbin > -1.0  &&  cbin < d )
-				if( calc_grad_mag_oriTEX( gauss_pyr, pozX + i, pozY + j, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
+				if( calc_grad_mag_oriTEX( gauss_pyr, pozX + j, pozY + i, ImageWidth, ImageHeight, &grad_mag, &grad_ori ) )
 				{
 					grad_ori -= ori;
 					while( grad_ori < 0.0 )
